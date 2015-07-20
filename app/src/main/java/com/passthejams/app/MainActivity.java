@@ -47,7 +47,7 @@ public class MainActivity extends ListActivity {
 
         mMediaPlayer = new MediaPlayer();
 
-        cursor = managedQuery(libUri, mediaList, MediaStore.Audio.Media.CONTENT_TYPE + "='" + MediaStore.Audio.Media.IS_MUSIC +"'", null, null);
+        cursor = managedQuery(libUri, mediaList, MediaStore.Audio.Media.IS_MUSIC + "!=0", null, null);
         for(String s : cursor.getColumnNames()) {
             System.out.println(s);
         }
