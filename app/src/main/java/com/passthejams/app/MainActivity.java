@@ -46,6 +46,7 @@ public class MainActivity extends ListActivity {
         libUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
 
         mMediaPlayer = new MediaPlayer();
+        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 
         cursor = managedQuery(libUri, mediaList, MediaStore.Audio.Media.IS_MUSIC + "!=0", null, null);
         for(String s : cursor.getColumnNames()) {
@@ -61,8 +62,9 @@ public class MainActivity extends ListActivity {
         if(cursor.moveToPosition(position)) {
             Uri contentUri = ContentUris.withAppendedId(libUri.normalizeScheme(),
                     cursor.getLong(0));
-            mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             try {
+                mMediaPlayer.reset();
+                mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                 mMediaPlayer.setDataSource(this, contentUri);
                 mMediaPlayer.prepare();
                 mMediaPlayer.start();
