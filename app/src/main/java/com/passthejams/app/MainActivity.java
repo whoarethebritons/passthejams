@@ -2,13 +2,16 @@ package com.passthejams.app;
 
 import android.accounts.*;
 import android.app.ListActivity;
+import android.content.ComponentName;
 import android.content.ContentUris;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -16,10 +19,14 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.ViewSwitcher;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -29,57 +36,48 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import java.io.IOException;
 
 
-public class MainActivity extends ListActivity {
+public class MainActivity extends ActionBarActivity implements BottomMusicFragment.OnFragmentInteractionListener{
     Cursor cursor;
     final int SONG_TITLE = 1;
-    MediaPlayer mMediaPlayer;
+    final static String POSITION = "position", OPTION="option";
+    MusicPlaybackService musicPlaybackService;
     Uri libUri;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+        //MediaStore.Audio.Playlists.
         String[] mediaList = {MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE};
         //Google Play Music URI
         //libUri = Uri.parse("content://com.google.android.music.MusicContent/media");
         //Regular file storage URI
         libUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
 
-        mMediaPlayer = new MediaPlayer();
-        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        cursor = managedQuery(libUri, mediaList, MediaStore.Audio.Media.IS_MUSIC + "!=0",
+                null, null);
 
-        cursor = managedQuery(libUri, mediaList, MediaStore.Audio.Media.IS_MUSIC + "!=0", null, null);
-        for(String s : cursor.getColumnNames()) {
-            System.out.println(s);
-        }
+        ListView lv = (ListView) findViewById(android.R.id.list);
+        lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         String[] displayFields = new String[]{MediaStore.Audio.Media.TITLE};
         int[] displayText = new int[] {android.R.id.text1};
-        setListAdapter(new SimpleCursorAdapter(this, android.R.layout.simple_list_item_1, cursor, displayFields, displayText));
-    }
+        SimpleCursorAdapter simpleCursorAdapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_1, cursor,
+                displayFields, displayText);
 
-    @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        if(cursor.moveToPosition(position)) {
-            Uri contentUri = ContentUris.withAppendedId(libUri.normalizeScheme(),
-                    cursor.getLong(0));
-            try {
-                mMediaPlayer.reset();
-                mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-                mMediaPlayer.setDataSource(this, contentUri);
-                mMediaPlayer.prepare();
-                mMediaPlayer.start();
-            } catch (IOException e) {
-                e.printStackTrace();
+        lv.setAdapter(simpleCursorAdapter);
+        lv.setItemsCanFocus(false);
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                View p = (View) view.getParent();
+                int pos = ((ListView) findViewById(android.R.id.list)).getPositionForView(view);
+                Intent playSong = new Intent(getApplicationContext(), MusicPlaybackService.class);
+                playSong.putExtra(POSITION, pos);
+                Log.v("main", " " + pos);
+                playSong.putExtra(OPTION, "play");
+                startService(playSong);
             }
-        }
-        super.onListItemClick(l, v, position, id);
-    }
-    public void clickOn(View v) {
-        Intent intent = new Intent();
-        intent.setType("audio/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        startActivityForResult(Intent.createChooser(intent, "Select Music"),1);
+        });
     }
 
     @Override
@@ -102,5 +100,21 @@ public class MainActivity extends ListActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
+    }
+    public void onForward(View v) {
+        Log.v("fragment", "forward clicked");
+        Intent i = new Intent();
+        i.putExtra(OPTION, "forward");
+    }
+    public void onBackward(View v) {
+        Log.v("fragment", "back clicked");
+        Intent i = new Intent();
+        i.putExtra(OPTION, "backward");
     }
 }
