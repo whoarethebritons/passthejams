@@ -39,7 +39,7 @@ import java.io.IOException;
 public class MainActivity extends ActionBarActivity implements BottomMusicFragment.OnFragmentInteractionListener{
     Cursor cursor;
     final int SONG_TITLE = 1;
-    final static String POSITION = "position", OPTION="option";
+    final static String POSITION = "position", OPTION="option", DISCARD_PAUSE="discard";
     MusicPlaybackService musicPlaybackService;
     Uri libUri;
     @Override
@@ -75,6 +75,7 @@ public class MainActivity extends ActionBarActivity implements BottomMusicFragme
                 playSong.putExtra(POSITION, pos);
                 Log.v("main", " " + pos);
                 playSong.putExtra(OPTION, "play");
+                playSong.putExtra(DISCARD_PAUSE,true);
                 startService(playSong);
             }
         });

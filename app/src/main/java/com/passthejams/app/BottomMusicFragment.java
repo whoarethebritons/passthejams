@@ -105,15 +105,15 @@ public class BottomMusicFragment extends Fragment {
 
         Button play = (Button) getActivity().findViewById(R.id.playButton);
         //temporary
-        play.setOnClickListener(buttonListeners(PLAY));
+        play.setOnClickListener(buttonListeners(PLAY,true));
         Button pause = (Button) getActivity().findViewById(R.id.pauseButton);
-        pause.setOnClickListener(buttonListeners(PAUSE));
+        pause.setOnClickListener(buttonListeners(PAUSE,false));
         Button next = (Button) getActivity().findViewById(R.id.nextButton);
-        next.setOnClickListener(buttonListeners(NEXT));
+        next.setOnClickListener(buttonListeners(NEXT,false));
         Button previous = (Button) getActivity().findViewById(R.id.previousButton);
-        previous.setOnClickListener(buttonListeners(PREV));
+        previous.setOnClickListener(buttonListeners(PREV,false));
     }
-    public View.OnClickListener buttonListeners(final String button) {
+    public View.OnClickListener buttonListeners(final String button, final boolean discard) {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -121,6 +121,9 @@ public class BottomMusicFragment extends Fragment {
                 Intent i = new Intent(getActivity(),MusicPlaybackService.class);
                 i.putExtra(MainActivity.OPTION, button);
                 i.putExtra(MainActivity.POSITION, v.getVerticalScrollbarPosition());
+                if(discard) {
+                    i.putExtra(MainActivity.DISCARD_PAUSE, false);
+                }
                 getActivity().startService(i);
             }
         };
