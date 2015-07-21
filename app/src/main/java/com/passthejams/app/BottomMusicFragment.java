@@ -82,7 +82,7 @@ public class BottomMusicFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        /*receiver = new BroadcastReceiver() {
+        receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Log.v(TAG, "receiving");
@@ -96,9 +96,8 @@ public class BottomMusicFragment extends Fragment {
                 }
             }
         };
-        Log.v(TAG, BottomMusicFragment.class.getCanonicalName());
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver,
-                new IntentFilter(BottomMusicFragment.class.getCanonicalName()));*/
+                new IntentFilter("button-event"));
 
         /*
         the onclick listeners that will go to the music service
@@ -106,7 +105,7 @@ public class BottomMusicFragment extends Fragment {
 
         Button play = (Button) getActivity().findViewById(R.id.playButton);
         //temporary
-        play.setOnClickListener(buttonListeners(PAUSE));
+        play.setOnClickListener(buttonListeners(PLAY));
         Button pause = (Button) getActivity().findViewById(R.id.pauseButton);
         pause.setOnClickListener(buttonListeners(PAUSE));
         Button next = (Button) getActivity().findViewById(R.id.nextButton);

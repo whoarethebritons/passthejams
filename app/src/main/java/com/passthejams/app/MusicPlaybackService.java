@@ -24,6 +24,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         action that is being requested
      */
     MediaPlayer mMediaPlayer = new MediaPlayer();
+    int cursorPosition;
     Uri libraryURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
     Cursor queue = null;
     LocalBroadcastManager localBroadcastManager;
@@ -72,24 +73,32 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         if(mMediaPlayer.isPlaying()) {
             mMediaPlayer.pause();
             //eventually switch out the buttons
-            /*Intent playPauseUpdate = new Intent(getApplicationContext(), BottomMusicFragment.class);
+            Intent playPauseUpdate = new Intent("button-event");
             playPauseUpdate.putExtra("value", TOGGLE);
-            localBroadcastManager.sendBroadcast(playPauseUpdate);*/
+            localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
+            localBroadcastManager.sendBroadcast(playPauseUpdate);
         }
     }
     public boolean serviceOnNext() {
-        return changeSong(queue.moveToNext());
+        return changeSong(queue.moveToPosition(cursorPosition + 1));
     }
     public void serviceOnPrevious() {
-        changeSong(queue.moveToPrevious());
+        changeSong(queue.moveToPosition(cursorPosition - 1));
     }
     private void serviceOnPlay(int pos) {
+        Log.v(TAG, "position: " + pos);
         Log.v(TAG, "status: " + changeSong(queue.moveToPosition(pos)));
+        Intent playPauseUpdate = new Intent("button-event");
+        playPauseUpdate.putExtra("value", TOGGLE);
+        localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
+        localBroadcastManager.sendBroadcast(playPauseUpdate);
     }
 
     public boolean changeSong(boolean input) {
         //if the cursor was able to move to this item
         if(input) {
+            Log.v(TAG, "position: " + queue.getPosition());
+            cursorPosition = queue.getPosition();
             //get the item's uri
             Uri contentUri = ContentUris.withAppendedId(libraryURI,
                     queue.getLong(0));
