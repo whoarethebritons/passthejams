@@ -1,14 +1,15 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
     tools:context="com.passthejams.app.BottomMusicFragment">
 
     <!-- TODO: Update blank fragment layout -->
 
 
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="75dp"
+        android:layout_height="75dp"
         android:layout_alignParentLeft="true"
         android:id="@+id/currentAlbumArt"/>
 
@@ -17,25 +18,29 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@+id/currentAlbumArt"
+        android:layout_centerInParent="true"
         android:text="prev"
         android:onClick="onBackward"
         android:id="@+id/previousButton"
-        />
+        android:singleLine="false" />
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/playPause"
+        android:layout_centerInParent="true"
         android:layout_toRightOf="@+id/previousButton">
         <Button
             style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
             android:text="play"
             android:id="@+id/playButton" />
         <Button
             style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
             android:text="pause"
             android:onClick="onPause"
             android:visibility="invisible"
@@ -48,6 +53,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@+id/playPause"
+        android:layout_centerInParent="true"
         android:onClick="onNext"
         android:text="for"
         android:id="@+id/nextButton" />
@@ -59,6 +65,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toRightOf="@+id/nextButton"
-        android:text="X"
+        android:layout_centerInParent="true"
+        android:text="Shuffle"
         android:id="@+id/shuffleButton" />
 </RelativeLayout>

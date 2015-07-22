@@ -7,12 +7,14 @@ import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Binder;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * Created by Eden on 7/20/2015.
@@ -23,6 +25,15 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         position of song to begin playing
         action that is being requested
      */
+
+    //used for binding service
+    public class PlaybackBinder extends Binder {
+        MusicPlaybackService getService() {
+            return MusicPlaybackService.this;
+        }
+    }
+    PlaybackBinder mBinder = new PlaybackBinder();
+
     class PausedSongHolder {
         int index;
         int seekTo;
@@ -38,47 +49,27 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     MediaPlayer mMediaPlayer = new MediaPlayer();
     PausedSongHolder pausedSongHolder = new PausedSongHolder();
     int cursorPosition;
-    Uri libraryURI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
     Cursor queue = null;
     LocalBroadcastManager localBroadcastManager;
-    final boolean TOGGLE = true;
+
     //for logging
     final String TAG = "Service";
+    final boolean PLAY = true, PAUSE=false;
+    final int SONGID=0, SONGTITLE = 1, ALBUMID=2;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        mMediaPlayer.setOnPreparedListener(this);
+        mMediaPlayer.setOnCompletionListener(this);
+        String[] mediaList = {MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE,
+                MediaStore.Audio.Media.ALBUM_ID};
+        //repeat query
+        queue = getContentResolver().query(Shared.libraryUri, mediaList,
+                MediaStore.Audio.Media.IS_MUSIC + "!=0", null, null);
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
-        mMediaPlayer.setOnPreparedListener(this);
-        mMediaPlayer.setOnCompletionListener(this);
-        String[] mediaList = {MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE};
-        //repeat query
-        queue = getContentResolver().query(libraryURI, mediaList, MediaStore.Audio.Media.IS_MUSIC + "!=0",
-                null, null);
-        String s = intent.getStringExtra(MainActivity.OPTION);
-        switch(s) {
-            case "play":
-                Log.v("service", "play clicked");
-                serviceOnPlay(intent.getIntExtra(MainActivity.POSITION, -1),
-                        intent.getBooleanExtra(MainActivity.DISCARD_PAUSE, true));
-                break;
-            case "next":
-                Log.v("service", "next clicked");
-                serviceOnNext();
-                break;
-            case "previous":
-                Log.v("service", "previous clicked");
-                serviceOnPrevious();
-                break;
-            case "pause":
-                Log.v("service", "pause clicked");
-                serviceOnPause();
-                break;
-            default:
-                break;
-        }
         return flags;
     }
 
@@ -88,23 +79,22 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             pausedSongHolder.setSeekTo(mMediaPlayer.getCurrentPosition());
             Log.v(TAG, pausedSongHolder.getIndex() + " seek to " + pausedSongHolder.getSeekTo());
             mMediaPlayer.pause();
-            //eventually switch out the buttons
-            Intent playPauseUpdate = new Intent("button-event");
-            playPauseUpdate.putExtra("value", TOGGLE);
-            localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
-            localBroadcastManager.sendBroadcast(playPauseUpdate);
+            //switch out the buttons
+            sendButtonValue(PAUSE);
         }
     }
-    public boolean serviceOnNext() {
-        return changeSong(queue.moveToPosition(cursorPosition + 1));
+    public void serviceOnNext() {
+        discardPause();
+        changeSong(queue.moveToPosition(cursorPosition + 1));
     }
     public void serviceOnPrevious() {
+        discardPause();
         changeSong(queue.moveToPosition(cursorPosition - 1));
     }
-    private void serviceOnPlay(int pos, boolean discard) {
+    public void serviceOnPlay(int pos, boolean discard) {
+        //handle whether this is a new click or not
         if(discard) {
-            Log.v(TAG, "discarded pause");
-            pausedSongHolder = new PausedSongHolder();
+            discardPause();
             changeSong(queue.moveToPosition(pos));
         }
         else {
@@ -112,10 +102,6 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             int seekPosition = pausedSongHolder.getSeekTo();
             Log.v(TAG, "seek: " + seekPosition);
         }
-        Intent playPauseUpdate = new Intent("button-event");
-        playPauseUpdate.putExtra("value", TOGGLE);
-        localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
-        localBroadcastManager.sendBroadcast(playPauseUpdate);
     }
 
     public boolean changeSong(boolean input) {
@@ -125,9 +111,17 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             Log.v(TAG, "position: " + queue.getPosition());
             cursorPosition = queue.getPosition();
             //get the item's uri
-            Uri contentUri = ContentUris.withAppendedId(libraryURI,
-                    queue.getLong(0));
-            Log.v("Service", queue.getString(1));
+            Uri contentUri = ContentUris.withAppendedId(Shared.libraryUri,
+                    queue.getLong(SONGID));
+            Log.v("Service", queue.getString(SONGTITLE));
+
+            //sends album art to fragment to display the current artwork
+            Intent albumArt = new Intent(Shared.BROADCAST_ART);
+            Log.v(TAG, "sending over album id: " + queue.getString(ALBUMID));
+            albumArt.putExtra(Shared.ART_VALUE, queue.getString(ALBUMID));
+            localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
+            localBroadcastManager.sendBroadcast(albumArt);
+
             try {
                 //make sure to clear any player that is already playing
                 if(mMediaPlayer != null) {
@@ -136,10 +130,10 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
                     mMediaPlayer.setDataSource(getApplicationContext(), contentUri);
                     mMediaPlayer.prepareAsync();
                     Log.v(TAG, "seeking to " + seekPosition);
-                } /*else {
+                } else {
                     mMediaPlayer = MediaPlayer.create(getApplicationContext(), contentUri);
                     Log.v("Service", "new player: " + mMediaPlayer.toString());
-                }*/
+                }
                 mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -147,21 +141,41 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             return mMediaPlayer.isPlaying();
         }
         else {
-            mMediaPlayer.release();
+            mMediaPlayer.reset();
+            sendButtonValue(PAUSE);
             stopSelf();
         }
         return input;
+    }
+
+    public void sendButtonValue(boolean value) {
+        Intent playPauseUpdate = new Intent(Shared.BROADCAST_BUTTON);
+        playPauseUpdate.putExtra(Shared.BUTTON_VALUE, value);
+        localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
+        localBroadcastManager.sendBroadcast(playPauseUpdate);
+    }
+    public void discardPause() {
+        Log.v(TAG, "discarded pause");
+        pausedSongHolder = new PausedSongHolder();
     }
 
     @Override
     public void onPrepared(MediaPlayer mp) {
         mp.seekTo(pausedSongHolder.getSeekTo());
         mp.start();
+        sendButtonValue(PLAY);
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return mBinder;
+    }
+    @Override
+    public boolean onUnbind(Intent intent) {
+        mMediaPlayer.release();
+        queue.close();
+        stopSelf();
+        return true;
     }
 
     @Override

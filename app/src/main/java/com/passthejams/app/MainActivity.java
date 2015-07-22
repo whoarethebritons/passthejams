@@ -1,12 +1,17 @@
 package com.passthejams.app;
 
 import android.accounts.*;
+import android.app.Activity;
+import android.app.Fragment;
 import android.app.ListActivity;
+import android.app.Service;
 import android.content.ComponentName;
 import android.content.ContentUris;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
+import android.database.CursorJoiner;
 import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -22,6 +27,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
@@ -33,54 +39,70 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 
-public class MainActivity extends ActionBarActivity implements BottomMusicFragment.OnFragmentInteractionListener{
+public class MainActivity extends Activity implements BottomMusicFragment.OnFragmentInteractionListener{
     Cursor cursor;
     final int SONG_TITLE = 1;
-    final static String POSITION = "position", OPTION="option", DISCARD_PAUSE="discard";
+    final String TAG="main";
     MusicPlaybackService musicPlaybackService;
-    Uri libUri;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
         //MediaStore.Audio.Playlists.
-        String[] mediaList = {MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE};
+        String[] mediaList = {MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE,
+                MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM,
+                MediaStore.Audio.Albums.ALBUM_ID};
         //Google Play Music URI
         //libUri = Uri.parse("content://com.google.android.music.MusicContent/media");
         //Regular file storage URI
-        libUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
 
-        cursor = managedQuery(libUri, mediaList, MediaStore.Audio.Media.IS_MUSIC + "!=0",
+        cursor = managedQuery(Shared.libraryUri, mediaList, MediaStore.Audio.Media.IS_MUSIC + "!=0",
                 null, null);
+        String join = "select * from audio JOIN album ON (audio.ALBUM_ID = album._ID)";
 
+        /*CursorJoiner joiner = new CursorJoiner(songcursor,
+                new String[]{MediaStore.Audio.Media.ALBUM_ID},
+                albumArt, new String[]{MediaStore.Audio.Albums._ID});*/
+
+
+        for(String s: cursor.getColumnNames()) {
+            Log.v(TAG, s);
+        }
         ListView lv = (ListView) findViewById(android.R.id.list);
         lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-        String[] displayFields = new String[]{MediaStore.Audio.Media.TITLE};
-        int[] displayText = new int[] {android.R.id.text1};
-        SimpleCursorAdapter simpleCursorAdapter = new SimpleCursorAdapter(this, android.R.layout.simple_list_item_1, cursor,
+        String[] displayFields = new String[]{MediaStore.Audio.Media.TITLE,
+                MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM,
+                MediaStore.Audio.Albums.ALBUM_ID};
+                //, getAlbumArt(cursor.getPosition())};
+        int[] displayText = new int[] {R.id.songView, R.id.artistView, R.id.albumView, R.id.artView};
+        SimpleCursorAdapter simpleCursorAdapter = new myCursorAdapter(this, R.layout.song_row, cursor,
                 displayFields, displayText);
 
         lv.setAdapter(simpleCursorAdapter);
         lv.setItemsCanFocus(false);
+        Fragment fragment = (BottomMusicFragment) getFragmentManager().findFragmentById(R.id.bottomBar);
+        /*lv.setOnItemClickListener(BottomMusicFragment);
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                View p = (View) view.getParent();
-                int pos = ((ListView) findViewById(android.R.id.list)).getPositionForView(view);
-                Intent playSong = new Intent(getApplicationContext(), MusicPlaybackService.class);
-                playSong.putExtra(POSITION, pos);
-                Log.v("main", " " + pos);
-                playSong.putExtra(OPTION, "play");
-                playSong.putExtra(DISCARD_PAUSE,true);
-                startService(playSong);
-            }
-        });
-    }
 
+        });*/
+    }
+    public class myCursorAdapter extends SimpleCursorAdapter {
+
+        public myCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
+            super(context, layout, c, from, to);
+        }
+        @Override
+        public void setViewImage(ImageView v, String value) {
+            v.setImageURI(Shared.getAlbumArt(value));
+        }
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -102,20 +124,19 @@ public class MainActivity extends ActionBarActivity implements BottomMusicFragme
 
         return super.onOptionsItemSelected(item);
     }
+    @Override
+    public void onDestroy() {
+        /*Intent i = new Intent(this, MusicPlaybackService.class);
+        i.putExtra(Shared.OPTION, "destroy");
+        startService(i);*/
+        super.onDestroy();
+    }
 
 
     @Override
-    public void onFragmentInteraction(Uri uri) {
-
-    }
-    public void onForward(View v) {
-        Log.v("fragment", "forward clicked");
-        Intent i = new Intent();
-        i.putExtra(OPTION, "forward");
-    }
-    public void onBackward(View v) {
-        Log.v("fragment", "back clicked");
-        Intent i = new Intent();
-        i.putExtra(OPTION, "backward");
+    public void onFragmentInteraction(AdapterView.OnItemClickListener fragmentService) {
+        Log.v(TAG, "adding item click listener");
+        ListView lv = (ListView) findViewById(android.R.id.list);
+        lv.setOnItemClickListener(fragmentService);
     }
 }
