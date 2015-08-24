@@ -14,7 +14,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * Created by Eden on 7/20/2015.
@@ -157,6 +156,33 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     public void discardPause() {
         Log.v(TAG, "discarded pause");
         pausedSongHolder = new PausedSongHolder();
+    }
+
+     /*added for media player control*/
+
+    public int getSongPosition() {
+        return mMediaPlayer.getCurrentPosition();
+    }
+    public void onSeekTo(int position) {
+        mMediaPlayer.seekTo(position);
+    }
+    public boolean isMediaPlaying() {
+        return mMediaPlayer.isPlaying();
+    }/* //functionality later
+    public boolean canGoBack() {
+        int positionHolder = cursorPosition;
+        boolean ret = queue.moveToPosition(cursorPosition -1);
+        queue.moveToPosition(positionHolder);
+        return ret;
+    }
+    public boolean canGoNext() {
+        int positionHolder = cursorPosition;
+        boolean ret = queue.moveToPosition(cursorPosition +1);
+        queue.moveToPosition(positionHolder);
+        return ret;
+    }*/
+    public int getDuration() {
+        return mMediaPlayer.getDuration();
     }
 
     @Override

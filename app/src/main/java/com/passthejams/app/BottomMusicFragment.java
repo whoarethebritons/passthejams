@@ -1,21 +1,10 @@
 package com.passthejams.app;
 
 import android.app.Activity;
-import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
-import android.database.Cursor;
-import android.media.MediaPlayer;
-import android.net.Uri;
-import android.os.Bundle;
 import android.app.Fragment;
+import android.content.*;
+import android.os.Bundle;
 import android.os.IBinder;
-import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,10 +13,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ViewSwitcher;
-
-import java.io.File;
-import java.util.ArrayList;
 
 
 /**
@@ -39,10 +24,11 @@ import java.util.ArrayList;
  * create an instance of this fragment.
  */
 public class BottomMusicFragment extends Fragment {
-
+    int id = 0;
     boolean mBound;
     MusicPlaybackService mService;
     BroadcastReceiver receiver, artReceiver;
+    Activity holderActivity;
 
     private OnFragmentInteractionListener mListener;
 
@@ -55,7 +41,7 @@ public class BottomMusicFragment extends Fragment {
      *
      * @return A new instance of fragment BottomMusicFragment.
      */
-    public static BottomMusicFragment newInstance() {
+    public static BottomMusicFragment newInstance(Activity inActivity) {
         BottomMusicFragment fragment = new BottomMusicFragment();
         return fragment;
     }
@@ -64,6 +50,7 @@ public class BottomMusicFragment extends Fragment {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
     }
     @Override
@@ -90,6 +77,7 @@ public class BottomMusicFragment extends Fragment {
                     play.setVisibility(View.INVISIBLE);
                     pause.setVisibility(View.VISIBLE);
                 }
+
             }
         };
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver,
@@ -113,13 +101,14 @@ public class BottomMusicFragment extends Fragment {
          */
 
         Button play = (Button) getActivity().findViewById(R.id.playButton);
-        play.setOnClickListener(buttonListeners(Shared.PLAY,true));
+        play.setOnClickListener(buttonListeners(Shared.PLAY, true));
         Button pause = (Button) getActivity().findViewById(R.id.pauseButton);
-        pause.setOnClickListener(buttonListeners(Shared.PAUSE,false));
+        pause.setOnClickListener(buttonListeners(Shared.PAUSE, false));
         Button next = (Button) getActivity().findViewById(R.id.nextButton);
-        next.setOnClickListener(buttonListeners(Shared.NEXT,false));
+        next.setOnClickListener(buttonListeners(Shared.NEXT, false));
         Button previous = (Button) getActivity().findViewById(R.id.previousButton);
-        previous.setOnClickListener(buttonListeners(Shared.PREV,false));
+        previous.setOnClickListener(buttonListeners(Shared.PREV, false));
+
     }
 
     /*
@@ -140,17 +129,21 @@ public class BottomMusicFragment extends Fragment {
                     playSong.getBooleanExtra(Shared.DISCARD_PAUSE, true));
         }
     };
-
+    public Intent makeActionIntent(String option, int position, boolean discard) {
+        Log.v(TAG, option);
+        Intent intent = new Intent(getActivity(), MusicPlaybackService.class);
+        intent.putExtra(Shared.OPTION, option);
+        intent.putExtra(Shared.POSITION, position);
+        intent.putExtra(Shared.DISCARD_PAUSE, !discard);
+        return intent;
+    }
     //button listeners
     public View.OnClickListener buttonListeners(final String button, final boolean discard) {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.v(TAG, button + " clicked");
-                Intent intent = new Intent(getActivity(),MusicPlaybackService.class);
-                intent.putExtra(Shared.OPTION, button);
-                intent.putExtra(Shared.POSITION, v.getVerticalScrollbarPosition());
-                intent.putExtra(Shared.DISCARD_PAUSE, !discard);
+                Intent intent = makeActionIntent(button, v.getVerticalScrollbarPosition(), discard);
                 switch(button) {
                     case "play":
                         Log.v(TAG, "play clicked");
@@ -215,6 +208,7 @@ public class BottomMusicFragment extends Fragment {
         super.onAttach(activity);
         try {
             mListener = (OnFragmentInteractionListener) activity;
+            //holderActivity = mListener.setActivity();
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
@@ -245,8 +239,8 @@ public class BottomMusicFragment extends Fragment {
      * >Communicating with Other Fragments</a> for more information.
      */
     public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        public void onFragmentInteraction(AdapterView.OnItemClickListener s);
+        void onFragmentInteraction(AdapterView.OnItemClickListener s);
+        public Activity setActivity();
     }
 
 }

@@ -19,8 +19,7 @@
         android:layout_height="wrap_content"
         android:layout_toRightOf="@+id/currentAlbumArt"
         android:layout_centerInParent="true"
-        android:text="prev"
-        android:onClick="onBackward"
+        android:background="@android:drawable/ic_media_previous"
         android:id="@+id/previousButton"
         android:singleLine="false" />
     <RelativeLayout
@@ -34,15 +33,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="play"
+            android:background="@android:drawable/ic_media_play"
             android:id="@+id/playButton" />
         <Button
             style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="pause"
-            android:onClick="onPause"
+            android:background="@android:drawable/ic_media_pause"
             android:visibility="invisible"
             android:id="@+id/pauseButton"/>
 
@@ -54,11 +52,8 @@
         android:layout_height="wrap_content"
         android:layout_toRightOf="@+id/playPause"
         android:layout_centerInParent="true"
-        android:onClick="onNext"
-        android:text="for"
+        android:background="@android:drawable/ic_media_next"
         android:id="@+id/nextButton" />
-
-
 
     <Button
         style="?android:attr/buttonStyleSmall"
@@ -68,4 +63,5 @@
         android:layout_centerInParent="true"
         android:text="Shuffle"
         android:id="@+id/shuffleButton" />
+
 </RelativeLayout>
