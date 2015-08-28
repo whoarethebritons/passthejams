@@ -91,8 +91,9 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         changeSong(queue.moveToPosition(cursorPosition - 1));
     }
     public void serviceOnPlay(int pos, boolean discard) {
+        Log.v(TAG, "Position:" + pos);
         //handle whether this is a new click or not
-        if(discard) {
+        if(discard||pausedSongHolder.index == -1) {
             discardPause();
             changeSong(queue.moveToPosition(pos));
         }
@@ -140,6 +141,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             return mMediaPlayer.isPlaying();
         }
         else {
+            Log.v(TAG, "No input to changeSong");
             mMediaPlayer.reset();
             sendButtonValue(PAUSE);
             stopSelf();

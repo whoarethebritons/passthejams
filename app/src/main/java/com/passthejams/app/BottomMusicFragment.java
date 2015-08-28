@@ -147,7 +147,7 @@ public class BottomMusicFragment extends Fragment {
                 switch(button) {
                     case "play":
                         Log.v(TAG, "play clicked");
-                        mService.serviceOnPlay(intent.getIntExtra(Shared.POSITION, -1),
+                        mService.serviceOnPlay(intent.getIntExtra(Shared.POSITION, 0),
                                 intent.getBooleanExtra(Shared.DISCARD_PAUSE, true));
                         break;
                     case "next":
