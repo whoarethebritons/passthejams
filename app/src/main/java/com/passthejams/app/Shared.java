@@ -7,6 +7,8 @@ import android.util.Log;
 
 /**
  * Created by Eden on 7/21/2015.
+ * The purpose of this class is for shared variables and methods
+ * mainly for final Strings so you can just change them once
  */
 public class Shared {
     //broadcast values

@@ -33,6 +33,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
     PlaybackBinder mBinder = new PlaybackBinder();
 
+    //holds a paused song, the position of the song in the database and the position to seek to
     class PausedSongHolder {
         int index;
         int seekTo;
@@ -45,25 +46,34 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         public int getIndex(){return index;}
         public int getSeekTo(){return seekTo;}
     }
+    //the media player everything will be playing from
     MediaPlayer mMediaPlayer = new MediaPlayer();
+    //a paused holder so that there is not more than one
     PausedSongHolder pausedSongHolder = new PausedSongHolder();
+    //position for logs
     int cursorPosition;
+    //cursor to move through database
     Cursor queue = null;
+    //broadcast manager to update ui
     LocalBroadcastManager localBroadcastManager;
 
     //for logging
     final String TAG = "Service";
+    //these are possibly confusing
     final boolean PLAY = true, PAUSE=false;
     final int SONGID=0, SONGTITLE = 1, ALBUMID=2;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        //create listeners for when the media player has loaded & finishes playing
         mMediaPlayer.setOnPreparedListener(this);
         mMediaPlayer.setOnCompletionListener(this);
+
+        //columns of database the cursor is selecting
         String[] mediaList = {MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE,
                 MediaStore.Audio.Media.ALBUM_ID};
-        //repeat query
+        //repeat query so media player has a version separate from the ui
         queue = getContentResolver().query(Shared.libraryUri, mediaList,
                 MediaStore.Audio.Media.IS_MUSIC + "!=0", null, null);
     }
@@ -74,22 +84,31 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     public void serviceOnPause() {
         if(mMediaPlayer.isPlaying()) {
+            //set the paused song holder to contain the position of the cursor and seek position
             pausedSongHolder.setIndex(cursorPosition);
             pausedSongHolder.setSeekTo(mMediaPlayer.getCurrentPosition());
+
             Log.v(TAG, pausedSongHolder.getIndex() + " seek to " + pausedSongHolder.getSeekTo());
+
+            //actually perform the pause
             mMediaPlayer.pause();
+
             //switch out the buttons
             sendButtonValue(PAUSE);
         }
     }
+    //get rid of paused song if it exists, move to next in cursor
     public void serviceOnNext() {
         discardPause();
         changeSong(queue.moveToPosition(cursorPosition + 1));
     }
+
+    //get rid of paused song if it exists, move to previous in cursor
     public void serviceOnPrevious() {
         discardPause();
         changeSong(queue.moveToPosition(cursorPosition - 1));
     }
+
     public void serviceOnPlay(int pos, boolean discard) {
         Log.v(TAG, "Position:" + pos);
         //handle whether this is a new click or not
@@ -105,7 +124,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     public boolean changeSong(boolean input) {
-        int seekPosition =0;
+        int seekPosition=0;
         //if the cursor was able to move to this item
         if(input) {
             Log.v(TAG, "position: " + queue.getPosition());
@@ -127,13 +146,16 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
                 if(mMediaPlayer != null) {
                     Log.v("Service", mMediaPlayer.toString());
                     mMediaPlayer.reset();
+                    //tell it which uri to play
                     mMediaPlayer.setDataSource(getApplicationContext(), contentUri);
+                    //prepare async in case it takes a while
                     mMediaPlayer.prepareAsync();
                     Log.v(TAG, "seeking to " + seekPosition);
                 } else {
                     mMediaPlayer = MediaPlayer.create(getApplicationContext(), contentUri);
                     Log.v("Service", "new player: " + mMediaPlayer.toString());
                 }
+                //set type to play
                 mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -145,11 +167,13 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             mMediaPlayer.reset();
             sendButtonValue(PAUSE);
             stopSelf();
+            return input;
         }
-        return input;
     }
 
+    //method to communicate to fragment about ui
     public void sendButtonValue(boolean value) {
+        //create an intent so that the broadcast receiver can filter
         Intent playPauseUpdate = new Intent(Shared.BROADCAST_BUTTON);
         playPauseUpdate.putExtra(Shared.BUTTON_VALUE, value);
         localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
@@ -187,10 +211,14 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         return mMediaPlayer.getDuration();
     }
 
+    //once media player is ready to play
     @Override
     public void onPrepared(MediaPlayer mp) {
+        //seek to paused song seek (or 0 if there is no paused song)
         mp.seekTo(pausedSongHolder.getSeekTo());
+        //start player
         mp.start();
+        //send that it is playing so it shows the pause button
         sendButtonValue(PLAY);
     }
 

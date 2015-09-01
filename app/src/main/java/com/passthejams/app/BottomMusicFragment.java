@@ -14,36 +14,23 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 
-
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link BottomMusicFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link BottomMusicFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
 public class BottomMusicFragment extends Fragment {
-    int id = 0;
+    //boolean value to hold whether the service is bound or not
     boolean mBound;
+    //variable to hold the music service so that methods can be directly run
     MusicPlaybackService mService;
+    //broadcast receivers for ui updates from service
     BroadcastReceiver receiver, artReceiver;
+    //unused right now
     Activity holderActivity;
 
+    //for interacting with holder activities
     private OnFragmentInteractionListener mListener;
-
 
     final String TAG="fragment";
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @return A new instance of fragment BottomMusicFragment.
-     */
     public static BottomMusicFragment newInstance(Activity inActivity) {
-        BottomMusicFragment fragment = new BottomMusicFragment();
-        return fragment;
+        return new BottomMusicFragment();
     }
 
     public BottomMusicFragment() {}
@@ -66,13 +53,16 @@ public class BottomMusicFragment extends Fragment {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Log.v(TAG, "receiving");
+                //gets the boolean value of whether to switch or not
                 boolean playPause = intent.getBooleanExtra(Shared.BUTTON_VALUE, true);
                 Button play = (Button) getActivity().findViewById(R.id.playButton);
                 Button pause = (Button) getActivity().findViewById(R.id.pauseButton);
+                //if that value is false, then mediaplayer is not playing
                 if(!playPause) {
                     play.setVisibility(View.VISIBLE);
                     pause.setVisibility(View.INVISIBLE);
                 }
+                //otherwise it is playing and show the pause button
                 else {
                     play.setVisibility(View.INVISIBLE);
                     pause.setVisibility(View.VISIBLE);
@@ -80,6 +70,7 @@ public class BottomMusicFragment extends Fragment {
 
             }
         };
+        //actual registration of that listener
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver,
                 new IntentFilter(Shared.BROADCAST_BUTTON));
 
@@ -90,6 +81,8 @@ public class BottomMusicFragment extends Fragment {
                 Log.v(TAG, "receiving");
                 String artLocation = intent.getStringExtra(Shared.ART_VALUE);
                 ImageView play = (ImageView) getActivity().findViewById(R.id.currentAlbumArt);
+                //method that will set the image to whatever is at the uri
+                //Shared.getAlbumArt(String s) will resolve the uri
                 play.setImageURI(Shared.getAlbumArt(artLocation));
             }
         };
@@ -100,6 +93,7 @@ public class BottomMusicFragment extends Fragment {
         the onclick listeners that will go to the music service
          */
 
+        //this one has true so that by default it will not discard pause
         Button play = (Button) getActivity().findViewById(R.id.playButton);
         play.setOnClickListener(buttonListeners(Shared.PLAY, true));
         Button pause = (Button) getActivity().findViewById(R.id.pauseButton);
@@ -120,20 +114,31 @@ public class BottomMusicFragment extends Fragment {
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             int pos = parent.getPositionForView(view);
             Log.v("list listener", "list item position: " + parent.getPositionForView(view));
+            //specifies where we are sending this to
             Intent playSong = new Intent(getActivity(), MusicPlaybackService.class);
+            //send over the position
             playSong.putExtra(Shared.POSITION, pos);
             Log.v("list listener", " " + pos);
-            playSong.putExtra(Shared.OPTION, "play");
+            //send that we are going to "play"
+            playSong.putExtra(Shared.OPTION, Shared.PLAY);
+            //send that we will discard any stored pause
             playSong.putExtra(Shared.DISCARD_PAUSE, true);
+
+            //call the play method on the service
             mService.serviceOnPlay(playSong.getIntExtra(Shared.POSITION, -1),
                     playSong.getBooleanExtra(Shared.DISCARD_PAUSE, true));
         }
     };
+
+    //method for making intents for the button listeners
     public Intent makeActionIntent(String option, int position, boolean discard) {
         Log.v(TAG, option);
         Intent intent = new Intent(getActivity(), MusicPlaybackService.class);
+        //specifies what action we will be performing
         intent.putExtra(Shared.OPTION, option);
+        //specifies position in database of the song
         intent.putExtra(Shared.POSITION, position);
+        //whether we are unpausing or skipping
         intent.putExtra(Shared.DISCARD_PAUSE, !discard);
         return intent;
     }
@@ -143,23 +148,23 @@ public class BottomMusicFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Log.v(TAG, button + " clicked");
+                //create the intent
                 Intent intent = makeActionIntent(button, v.getVerticalScrollbarPosition(), discard);
+                //switch around which action we're planning on doing
+
+                Log.d(TAG, button + " clicked");
                 switch(button) {
                     case "play":
-                        Log.v(TAG, "play clicked");
                         mService.serviceOnPlay(intent.getIntExtra(Shared.POSITION, 0),
                                 intent.getBooleanExtra(Shared.DISCARD_PAUSE, true));
                         break;
                     case "next":
-                        Log.v(TAG, "next clicked");
                         mService.serviceOnNext();
                         break;
                     case "previous":
-                        Log.v(TAG, "previous clicked");
                         mService.serviceOnPrevious();
                         break;
                     case "pause":
-                        Log.v(TAG, "pause clicked");
                         mService.serviceOnPause();
                         break;
                     default:
@@ -192,6 +197,7 @@ public class BottomMusicFragment extends Fragment {
 
     @Override
     public void onStop() {
+        //remove the broadcasters
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(receiver);
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(artReceiver);
         super.onStop();
@@ -228,19 +234,10 @@ public class BottomMusicFragment extends Fragment {
         super.onDestroy();
     }
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(AdapterView.OnItemClickListener s);
-        public Activity setActivity();
+        //unused right now
+        Activity setActivity();
     }
 
 }

@@ -15,15 +15,16 @@ import android.widget.SimpleCursorAdapter;
 
 
 public class MainActivity extends Activity implements BottomMusicFragment.OnFragmentInteractionListener{
-    Cursor cursor;
-    final int SONG_TITLE = 1;
+    //Cursor to list the music
+    Cursor mCursor;
     final String TAG="main";
-    MusicPlaybackService musicPlaybackService;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
+
+        //database columns
         String[] mediaList = {MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE,
                 MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM,
                 MediaStore.Audio.Albums.ALBUM_ID};
@@ -31,26 +32,31 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         //libUri = Uri.parse("content://com.google.android.music.MusicContent/media");
         //Regular file storage URI
 
-        cursor = managedQuery(Shared.libraryUri, mediaList, MediaStore.Audio.Media.IS_MUSIC + "!=0",
+        //query the database for all things that are "music"
+        mCursor = managedQuery(Shared.libraryUri, mediaList, MediaStore.Audio.Media.IS_MUSIC + "!=0",
                 null, null);
 
-        for(String s: cursor.getColumnNames()) {
+        for(String s: mCursor.getColumnNames()) {
             Log.v(TAG, s);
         }
+        //get the view
         ListView lv = (ListView) findViewById(android.R.id.list);
         lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+
+        //text to display
         String[] displayFields = new String[]{MediaStore.Audio.Media.TITLE,
                 MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM,
                 MediaStore.Audio.Albums.ALBUM_ID};
+        //fields to display text in
         int[] displayText = new int[] {R.id.songView, R.id.artistView, R.id.albumView, R.id.artView};
-        SimpleCursorAdapter simpleCursorAdapter = new myCursorAdapter(this, R.layout.song_row, cursor,
+        SimpleCursorAdapter simpleCursorAdapter = new myCursorAdapter(this, R.layout.song_row, mCursor,
                 displayFields, displayText);
 
+        //set adapter
         lv.setAdapter(simpleCursorAdapter);
         lv.setItemsCanFocus(false);
     }
     public class myCursorAdapter extends SimpleCursorAdapter {
-
         public myCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
             super(context, layout, c, from, to);
         }
@@ -85,7 +91,8 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         super.onDestroy();
     }
 
-
+    //this is the override of the interface method that allows us to
+    //give the main activity access to the itemclicklistener
     @Override
     public void onFragmentInteraction(AdapterView.OnItemClickListener fragmentService) {
         Log.v(TAG, "adding item click listener");
