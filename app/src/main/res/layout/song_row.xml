@@ -32,5 +32,5 @@
         android:paddingLeft="10dp"
         android:id="@+id/artView"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_alignParentEnd="true" android:src="@android:drawable/ic_dialog_alert"/>
 </RelativeLayout>

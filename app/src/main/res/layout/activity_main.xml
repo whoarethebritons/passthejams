@@ -13,12 +13,12 @@
         android:focusable="false"
         android:descendantFocusability="blocksDescendants"
             android:id="@android:id/list" android:layout_alignParentTop="true" android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"/>
+            android:layout_alignParentStart="true" tools:listitem="@layout/song_row"/>
     <fragment
         android:name="com.passthejams.app.BottomMusicFragment"
         android:id="@+id/bottomBar"
         android:layout_width="wrap_content"
         android:layout_gravity="bottom|center"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content" tools:layout="@layout/fragment_bottom_music"/>
 
 </FrameLayout>
