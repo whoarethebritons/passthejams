@@ -135,9 +135,9 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             Log.v("Service", queue.getString(SONGTITLE));
 
             //sends album art to fragment to display the current artwork
-            Intent albumArt = new Intent(Shared.BROADCAST_ART);
+            Intent albumArt = new Intent(Shared.Broadcasters.BROADCAST_ART.name());
             Log.v(TAG, "sending over album id: " + queue.getString(ALBUMID));
-            albumArt.putExtra(Shared.ART_VALUE, queue.getString(ALBUMID));
+            albumArt.putExtra(Shared.Broadcasters.ART_VALUE.name(), queue.getString(ALBUMID));
             localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
             localBroadcastManager.sendBroadcast(albumArt);
 
@@ -174,8 +174,8 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     //method to communicate to fragment about ui
     public void sendButtonValue(boolean value) {
         //create an intent so that the broadcast receiver can filter
-        Intent playPauseUpdate = new Intent(Shared.BROADCAST_BUTTON);
-        playPauseUpdate.putExtra(Shared.BUTTON_VALUE, value);
+        Intent playPauseUpdate = new Intent(Shared.Broadcasters.BROADCAST_BUTTON.name());
+        playPauseUpdate.putExtra(Shared.Broadcasters.BUTTON_VALUE.name(), value);
         localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
         localBroadcastManager.sendBroadcast(playPauseUpdate);
     }

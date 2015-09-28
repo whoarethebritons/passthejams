@@ -54,7 +54,7 @@ public class BottomMusicFragment extends Fragment {
             public void onReceive(Context context, Intent intent) {
                 Log.v(TAG, "receiving");
                 //gets the boolean value of whether to switch or not
-                boolean playPause = intent.getBooleanExtra(Shared.BUTTON_VALUE, true);
+                boolean playPause = intent.getBooleanExtra(Shared.Broadcasters.BUTTON_VALUE.name(), true);
                 Button play = (Button) getActivity().findViewById(R.id.playButton);
                 Button pause = (Button) getActivity().findViewById(R.id.pauseButton);
                 //if that value is false, then mediaplayer is not playing
@@ -72,22 +72,22 @@ public class BottomMusicFragment extends Fragment {
         };
         //actual registration of that listener
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(receiver,
-                new IntentFilter(Shared.BROADCAST_BUTTON));
+                new IntentFilter(Shared.Broadcasters.BROADCAST_BUTTON.name()));
 
         /*album art change handling*/
         artReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 Log.v(TAG, "receiving");
-                String artLocation = intent.getStringExtra(Shared.ART_VALUE);
+                String artLocation = intent.getStringExtra(Shared.Broadcasters.ART_VALUE.name());
                 ImageView play = (ImageView) getActivity().findViewById(R.id.currentAlbumArt);
                 //method that will set the image to whatever is at the uri
                 //Shared.getAlbumArt(String s) will resolve the uri
-                play.setImageURI(Shared.getAlbumArt(artLocation));
+                play.setImageURI(Shared.getAlbumArt(context, artLocation));
             }
         };
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(artReceiver,
-                new IntentFilter(Shared.BROADCAST_ART));
+                new IntentFilter(Shared.Broadcasters.BROADCAST_ART.name()));
 
         /*
         the onclick listeners that will go to the music service
@@ -95,13 +95,13 @@ public class BottomMusicFragment extends Fragment {
 
         //this one has true so that by default it will not discard pause
         Button play = (Button) getActivity().findViewById(R.id.playButton);
-        play.setOnClickListener(buttonListeners(Shared.PLAY, true));
+        play.setOnClickListener(buttonListeners(Shared.Service.PLAY, true));
         Button pause = (Button) getActivity().findViewById(R.id.pauseButton);
-        pause.setOnClickListener(buttonListeners(Shared.PAUSE, false));
+        pause.setOnClickListener(buttonListeners(Shared.Service.PAUSE, false));
         Button next = (Button) getActivity().findViewById(R.id.nextButton);
-        next.setOnClickListener(buttonListeners(Shared.NEXT, false));
+        next.setOnClickListener(buttonListeners(Shared.Service.NEXT, false));
         Button previous = (Button) getActivity().findViewById(R.id.previousButton);
-        previous.setOnClickListener(buttonListeners(Shared.PREV, false));
+        previous.setOnClickListener(buttonListeners(Shared.Service.PREVIOUS, false));
 
     }
 
@@ -117,16 +117,16 @@ public class BottomMusicFragment extends Fragment {
             //specifies where we are sending this to
             Intent playSong = new Intent(getActivity(), MusicPlaybackService.class);
             //send over the position
-            playSong.putExtra(Shared.POSITION, pos);
+            playSong.putExtra(Shared.Main.POSITION.name(), pos);
             Log.v("list listener", " " + pos);
             //send that we are going to "play"
-            playSong.putExtra(Shared.OPTION, Shared.PLAY);
+            playSong.putExtra(Shared.Main.OPTION.name(), Shared.Service.PLAY);
             //send that we will discard any stored pause
-            playSong.putExtra(Shared.DISCARD_PAUSE, true);
+            playSong.putExtra(Shared.Main.DISCARD_PAUSE.name(), true);
 
             //call the play method on the service
-            mService.serviceOnPlay(playSong.getIntExtra(Shared.POSITION, -1),
-                    playSong.getBooleanExtra(Shared.DISCARD_PAUSE, true));
+            mService.serviceOnPlay(playSong.getIntExtra(Shared.Main.POSITION.name(), -1),
+                    playSong.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true));
         }
     };
 
@@ -135,36 +135,36 @@ public class BottomMusicFragment extends Fragment {
         Log.v(TAG, option);
         Intent intent = new Intent(getActivity(), MusicPlaybackService.class);
         //specifies what action we will be performing
-        intent.putExtra(Shared.OPTION, option);
+        intent.putExtra(Shared.Main.OPTION.name(), option);
         //specifies position in database of the song
-        intent.putExtra(Shared.POSITION, position);
+        intent.putExtra(Shared.Main.POSITION.name(), position);
         //whether we are unpausing or skipping
-        intent.putExtra(Shared.DISCARD_PAUSE, !discard);
+        intent.putExtra(Shared.Main.DISCARD_PAUSE.name(), !discard);
         return intent;
     }
     //button listeners
-    public View.OnClickListener buttonListeners(final String button, final boolean discard) {
+    public View.OnClickListener buttonListeners(final Shared.Service button, final boolean discard) {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.v(TAG, button + " clicked");
+                Log.v(TAG, button.name() + " clicked");
                 //create the intent
-                Intent intent = makeActionIntent(button, v.getVerticalScrollbarPosition(), discard);
+                Intent intent = makeActionIntent(button.name(), v.getVerticalScrollbarPosition(), discard);
                 //switch around which action we're planning on doing
 
                 Log.d(TAG, button + " clicked");
                 switch(button) {
-                    case "play":
-                        mService.serviceOnPlay(intent.getIntExtra(Shared.POSITION, 0),
-                                intent.getBooleanExtra(Shared.DISCARD_PAUSE, true));
+                    case PLAY:
+                        mService.serviceOnPlay(intent.getIntExtra(Shared.Main.POSITION.name(), 0),
+                                intent.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true));
                         break;
-                    case "next":
+                    case NEXT:
                         mService.serviceOnNext();
                         break;
-                    case "previous":
+                    case PREVIOUS:
                         mService.serviceOnPrevious();
                         break;
-                    case "pause":
+                    case PAUSE:
                         mService.serviceOnPause();
                         break;
                     default:

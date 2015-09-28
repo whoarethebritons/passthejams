@@ -62,7 +62,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         }
         @Override
         public void setViewImage(ImageView v, String value) {
-            v.setImageURI(Shared.getAlbumArt(value));
+            v.setImageURI(Shared.getAlbumArt(getApplicationContext(), value));
         }
     }
     @Override
