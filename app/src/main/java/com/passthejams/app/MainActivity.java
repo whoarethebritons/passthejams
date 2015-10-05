@@ -2,6 +2,7 @@ package com.passthejams.app;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -81,6 +82,13 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            return true;
+        }
+
+        //start network settings activity
+        if (id == R.id.action_network_test) {
+            Intent oManager = new Intent(this, network_test.class);
+            startActivity(oManager);
             return true;
         }
 
