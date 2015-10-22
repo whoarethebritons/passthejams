@@ -19,7 +19,7 @@ import android.widget.SimpleCursorAdapter;
 public class Tab1Activity extends Activity
 {
     Cursor mCursor;
-    final String TAG="main";
+    final String TAG="TAB1";
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -28,12 +28,12 @@ public class Tab1Activity extends Activity
         setContentView(R.layout.album_layout);
 
         //database columns
-        String[] mediaList = {MediaStore.Audio.Media._ID, MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM,
-                MediaStore.Audio.Albums.ALBUM_ID};
+        String[] mediaList = {"DISTINCT "+MediaStore.Audio.Albums.ALBUM, MediaStore.Audio.Albums._ID,
+                MediaStore.Audio.Albums.ARTIST};
 
-        //query the database for all things that are "music"
-        mCursor = managedQuery(Shared.libraryUri, mediaList, MediaStore.Audio.Media.IS_MUSIC + "!=0",
-                null, null);
+        //query the database for all albums, different URI to remove duplicates
+        mCursor = managedQuery(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, mediaList,
+                null, null, (MediaStore.Audio.Media.ALBUM + " ASC"));
 
         for(String s: mCursor.getColumnNames()) {
             Log.v(TAG, s);
@@ -44,7 +44,7 @@ public class Tab1Activity extends Activity
 
         //text to display
         String[] displayFields = new String[]{ MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM,
-                MediaStore.Audio.Albums.ALBUM_ID};
+                MediaStore.Audio.Albums._ID};
 
         //fields to display text in
         int[] displayText = new int[] {R.id.artistName, R.id.albumTitle, R.id.albumView};

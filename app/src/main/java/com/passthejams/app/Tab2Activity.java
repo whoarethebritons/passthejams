@@ -17,7 +17,7 @@ import android.widget.SimpleCursorAdapter;
 public class Tab2Activity extends Activity
 {
     Cursor mCursor;
-    final String TAG="main";
+    final String TAG="TAB2";
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -30,9 +30,9 @@ public class Tab2Activity extends Activity
                 MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM,
                 MediaStore.Audio.Albums.ALBUM_ID};
 
-        //query the database for all things that are "music"
+        //sort all songs by album name and then by track number
         mCursor = managedQuery(Shared.libraryUri, mediaList, MediaStore.Audio.Media.IS_MUSIC + "!=0",
-                null, null);
+                null, (MediaStore.Audio.Media.ALBUM + " ASC, "+MediaStore.Audio.Media.TRACK+" ASC"));
 
         for(String s: mCursor.getColumnNames()) {
             Log.v(TAG, s);
