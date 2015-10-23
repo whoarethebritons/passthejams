@@ -13,7 +13,7 @@ import android.widget.ListView;
 import android.widget.TabHost;
 
 
-public class MainActivity extends TabActivity implements BottomMusicFragment.OnFragmentInteractionListener{
+public class MainActivity extends TabActivity implements BottomMusicFragment.OnFragmentInteractionListener,  Tab2Activity.Tab2Interface {
     final String TAG="main";
 
     @Override
@@ -74,17 +74,22 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
         super.onDestroy();
     }
 
+    AdapterView.OnItemClickListener songListListener;
     //this is the override of the interface method that allows us to
     //give the main activity access to the itemclicklistener
     @Override
     public void onFragmentInteraction(AdapterView.OnItemClickListener fragmentService) {
-       /*Log.v(TAG, "adding item click listener");
-        ListView lv = (ListView) findViewById(R.id.songList);
-        lv.setOnItemClickListener(fragmentService);*/
+        songListListener = fragmentService;
+        Log.v(TAG, "changed listener");
     }
 
     @Override
     public Activity setActivity() {
         return this;
+    }
+
+    @Override
+    public AdapterView.OnItemClickListener getListener() {
+        return songListListener;
     }
 }

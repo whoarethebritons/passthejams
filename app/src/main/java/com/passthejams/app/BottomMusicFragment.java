@@ -13,8 +13,9 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TabHost;
 
-public class BottomMusicFragment extends Fragment {
+public class BottomMusicFragment extends Fragment{
     //boolean value to hold whether the service is bound or not
     boolean mBound;
     //variable to hold the music service so that methods can be directly run
@@ -102,6 +103,16 @@ public class BottomMusicFragment extends Fragment {
         next.setOnClickListener(buttonListeners(Shared.Service.NEXT, false));
         Button previous = (Button) getActivity().findViewById(R.id.previousButton);
         previous.setOnClickListener(buttonListeners(Shared.Service.PREVIOUS, false));
+
+        TabHost tabHost = (TabHost) getActivity().findViewById(android.R.id.tabhost);
+        tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
+            @Override
+            public void onTabChanged(String s) {
+                if(s.equals("Songs")) {
+                    //mListener.onFragmentInteraction(listItemClick);
+                }
+            }
+        });
 
     }
 

@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
@@ -52,6 +53,15 @@ public class Tab2Activity extends Activity
         //set adapter
         lv.setAdapter(simpleCursorAdapter);
         lv.setItemsCanFocus(true);
+
+    }
+    @Override
+    public void onContentChanged() {
+        Log.v(TAG, "on content changed");
+        ListView lv = (ListView) findViewById(R.id.songList);
+        Activity a = getParent();
+        Tab2Interface ef = (Tab2Interface) a;
+        lv.setOnItemClickListener(ef.getListener());
     }
     public class myCursorAdapter extends SimpleCursorAdapter {
         public myCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
@@ -61,5 +71,9 @@ public class Tab2Activity extends Activity
         public void setViewImage(ImageView v, String value) {
             v.setImageURI(Shared.getAlbumArt(getApplicationContext(), value));
         }
+    }
+
+    public interface Tab2Interface {
+        AdapterView.OnItemClickListener getListener();
     }
 }
