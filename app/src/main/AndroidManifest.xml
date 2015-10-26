@@ -26,7 +26,7 @@
         <service android:name=".MusicPlaybackService" />
 
         <activity
-            android:name=".network_test"
+            android:name=".NetworkTest"
             android:label="@string/title_activity_network_test" >
         </activity>
     </application>

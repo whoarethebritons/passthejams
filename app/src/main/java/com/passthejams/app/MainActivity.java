@@ -87,7 +87,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
 
         //start network settings activity
         if (id == R.id.action_network_test) {
-            Intent oManager = new Intent(this, network_test.class);
+            Intent oManager = new Intent(this, NetworkTest.class);
             startActivity(oManager);
             return true;
         }
