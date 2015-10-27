@@ -216,7 +216,6 @@ public class NetworkTest extends Activity {
     protected void onPause() {
         if(mNsdManager != null) {
             mNsdManager.unregisterService(mRegistrationListener);
-            mNsdManager.stopServiceDiscovery(mDiscoveryListener);
         }
         super.onPause();
     }
@@ -227,7 +226,6 @@ public class NetworkTest extends Activity {
         super.onResume();
         if(mNsdManager != null) {
             registerService(9000);
-            mNsdManager.discoverServices(SERVICE_TYPE,NsdManager.PROTOCOL_DNS_SD,mDiscoveryListener);
         }
     }
 
