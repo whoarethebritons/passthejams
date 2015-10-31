@@ -34,9 +34,7 @@ public class Test {
 
         hmap.put("Similar Tracks", Track.getSimilar("Led Zeppelin","Houses of the Holy", key) );
         hmap.put("_id", "trackid");
-        ClassLoader classLoader = Test.class.getClassLoader();
-        URL resource = classLoader.getResource("org/apache/http/client/HttpClient.class");
-        System.out.println(resource);
+
         CouchDbProperties properties = new CouchDbProperties()
                 .setDbName("passthejams")
                 .setCreateDbIfNotExist(true)
