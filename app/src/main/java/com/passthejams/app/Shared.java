@@ -2,9 +2,13 @@ package com.passthejams.app;
 
 import android.content.ContentUris;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
 
 import java.io.FileNotFoundException;
 
@@ -33,4 +37,35 @@ public class Shared {
         //Log.v("Shared", test.toString());
         return test;
     }
+
+    public static class ImageLoader extends AsyncTask<Object, String, Uri> {
+        private View imageView;
+        @Override
+        protected Uri doInBackground(Object... params) {
+            imageView = (View) params[0];
+            String id = (String) params[1];
+            Context context = (Context) params[2];
+
+            Uri test = ContentUris.withAppendedId(
+                    Uri.parse("content://media/external/audio/albumart"), Integer.parseInt(id));
+            try {
+                context.getContentResolver().openInputStream((test));
+            }
+            catch(FileNotFoundException e) {
+                Log.e("Shared", e.getMessage());
+                test = null;
+            }
+            //Bitmap bitmap = new Bitmap(uri);
+
+            return test;
+        }
+        @Override
+        protected void onPostExecute(Uri uri) {
+            if(uri != null && imageView != null) {
+                ImageView albumArt = (ImageView) imageView;
+                albumArt.setImageURI(uri);
+            }
+        }
+    }
+
 }

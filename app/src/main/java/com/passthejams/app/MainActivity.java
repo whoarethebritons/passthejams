@@ -16,7 +16,7 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
 
-public class MainActivity extends Activity implements BottomMusicFragment.OnFragmentInteractionListener{
+public class MainActivity extends Activity implements BottomMusicFragment.OnFragmentInteractionListener {
     //Cursor to list the music
     Cursor mCursor;
     final String TAG="main", PREFS_NAME = "PASSTHEJAMS_PREF", FIRST_TIME="FIRST_TIME_PREF";
@@ -67,9 +67,9 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         //Regular file storage URI
 
         //query the database for all things that are "music"
-        mCursor = managedQuery(Shared.libraryUri, mediaList, MediaStore.Audio.Media.IS_MUSIC + "!=0",
+        CursorLoader cursorLoader = new CursorLoader(this, Shared.libraryUri, mediaList, MediaStore.Audio.Media.IS_MUSIC + "!=0",
                 null, null);
-
+        mCursor = cursorLoader.loadInBackground();
         for(String s: mCursor.getColumnNames()) {
             Log.v(TAG, s);
         }
@@ -96,9 +96,10 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         }
         @Override
         public void setViewImage(@NonNull ImageView v, String value) {
-            v.setImageURI(Shared.getAlbumArt(getApplicationContext(), value));
+            new Shared.ImageLoader().execute(v, value, getApplicationContext());
         }
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -145,8 +146,4 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
     public Activity setActivity() {
         return this;
     }
-
-    public void makeNewQueue() {
-    }
-
 }
