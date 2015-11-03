@@ -1,11 +1,12 @@
 package com.passthejams.app;
 
 import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
+import android.content.*;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,12 +19,44 @@ import android.widget.SimpleCursorAdapter;
 public class MainActivity extends Activity implements BottomMusicFragment.OnFragmentInteractionListener{
     //Cursor to list the music
     Cursor mCursor;
-    final String TAG="main";
+    final String TAG="main", PREFS_NAME = "PASSTHEJAMS_PREF", FIRST_TIME="FIRST_TIME_PREF";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        if (settings.getBoolean(FIRST_TIME, true)) {
+            //the app is being launched for first time, do something
+            Log.d("Comments", "First time");
+
+            // first time create queue
+
+            ContentResolver contentResolver = this.getContentResolver();
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MediaStore.Audio.Playlists.NAME, "passthejams queue");
+            int queue_id = 0;
+
+            Uri mUri = contentResolver.insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, contentValues);
+            final String[] PROJECTION_PLAYLIST = new String[] {
+                    MediaStore.Audio.Playlists._ID,
+                    MediaStore.Audio.Playlists.NAME,
+                    MediaStore.Audio.Playlists.DATA
+            };
+            if(mUri != null) {
+                Cursor c = contentResolver.query(mUri, PROJECTION_PLAYLIST, null, null, null);
+                System.out.println(c.getColumnCount());
+                if(c != null) {
+                    queue_id = c.getInt(c.getColumnIndex(MediaStore.Audio.Playlists._ID));
+                    c.close();
+                }
+            }
+
+            // record the fact that the app has been started at least once
+            settings.edit().putBoolean(FIRST_TIME, false).commit();
+            settings.edit().putInt("QUEUE_ID", queue_id).commit();
+        }
 
         //database columns
         String[] mediaList = {MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE,
@@ -62,7 +95,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
             super(context, layout, c, from, to);
         }
         @Override
-        public void setViewImage(ImageView v, String value) {
+        public void setViewImage(@NonNull ImageView v, String value) {
             v.setImageURI(Shared.getAlbumArt(getApplicationContext(), value));
         }
     }
@@ -112,4 +145,8 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
     public Activity setActivity() {
         return this;
     }
+
+    public void makeNewQueue() {
+    }
+
 }
