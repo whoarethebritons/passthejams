@@ -29,6 +29,14 @@
             android:name=".NetworkTest"
             android:label="@string/title_activity_network_test" >
         </activity>
+        <activity
+            android:name=".Tab1Activity"
+            android:label="Tab1Activity" >
+        </activity>
+        <activity
+            android:name=".Tab2Activity"
+            android:label="Tab2Activity" >
+        </activity>
     </application>
 
 </manifest>

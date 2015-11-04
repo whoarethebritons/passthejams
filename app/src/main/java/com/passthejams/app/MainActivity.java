@@ -1,23 +1,19 @@
 package com.passthejams.app;
 
 import android.app.Activity;
-import android.content.Context;
+import android.app.TabActivity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AdapterView;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
+import android.widget.TabHost;
 
 
-public class MainActivity extends Activity implements BottomMusicFragment.OnFragmentInteractionListener{
-    //Cursor to list the music
-    Cursor mCursor;
+public class MainActivity extends TabActivity implements BottomMusicFragment.OnFragmentInteractionListener,  Tab2Activity.Tab2Interface {
     final String TAG="main";
 
     @Override
@@ -25,47 +21,26 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //database columns
-        String[] mediaList = {MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE,
-                MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM,
-                MediaStore.Audio.Albums.ALBUM_ID};
-        //Google Play Music URI
-        //libUri = Uri.parse("content://com.google.android.music.MusicContent/media");
-        //Regular file storage URI
+        // create the TabHost that will contain the Tabs
+        TabHost tabHost = (TabHost)findViewById(android.R.id.tabhost);
 
-        //query the database for all things that are "music"
-        mCursor = managedQuery(Shared.libraryUri, mediaList, MediaStore.Audio.Media.IS_MUSIC + "!=0",
-                null, null);
+        //Name the tag that each tab has
+        TabHost.TabSpec tab1 = tabHost.newTabSpec("Albums");
+        TabHost.TabSpec tab2 = tabHost.newTabSpec("Songs");
 
-        for(String s: mCursor.getColumnNames()) {
-            Log.v(TAG, s);
-        }
-        //get the view
-        ListView lv = (ListView) findViewById(android.R.id.list);
-        lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        // Set the Tab name and Activity
+        // that will be opened when particular Tab will be selected
+        tab1.setIndicator("Albums");
+        tab1.setContent(new Intent(this, Tab1Activity.class));
 
-        //text to display
-        String[] displayFields = new String[]{MediaStore.Audio.Media.TITLE,
-                MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM,
-                MediaStore.Audio.Albums.ALBUM_ID};
-        //fields to display text in
-        int[] displayText = new int[] {R.id.songView, R.id.artistView, R.id.albumView, R.id.artView};
-        SimpleCursorAdapter simpleCursorAdapter = new myCursorAdapter(this, R.layout.song_row, mCursor,
-                displayFields, displayText);
+        tab2.setIndicator("Songs");
+        tab2.setContent(new Intent(this, Tab2Activity.class));
 
-        //set adapter
-        lv.setAdapter(simpleCursorAdapter);
-        lv.setItemsCanFocus(false);
+        //Add the tabs into the tabHost
+        tabHost.addTab(tab1);
+        tabHost.addTab(tab2);
     }
-    public class myCursorAdapter extends SimpleCursorAdapter {
-        public myCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
-            super(context, layout, c, from, to);
-        }
-        @Override
-        public void setViewImage(ImageView v, String value) {
-            v.setImageURI(Shared.getAlbumArt(getApplicationContext(), value));
-        }
-    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -99,17 +74,22 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         super.onDestroy();
     }
 
+    AdapterView.OnItemClickListener songListListener;
     //this is the override of the interface method that allows us to
     //give the main activity access to the itemclicklistener
     @Override
     public void onFragmentInteraction(AdapterView.OnItemClickListener fragmentService) {
-        Log.v(TAG, "adding item click listener");
-        ListView lv = (ListView) findViewById(android.R.id.list);
-        lv.setOnItemClickListener(fragmentService);
+        songListListener = fragmentService;
+        Log.v(TAG, "changed listener");
     }
 
     @Override
     public Activity setActivity() {
         return this;
+    }
+
+    @Override
+    public AdapterView.OnItemClickListener getListener() {
+        return songListListener;
     }
 }
