@@ -2,9 +2,14 @@ package com.passthejams.app;
 
 import android.app.Activity;
 import android.app.TabActivity;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,43 +19,12 @@ import android.widget.TabHost;
 
 
 public class MainActivity extends TabActivity implements BottomMusicFragment.OnFragmentInteractionListener,  Tab2Activity.Tab2Interface {
-    final String TAG="main";
-
+    final String TAG="main", PREFS_NAME = "PASSTHEJAMS_PREF", FIRST_TIME="FIRST_TIME_PREF";;
+    Cursor returnCursor;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
-        if (settings.getBoolean(FIRST_TIME, true)) {
-            //the app is being launched for first time, do something
-            Log.d("Comments", "First time");
-
-            // first time create queue
-
-            ContentResolver contentResolver = this.getContentResolver();
-            ContentValues contentValues = new ContentValues();
-            contentValues.put(MediaStore.Audio.Playlists.NAME, "passthejams queue");
-            int queue_id = 0;
-
-            Uri mUri = contentResolver.insert(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, contentValues);
-            final String[] PROJECTION_PLAYLIST = new String[] {
-                    MediaStore.Audio.Playlists._ID,
-                    MediaStore.Audio.Playlists.NAME,
-                    MediaStore.Audio.Playlists.DATA
-            };
-            if(mUri != null) {
-                Cursor c = contentResolver.query(mUri, PROJECTION_PLAYLIST, null, null, null);
-                System.out.println(c.getColumnCount());
-                if(c != null) {
-                    queue_id = c.getInt(c.getColumnIndex(MediaStore.Audio.Playlists._ID));
-                    c.close();
-                }
-            }
-
-            // record the fact that the app has been started at least once
-            settings.edit().putBoolean(FIRST_TIME, false).commit();
-            settings.edit().putInt("QUEUE_ID", queue_id).commit();
-        }
 
         // create the TabHost that will contain the Tabs
         TabHost tabHost = (TabHost)findViewById(android.R.id.tabhost);
@@ -115,6 +89,11 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
     }
 
     @Override
+    public Cursor currentViewCursor() {
+        return returnCursor;
+    }
+
+    @Override
     public Activity setActivity() {
         return this;
     }
@@ -122,5 +101,10 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
     @Override
     public AdapterView.OnItemClickListener getListener() {
         return songListListener;
+    }
+
+    @Override
+    public void passCursor(Cursor c) {
+        returnCursor = c;
     }
 }

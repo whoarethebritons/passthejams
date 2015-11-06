@@ -3,8 +3,10 @@ package com.passthejams.app;
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.*;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -29,6 +31,8 @@ public class BottomMusicFragment extends Fragment{
     private OnFragmentInteractionListener mListener;
 
     final String TAG="fragment";
+
+
 
     public static BottomMusicFragment newInstance(Activity inActivity) {
         return new BottomMusicFragment();
@@ -84,7 +88,7 @@ public class BottomMusicFragment extends Fragment{
                 ImageView play = (ImageView) getActivity().findViewById(R.id.currentAlbumArt);
                 //method that will set the image to whatever is at the uri
                 //Shared.getAlbumArt(String s) will resolve the uri
-                play.setImageURI(Shared.getAlbumArt(context, artLocation));
+                Shared.getAlbumArt(context, play, artLocation);
             }
         };
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(artReceiver,
@@ -136,7 +140,11 @@ public class BottomMusicFragment extends Fragment{
             playSong.putExtra(Shared.Main.DISCARD_PAUSE.name(), true);
 
             //call the play method on the service
-            mService.serviceOnPlay(playSong.getIntExtra(Shared.Main.POSITION.name(), -1),
+            MusicPlaybackService.QueueObjectInfo queueObjectInfo =
+                    new MusicPlaybackService(). new QueueObjectInfo(mListener.currentViewCursor(),
+                            playSong.getIntExtra(Shared.Main.POSITION.name(), -1),
+                            false, false);
+           mService.serviceOnPlay(queueObjectInfo,
                     playSong.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true));
         }
     };
@@ -166,7 +174,11 @@ public class BottomMusicFragment extends Fragment{
                 Log.d(TAG, button + " clicked");
                 switch(button) {
                     case PLAY:
-                        mService.serviceOnPlay(intent.getIntExtra(Shared.Main.POSITION.name(), 0),
+                        MusicPlaybackService.QueueObjectInfo queueObjectInfo =
+                                new MusicPlaybackService(). new QueueObjectInfo(mListener.currentViewCursor(),
+                                        intent.getIntExtra(Shared.Main.POSITION.name(), 0),
+                                        false, false);
+                        mService.serviceOnPlay(queueObjectInfo,
                                 intent.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true));
                         break;
                     case NEXT:
@@ -247,6 +259,7 @@ public class BottomMusicFragment extends Fragment{
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(AdapterView.OnItemClickListener s);
+        Cursor currentViewCursor();
         //unused right now
         Activity setActivity();
     }

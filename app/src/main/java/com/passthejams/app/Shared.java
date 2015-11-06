@@ -22,20 +22,24 @@ public class Shared {
     public enum Main { POSITION, OPTION, DISCARD_PAUSE}
     public enum Service { NEXT, PLAY, PREVIOUS, PAUSE }
     static Uri libraryUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-
-    static Uri getAlbumArt(Context mContext, String album_id) {
+    final static String[] PROJECTION_PLAYLIST = new String[] {
+            MediaStore.Audio.Playlists._ID,
+            MediaStore.Audio.Playlists.NAME,
+            MediaStore.Audio.Playlists.DATA
+    };
+    final static String[] PROJECTION_SONG = {MediaStore.Audio.Media._ID, MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM,
+            MediaStore.Audio.Albums.ALBUM_ID};
+    static void getAlbumArt(Context mContext, ImageView v, String album_id) {
         int id = Integer.parseInt(album_id);
         Uri test = ContentUris.withAppendedId(
                 Uri.parse("content://media/external/audio/albumart"), id);
         try {
             mContext.getContentResolver().openInputStream(test);
+            v.setImageURI(test);
         }
         catch(FileNotFoundException e) {
             Log.e("Shared", e.getMessage());
-            test = null;
         }
-        //Log.v("Shared", test.toString());
-        return test;
     }
 
     public static class ImageLoader extends AsyncTask<Object, String, Uri> {
@@ -53,6 +57,7 @@ public class Shared {
             }
             catch(FileNotFoundException e) {
                 Log.e("Shared", e.getMessage());
+
                 test = null;
             }
             //Bitmap bitmap = new Bitmap(uri);
@@ -65,6 +70,10 @@ public class Shared {
                 ImageView albumArt = (ImageView) imageView;
                 albumArt.setImageURI(uri);
             }
+            /*else if(uri == null && imageView != null) {
+                ImageView albumArt = (ImageView) imageView;
+                albumArt.setImageURI(uri);
+            }*/
         }
     }
 

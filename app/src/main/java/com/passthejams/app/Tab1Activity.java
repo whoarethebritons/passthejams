@@ -61,7 +61,7 @@ public class Tab1Activity extends Activity
         }
         @Override
         public void setViewImage(ImageView v, String value) {
-            v.setImageURI(Shared.getAlbumArt(getApplicationContext(), value));
+            Shared.getAlbumArt(getApplicationContext(), v, value);
         }
     }
 }

@@ -1,19 +1,21 @@
 package com.passthejams.app;
 
 import android.app.Service;
-import android.content.ContentUris;
-import android.content.Intent;
+import android.content.*;
 import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.PriorityQueue;
+import java.util.TreeMap;
 
 /**
  * Created by Eden on 7/20/2015.
@@ -46,22 +48,38 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         public int getIndex(){return index;}
         public int getSeekTo(){return seekTo;}
     }
+    class QueueObjectInfo {
+        Cursor mCursor;
+        int mStartPosition;
+        boolean mShuffle;
+        boolean mRepeat;
+        public QueueObjectInfo(Cursor c, int start, boolean shuffle, boolean repeat) {
+            mCursor = c;
+            mStartPosition = start;
+            mShuffle = shuffle;
+            mRepeat = repeat;
+        }
+    }
+
     //the media player everything will be playing from
     MediaPlayer mMediaPlayer = new MediaPlayer();
     //a paused holder so that there is not more than one
     PausedSongHolder pausedSongHolder = new PausedSongHolder();
     //position for logs
     int cursorPosition;
-    //cursor to move through database
-    Cursor queue = null;
+
+    //position in treemap
+    int playPosition;
+
     //broadcast manager to update ui
     LocalBroadcastManager localBroadcastManager;
+
+    TreeMap<Integer, TrackInfo> songqueue = new TreeMap<Integer, TrackInfo>();
 
     //for logging
     final String TAG = "Service";
     //these are possibly confusing
     final boolean PLAY = true, PAUSE=false;
-    final int SONGID=0, SONGTITLE = 1, ALBUMID=2;
 
     @Override
     public void onCreate() {
@@ -73,9 +91,6 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         //columns of database the cursor is selecting
         String[] mediaList = {MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE,
                 MediaStore.Audio.Media.ALBUM_ID};
-        //repeat query so media player has a version separate from the ui
-        queue = getContentResolver().query(Shared.libraryUri, mediaList,
-                MediaStore.Audio.Media.IS_MUSIC + "!=0", null, null);
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -85,7 +100,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     public void serviceOnPause() {
         if(mMediaPlayer.isPlaying()) {
             //set the paused song holder to contain the position of the cursor and seek position
-            pausedSongHolder.setIndex(cursorPosition);
+            pausedSongHolder.setIndex(playPosition);
             pausedSongHolder.setSeekTo(mMediaPlayer.getCurrentPosition());
 
             Log.v(TAG, pausedSongHolder.getIndex() + " seek to " + pausedSongHolder.getSeekTo());
@@ -100,44 +115,68 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     //get rid of paused song if it exists, move to next in cursor
     public void serviceOnNext() {
         discardPause();
-        changeSong(queue.moveToPosition(cursorPosition + 1));
+        playPosition++;
+        changeSong();
     }
 
     //get rid of paused song if it exists, move to previous in cursor
     public void serviceOnPrevious() {
         discardPause();
-        changeSong(queue.moveToPosition(cursorPosition - 1));
+        playPosition--;
+        changeSong();
     }
 
-    public void serviceOnPlay(int pos, boolean discard) {
-        Log.v(TAG, "Position:" + pos);
+    public void serviceOnPlay(QueueObjectInfo inputQ, boolean discard) {
+        Log.v(TAG, "Cursor size:" + inputQ.mCursor.getCount());
+        int temp = 0;
+
+        int mPlayOrder = 0;
+
+        while(inputQ.mCursor.moveToPosition(temp)) {
+            songqueue.put(mPlayOrder, new TrackInfo(
+                    inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media._ID)),
+                    inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)),
+                    inputQ.mCursor.getString(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+                    inputQ.mCursor.getString(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))));
+            //int id, int album_id, String name, String artist));
+            Log.v(TAG, "inserted: " + inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media._ID))
+                    + " at: " + mPlayOrder);
+            mPlayOrder++;
+            temp++;
+        }
+
         //handle whether this is a new click or not
-        if(discard||pausedSongHolder.index == -1) {
+        if(discard || pausedSongHolder.index == -1) {
             discardPause();
-            changeSong(queue.moveToPosition(pos));
+            playPosition = inputQ.mStartPosition;
+            changeSong();//queue.moveToPosition(0));
         }
         else {
-            changeSong(queue.moveToPosition(pausedSongHolder.getIndex()));
+            playPosition = pausedSongHolder.getIndex();
+            changeSong();//queue.moveToPosition(pausedSongHolder.getIndex()));
             int seekPosition = pausedSongHolder.getSeekTo();
             Log.v(TAG, "seek: " + seekPosition);
         }
+
     }
 
-    public boolean changeSong(boolean input) {
+    public boolean changeSong(){//boolean input) {
         int seekPosition=0;
         //if the cursor was able to move to this item
-        if(input) {
-            Log.v(TAG, "position: " + queue.getPosition());
-            cursorPosition = queue.getPosition();
+        if(playPosition <= songqueue.lastKey()) {
+            Log.v(TAG, "position: " + playPosition);//queue.getPosition());
+            cursorPosition = playPosition; //queue.getPosition();
+            //get the TrackInfo
+            TrackInfo trackInfo = songqueue.get(playPosition);
             //get the item's uri
             Uri contentUri = ContentUris.withAppendedId(Shared.libraryUri,
-                    queue.getLong(SONGID));
-            Log.v("Service", queue.getString(SONGTITLE));
+                    songqueue.get(playPosition).id);
+            Log.v("Service", trackInfo.name);
 
             //sends album art to fragment to display the current artwork
             Intent albumArt = new Intent(Shared.Broadcasters.BROADCAST_ART.name());
-            Log.v(TAG, "sending over album id: " + queue.getString(ALBUMID));
-            albumArt.putExtra(Shared.Broadcasters.ART_VALUE.name(), queue.getString(ALBUMID));
+            Log.v(TAG, "sending over album id: " + trackInfo.album_id);//queue.getString(ALBUMID));
+            albumArt.putExtra(Shared.Broadcasters.ART_VALUE.name(), String.valueOf(trackInfo.album_id));//queue.getString(ALBUMID));
             localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
             localBroadcastManager.sendBroadcast(albumArt);
 
@@ -167,7 +206,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             mMediaPlayer.reset();
             sendButtonValue(PAUSE);
             stopSelf();
-            return input;
+            return false;
         }
     }
 
@@ -182,33 +221,6 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     public void discardPause() {
         Log.v(TAG, "discarded pause");
         pausedSongHolder = new PausedSongHolder();
-    }
-
-     /*added for media player control*/
-
-    public int getSongPosition() {
-        return mMediaPlayer.getCurrentPosition();
-    }
-    public void onSeekTo(int position) {
-        mMediaPlayer.seekTo(position);
-    }
-    public boolean isMediaPlaying() {
-        return mMediaPlayer.isPlaying();
-    }/* //functionality later
-    public boolean canGoBack() {
-        int positionHolder = cursorPosition;
-        boolean ret = queue.moveToPosition(cursorPosition -1);
-        queue.moveToPosition(positionHolder);
-        return ret;
-    }
-    public boolean canGoNext() {
-        int positionHolder = cursorPosition;
-        boolean ret = queue.moveToPosition(cursorPosition +1);
-        queue.moveToPosition(positionHolder);
-        return ret;
-    }*/
-    public int getDuration() {
-        return mMediaPlayer.getDuration();
     }
 
     //once media player is ready to play
@@ -229,7 +241,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     @Override
     public boolean onUnbind(Intent intent) {
         mMediaPlayer.release();
-        queue.close();
+        //queue.close();
         stopSelf();
         return true;
     }

@@ -53,7 +53,9 @@ public class Tab2Activity extends Activity
         //set adapter
         lv.setAdapter(simpleCursorAdapter);
         lv.setItemsCanFocus(true);
-
+        Tab2Interface ef = (Tab2Interface) getParent();
+        //lv.setOnItemClickListener(ef.getListener());
+        ef.passCursor(mCursor);
     }
     @Override
     public void onContentChanged() {
@@ -62,6 +64,7 @@ public class Tab2Activity extends Activity
         Activity a = getParent();
         Tab2Interface ef = (Tab2Interface) a;
         lv.setOnItemClickListener(ef.getListener());
+        ef.passCursor(mCursor);
     }
     public class myCursorAdapter extends SimpleCursorAdapter {
         public myCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
@@ -69,11 +72,12 @@ public class Tab2Activity extends Activity
         }
         @Override
         public void setViewImage(ImageView v, String value) {
-            v.setImageURI(Shared.getAlbumArt(getApplicationContext(), value));
+            Shared.getAlbumArt(getApplicationContext(), v, value);
         }
     }
 
     public interface Tab2Interface {
         AdapterView.OnItemClickListener getListener();
+        void passCursor(Cursor c);
     }
 }
