@@ -21,14 +21,33 @@ public class Shared {
     public enum Broadcasters { BROADCAST_BUTTON, BROADCAST_ART, BUTTON_VALUE, ART_VALUE }
     public enum Main { POSITION, OPTION, DISCARD_PAUSE}
     public enum Service { NEXT, PLAY, PREVIOUS, PAUSE }
+
+    public enum TabIntent { LAYOUT, LISTVIEW, ROWID, URI, PROJECTION_STRING, SELECTION_STRING, SELECTION_ARGS,
+        DISPLAY_FIELDS, DISPLAY_TEXT }
+    public enum TabType { SONG, ARTIST, ALBUM, PLAYLIST }
     static Uri libraryUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
     final static String[] PROJECTION_PLAYLIST = new String[] {
             MediaStore.Audio.Playlists._ID,
             MediaStore.Audio.Playlists.NAME,
             MediaStore.Audio.Playlists.DATA
     };
-    final static String[] PROJECTION_SONG = {MediaStore.Audio.Media._ID, MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM,
+    final static String[] PROJECTION_ARTIST = new String[] {
+            MediaStore.Audio.Artists._ID,
+            MediaStore.Audio.Artists.ARTIST,
+            MediaStore.Audio.Albums.ALBUM_ID
+    };
+    final static String[] PROJECTION_SONG = {
+            MediaStore.Audio.Media._ID,
+            MediaStore.Audio.Media.TITLE,
+            MediaStore.Audio.Albums.ARTIST,
+            MediaStore.Audio.Albums.ALBUM,
             MediaStore.Audio.Albums.ALBUM_ID};
+    final static String[] PROJECTION_ALBUM = {
+            MediaStore.Audio.Media._ID,
+            MediaStore.Audio.Albums.ARTIST,
+            MediaStore.Audio.Albums.ALBUM,
+            MediaStore.Audio.Albums.ALBUM_ID};
+
     static void getAlbumArt(Context mContext, ImageView v, String album_id) {
         int id = Integer.parseInt(album_id);
         Uri test = ContentUris.withAppendedId(

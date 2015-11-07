@@ -107,17 +107,6 @@ public class BottomMusicFragment extends Fragment{
         next.setOnClickListener(buttonListeners(Shared.Service.NEXT, false));
         Button previous = (Button) getActivity().findViewById(R.id.previousButton);
         previous.setOnClickListener(buttonListeners(Shared.Service.PREVIOUS, false));
-
-        TabHost tabHost = (TabHost) getActivity().findViewById(android.R.id.tabhost);
-        tabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
-            @Override
-            public void onTabChanged(String s) {
-                if(s.equals("Songs")) {
-                    //mListener.onFragmentInteraction(listItemClick);
-                }
-            }
-        });
-
     }
 
     /*
