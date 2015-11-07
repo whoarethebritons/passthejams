@@ -134,7 +134,7 @@ public class BottomMusicFragment extends Fragment{
                             playSong.getIntExtra(Shared.Main.POSITION.name(), -1),
                             false, false);
            mService.serviceOnPlay(queueObjectInfo,
-                    playSong.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true));
+                    playSong.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), false);
         }
     };
 
@@ -168,7 +168,7 @@ public class BottomMusicFragment extends Fragment{
                                         intent.getIntExtra(Shared.Main.POSITION.name(), 0),
                                         false, false);
                         mService.serviceOnPlay(queueObjectInfo,
-                                intent.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true));
+                                intent.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), true);
                         break;
                     case NEXT:
                         mService.serviceOnNext();

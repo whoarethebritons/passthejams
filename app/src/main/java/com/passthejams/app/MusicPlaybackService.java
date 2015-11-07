@@ -126,25 +126,25 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         changeSong();
     }
 
-    public void serviceOnPlay(QueueObjectInfo inputQ, boolean discard) {
+    public void serviceOnPlay(QueueObjectInfo inputQ, boolean discard, boolean discardQ) {
         Log.v(TAG, "Cursor size:" + inputQ.mCursor.getCount());
         int temp = 0;
 
         int mPlayOrder = 0;
-
-        while(inputQ.mCursor.moveToPosition(temp)) {
-            songqueue.put(mPlayOrder, new TrackInfo(
-                    inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media._ID)),
-                    inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)),
-                    inputQ.mCursor.getString(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
-                    inputQ.mCursor.getString(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))));
-            //int id, int album_id, String name, String artist));
-            Log.v(TAG, "inserted: " + inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media._ID))
-                    + " at: " + mPlayOrder);
-            mPlayOrder++;
-            temp++;
+        if(!discardQ) {
+            while (inputQ.mCursor.moveToPosition(temp)) {
+                songqueue.put(mPlayOrder, new TrackInfo(
+                        inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media._ID)),
+                        inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)),
+                        inputQ.mCursor.getString(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+                        inputQ.mCursor.getString(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))));
+                //int id, int album_id, String name, String artist));
+                Log.v(TAG, "inserted: " + inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media._ID))
+                        + " at: " + mPlayOrder);
+                mPlayOrder++;
+                temp++;
+            }
         }
-
         //handle whether this is a new click or not
         if(discard || pausedSongHolder.index == -1) {
             discardPause();
