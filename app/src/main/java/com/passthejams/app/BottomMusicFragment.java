@@ -6,6 +6,7 @@ import android.content.*;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Looper;
 import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -16,6 +17,9 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TabHost;
+
+import java.io.IOException;
+import java.util.ArrayList;
 
 public class BottomMusicFragment extends Fragment{
     //boolean value to hold whether the service is bound or not
@@ -107,6 +111,27 @@ public class BottomMusicFragment extends Fragment{
         next.setOnClickListener(buttonListeners(Shared.Service.NEXT, false));
         Button previous = (Button) getActivity().findViewById(R.id.previousButton);
         previous.setOnClickListener(buttonListeners(Shared.Service.PREVIOUS, false));
+
+        Button shuffle = (Button) getActivity().findViewById(R.id.shuffleButton);
+        shuffle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Thread newThread = new Thread(new Runnable() {
+                    public void run() {
+                        Looper.prepare();
+                        ArrayList<TrackInfo> test = new LastFm(getActivity().getApplicationContext(),
+                                mService.getCurrentPlaying()).generateOrGetSimilar(getActivity().getContentResolver());
+                        mService.addSimilarToQueue(test);
+                        /*for (TrackInfo t: test) {
+                            Log.v(TAG, t.name);
+                        }*/
+                    }
+                });
+                newThread.start();
+
+            }
+        });
+
     }
 
     /*

@@ -7,7 +7,7 @@
     <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/songList"
+        android:id="@android:id/list"
         tools:listitem="@layout/song_row"
         android:focusable="false"
         android:descendantFocusability="blocksDescendants"/>

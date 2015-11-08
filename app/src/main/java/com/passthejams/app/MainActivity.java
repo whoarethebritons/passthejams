@@ -10,8 +10,12 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.TabHost;
+
+import java.util.List;
 
 
 public class MainActivity extends TabActivity implements BottomMusicFragment.OnFragmentInteractionListener,
@@ -102,6 +106,8 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
 
     @Override
     public Cursor currentViewCursor() {
+        //return
+        //
         return returnCursor;
     }
 
@@ -139,11 +145,11 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
         Uri uri = null;
         int[] displayText = new int[0];
 
+        list_id = android.R.id.list;
         switch (type) {
             case SONG:
                 layout_id = R.layout.song_layout;
                 row_id = R.layout.song_row;
-                list_id = R.id.songList;
                 projectionString = Shared.PROJECTION_SONG;
                 selectionString = MediaStore.Audio.Media.IS_MUSIC + "!=0";
                 selectionArguments = null;
@@ -155,7 +161,7 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
                 break;
             case ALBUM:
                 layout_id = R.layout.album_layout;
-                list_id = R.id.albumGrid;
+                //list_id = R.id.albumGrid;
                 row_id = R.layout.album_tile;
                 projectionString = Shared.PROJECTION_ALBUM;
                 selectionString = MediaStore.Audio.Media.IS_MUSIC + "!=0";
@@ -169,7 +175,7 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
                 break;
             case ARTIST:
                 layout_id = R.layout.artist_layout;
-                list_id = R.id.artistGrid;
+                //list_id = R.id.artistGrid;
                 row_id = R.layout.artist_tile;
                 projectionString = Shared.PROJECTION_ARTIST;
                 selectionString = MediaStore.Audio.Media.IS_MUSIC + "!=0";
@@ -182,7 +188,7 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
                 break;
             case PLAYLIST:
                 layout_id = R.layout.album_layout;
-                list_id = R.id.albumGrid;
+                //list_id = R.id.albumGrid;
                 row_id = R.layout.album_tile;
                 projectionString = Shared.PROJECTION_PLAYLIST;
                 selectionString = null;
@@ -205,5 +211,19 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
         retIntent.putExtra(Shared.TabIntent.DISPLAY_FIELDS.name(), displayFields);
         retIntent.putExtra(Shared.TabIntent.DISPLAY_TEXT.name(), displayText);
         return retIntent;
+    }
+    public Cursor fromIntent(Intent i) {
+        int layout_id = i.getIntExtra(Shared.TabIntent.LAYOUT.name(), R.layout.song_layout);
+        int list_id = i.getIntExtra(Shared.TabIntent.LISTVIEW.name(), android.R.id.list);
+
+        int row_id = i.getIntExtra(Shared.TabIntent.ROWID.name(), android.R.id.list);
+
+        String[] projectionString = i.getStringArrayExtra(Shared.TabIntent.PROJECTION_STRING.name());
+        String selectionString = i.getStringExtra(Shared.TabIntent.SELECTION_STRING.name());
+        String[] selectionArguments = i.getStringArrayExtra(Shared.TabIntent.SELECTION_ARGS.name());
+        Uri uri = Uri.parse(i.getStringExtra(Shared.TabIntent.URI.name()));
+
+        //query the database given the passed items
+        return managedQuery(uri, projectionString, selectionString, selectionArguments, null);
     }
 }

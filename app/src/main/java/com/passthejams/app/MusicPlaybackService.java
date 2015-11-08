@@ -14,6 +14,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.PriorityQueue;
 import java.util.TreeMap;
 
@@ -149,11 +150,11 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         if(discard || pausedSongHolder.index == -1) {
             discardPause();
             playPosition = inputQ.mStartPosition;
-            changeSong();//queue.moveToPosition(0));
+            changeSong();
         }
         else {
             playPosition = pausedSongHolder.getIndex();
-            changeSong();//queue.moveToPosition(pausedSongHolder.getIndex()));
+            changeSong();
             int seekPosition = pausedSongHolder.getSeekTo();
             Log.v(TAG, "seek: " + seekPosition);
         }
@@ -164,8 +165,8 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         int seekPosition=0;
         //if the cursor was able to move to this item
         if(playPosition <= songqueue.lastKey()) {
-            Log.v(TAG, "position: " + playPosition);//queue.getPosition());
-            cursorPosition = playPosition; //queue.getPosition();
+            Log.v(TAG, "position: " + playPosition);
+            cursorPosition = playPosition;
             //get the TrackInfo
             TrackInfo trackInfo = songqueue.get(playPosition);
             //get the item's uri
@@ -175,8 +176,8 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
 
             //sends album art to fragment to display the current artwork
             Intent albumArt = new Intent(Shared.Broadcasters.BROADCAST_ART.name());
-            Log.v(TAG, "sending over album id: " + trackInfo.album_id);//queue.getString(ALBUMID));
-            albumArt.putExtra(Shared.Broadcasters.ART_VALUE.name(), String.valueOf(trackInfo.album_id));//queue.getString(ALBUMID));
+            Log.v(TAG, "sending over album id: " + trackInfo.album_id);
+            albumArt.putExtra(Shared.Broadcasters.ART_VALUE.name(), String.valueOf(trackInfo.album_id));
             localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
             localBroadcastManager.sendBroadcast(albumArt);
 
@@ -250,5 +251,22 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     public void onCompletion(MediaPlayer mp) {
         //here we need to play the next song in the queue
         serviceOnNext();
+    }
+    public void addSimilarToQueue(ArrayList<TrackInfo> trackInfos) {
+        TrackInfo baseSong = songqueue.get(playPosition);
+        songqueue.clear();
+        int playOrder = 0;
+        songqueue.put(playOrder, baseSong);
+        for(TrackInfo t : trackInfos) {
+            songqueue.put(++playOrder, t);
+        }
+        discardPause();
+        playPosition = 0;
+        changeSong();
+        Log.v(TAG, "insert size: " + trackInfos.size());
+        Log.v(TAG, "Queue size: " + String.valueOf(songqueue.size()));
+    }
+    public TrackInfo getCurrentPlaying() {
+        return songqueue.get(playPosition);
     }
 }

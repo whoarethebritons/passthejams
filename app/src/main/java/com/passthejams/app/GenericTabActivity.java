@@ -7,6 +7,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.ActionMode;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.*;
 
 /**
@@ -23,9 +27,9 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
         super.onCreate(savedInstanceState);
 
         int layout_id = getIntent().getIntExtra(Shared.TabIntent.LAYOUT.name(), R.layout.song_layout);
-        list_id = getIntent().getIntExtra(Shared.TabIntent.LISTVIEW.name(), R.id.songList);
+        list_id = getIntent().getIntExtra(Shared.TabIntent.LISTVIEW.name(), android.R.id.list);
 
-        int row_id = getIntent().getIntExtra(Shared.TabIntent.ROWID.name(), R.id.songList);
+        int row_id = getIntent().getIntExtra(Shared.TabIntent.ROWID.name(), android.R.id.list);
         setContentView(layout_id);
 
         String[] projectionString = getIntent().getStringArrayExtra(Shared.TabIntent.PROJECTION_STRING.name());
@@ -76,5 +80,11 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
     public interface genericTabInterface {
         AdapterView.OnItemClickListener getListener();
         void passCursor(Cursor c);
+    }
+    Cursor getCursor(TabHost t) {
+        //TabHost tabHost = (TabHost) getParent().findViewById(android.R.id.tabhost);
+        AbsListView lv = (ListView) t.getTabContentView().findViewById(android.R.id.list);
+        GenericTabActivity.myCursorAdapter adapter = (GenericTabActivity.myCursorAdapter) lv.getAdapter();
+        return adapter.getCursor();
     }
 }

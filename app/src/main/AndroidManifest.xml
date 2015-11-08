@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.USE_CREDENTIALS" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -29,6 +30,10 @@
             android:name=".NetworkTest"
             android:label="@string/title_activity_network_test" >
         </activity>
+        <activity
+            android:name=".LastFm"
+            android:label="LastFm" >
+    </activity>
         <activity
                 android:name=".GenericTabActivity"
                 android:label="GenericTabActivity" >

@@ -22,7 +22,7 @@ public class Shared {
     public enum Main { POSITION, OPTION, DISCARD_PAUSE}
     public enum Service { NEXT, PLAY, PREVIOUS, PAUSE }
 
-    public enum TabIntent { LAYOUT, LISTVIEW, ROWID, URI, PROJECTION_STRING, SELECTION_STRING, SELECTION_ARGS,
+    public enum TabIntent { CURSOR, LAYOUT, LISTVIEW, ROWID, URI, PROJECTION_STRING, SELECTION_STRING, SELECTION_ARGS,
         DISPLAY_FIELDS, DISPLAY_TEXT }
     public enum TabType { SONG, ARTIST, ALBUM, PLAYLIST }
     static Uri libraryUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;

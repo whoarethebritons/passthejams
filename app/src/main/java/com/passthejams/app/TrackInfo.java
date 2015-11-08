@@ -6,6 +6,7 @@ package com.passthejams.app;
 public class TrackInfo {
     int id, album_id;
     String name, artist;
+    public TrackInfo() {}
     public TrackInfo(int id, int album_id, String name, String artist) {
         this.id = id;
         this.album_id = album_id;
