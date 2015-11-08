@@ -49,6 +49,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         public int getIndex(){return index;}
         public int getSeekTo(){return seekTo;}
     }
+    //holds the object to make the queue from
     class QueueObjectInfo {
         Cursor mCursor;
         int mStartPosition;
@@ -88,10 +89,6 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         //create listeners for when the media player has loaded & finishes playing
         mMediaPlayer.setOnPreparedListener(this);
         mMediaPlayer.setOnCompletionListener(this);
-
-        //columns of database the cursor is selecting
-        String[] mediaList = {MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE,
-                MediaStore.Audio.Media.ALBUM_ID};
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -127,19 +124,23 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         changeSong();
     }
 
+    /* takes QueueObjectInfo inputQ which allows it to create the queue
+     * boolean discard which tells it whether to discard a pause or not
+     * boolean discardQ which tells it whether to discard the queue or not*/
     public void serviceOnPlay(QueueObjectInfo inputQ, boolean discard, boolean discardQ) {
         Log.v(TAG, "Cursor size:" + inputQ.mCursor.getCount());
         int temp = 0;
 
         int mPlayOrder = 0;
+        //keeping queue
         if(!discardQ) {
+            //add all songs from the current cursor to the queue
             while (inputQ.mCursor.moveToPosition(temp)) {
                 songqueue.put(mPlayOrder, new TrackInfo(
                         inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media._ID)),
                         inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)),
                         inputQ.mCursor.getString(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
                         inputQ.mCursor.getString(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))));
-                //int id, int album_id, String name, String artist));
                 Log.v(TAG, "inserted: " + inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media._ID))
                         + " at: " + mPlayOrder);
                 mPlayOrder++;
@@ -149,10 +150,12 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         //handle whether this is a new click or not
         if(discard || pausedSongHolder.index == -1) {
             discardPause();
+            //set playPosition to the song that was clicked on
             playPosition = inputQ.mStartPosition;
             changeSong();
         }
         else {
+            //set playPosition to the paused song position
             playPosition = pausedSongHolder.getIndex();
             changeSong();
             int seekPosition = pausedSongHolder.getSeekTo();
@@ -161,9 +164,9 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     }
 
-    public boolean changeSong(){//boolean input) {
+    public boolean changeSong(){
         int seekPosition=0;
-        //if the cursor was able to move to this item
+        //if playPosition has not gone past the queue
         if(playPosition <= songqueue.lastKey()) {
             Log.v(TAG, "position: " + playPosition);
             cursorPosition = playPosition;
@@ -252,20 +255,29 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         //here we need to play the next song in the queue
         serviceOnNext();
     }
+
+    /*
+        addSimilarToQueue takes an ArrayList of TrackInfo and adds it to the songqueue
+        called after LastFm to add similar songs
+     */
     public void addSimilarToQueue(ArrayList<TrackInfo> trackInfos) {
         TrackInfo baseSong = songqueue.get(playPosition);
+        //clear the current queue
         songqueue.clear();
         int playOrder = 0;
+        //add the original song
         songqueue.put(playOrder, baseSong);
+        //add all of the similar songs
         for(TrackInfo t : trackInfos) {
             songqueue.put(++playOrder, t);
         }
         discardPause();
         playPosition = 0;
         changeSong();
-        Log.v(TAG, "insert size: " + trackInfos.size());
-        Log.v(TAG, "Queue size: " + String.valueOf(songqueue.size()));
+        Log.d(TAG, "insert size: " + trackInfos.size());
+        Log.d(TAG, "Queue size: " + String.valueOf(songqueue.size()));
     }
+    /* added to get TrackInfo to send to LastFm */
     public TrackInfo getCurrentPlaying() {
         return songqueue.get(playPosition);
     }

@@ -42,17 +42,21 @@ public class LastFm extends Activity{
 
     public ArrayList<TrackInfo> generateOrGetSimilar(ContentResolver contentResolver) {
         Cursor mCursor;
+        //get current trackinfo
         int id = trackInfo.id;
-        String song =trackInfo.name;
+        String song = trackInfo.name;
         String artist = trackInfo.artist;
         int album_id;
         ArrayList<TrackInfo> similar = new ArrayList<>();
 
         try {
+            //if it already exists, get the ArrayList from the database
             similar = snappydb.getObject(String.valueOf(id), similar.getClass());
             Log.d(TAG, "exists in db");
         } catch (SnappydbException e) {
             Log.d(TAG, "does not exist in db");
+
+            //give Last.Fm a cache
             FileSystemCache fileSystemCache = new FileSystemCache(mContext.getCacheDir());
             Caller caller = Caller.getInstance();
             caller.setCache(fileSystemCache);
@@ -65,6 +69,8 @@ public class LastFm extends Activity{
             }
             Result result = caller.call("track.getSimilar", key, params);
             Collection<Track> tracks = ResponseBuilder.buildCollection(result, Track.class);
+
+            //see if each track exists on the device
             for( Track t: tracks) {
                 Log.v(TAG, t.getName());
                 mCursor = contentResolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, Shared.PROJECTION_SONG,
@@ -74,11 +80,13 @@ public class LastFm extends Activity{
                     song = mCursor.getString(mCursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
                     artist = mCursor.getString(mCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
                     album_id = mCursor.getInt(mCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
+                    //if it does add it
                     similar.add(new TrackInfo(id, album_id, song, artist));
                 }
                 mCursor.close();
             }
             try {
+                //write this information to the database
                 snappydb.put(String.valueOf(id), similar);
             } catch (SnappydbException e1) {
                 e1.printStackTrace();
@@ -90,6 +98,7 @@ public class LastFm extends Activity{
         } catch (SnappydbException e) {
             e.printStackTrace();
         }
+        //return ArrayList that Fragment will add to queue
         return similar;
     }
 }

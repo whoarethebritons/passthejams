@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
-import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,9 +15,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TabHost;
-
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class BottomMusicFragment extends Fragment{
@@ -113,18 +109,24 @@ public class BottomMusicFragment extends Fragment{
         previous.setOnClickListener(buttonListeners(Shared.Service.PREVIOUS, false));
 
         Button shuffle = (Button) getActivity().findViewById(R.id.shuffleButton);
+        /* shuffle button is the LastFm button right now */
         shuffle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //must be on a new thread because of NetworkOnMainException
                 Thread newThread = new Thread(new Runnable() {
                     public void run() {
                         Looper.prepare();
-                        ArrayList<TrackInfo> test = new LastFm(getActivity().getApplicationContext(),
-                                mService.getCurrentPlaying()).generateOrGetSimilar(getActivity().getContentResolver());
-                        mService.addSimilarToQueue(test);
+                        if(mService.getCurrentPlaying() != null) {
+                            //get the ArrayList from LastFm
+                            ArrayList<TrackInfo> test = new LastFm(getActivity().getApplicationContext(),
+                                    mService.getCurrentPlaying()).generateOrGetSimilar(getActivity().getContentResolver());
+                            //call the service passing the ArrayList
+                            mService.addSimilarToQueue(test);
                         /*for (TrackInfo t: test) {
                             Log.v(TAG, t.name);
                         }*/
+                        }
                     }
                 });
                 newThread.start();
@@ -158,7 +160,7 @@ public class BottomMusicFragment extends Fragment{
                     new MusicPlaybackService(). new QueueObjectInfo(mListener.currentViewCursor(),
                             playSong.getIntExtra(Shared.Main.POSITION.name(), -1),
                             false, false);
-           mService.serviceOnPlay(queueObjectInfo,
+            mService.serviceOnPlay(queueObjectInfo,
                     playSong.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), false);
         }
     };
@@ -188,12 +190,14 @@ public class BottomMusicFragment extends Fragment{
                 Log.d(TAG, button + " clicked");
                 switch(button) {
                     case PLAY:
-                        MusicPlaybackService.QueueObjectInfo queueObjectInfo =
-                                new MusicPlaybackService(). new QueueObjectInfo(mListener.currentViewCursor(),
-                                        intent.getIntExtra(Shared.Main.POSITION.name(), 0),
-                                        false, false);
-                        mService.serviceOnPlay(queueObjectInfo,
-                                intent.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), true);
+                        if(mListener.currentViewCursor() != null) {
+                            MusicPlaybackService.QueueObjectInfo queueObjectInfo =
+                                    new MusicPlaybackService().new QueueObjectInfo(mListener.currentViewCursor(),
+                                            intent.getIntExtra(Shared.Main.POSITION.name(), 0),
+                                            false, false);
+                            mService.serviceOnPlay(queueObjectInfo,
+                                    intent.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), true);
+                        }
                         break;
                     case NEXT:
                         mService.serviceOnNext();
