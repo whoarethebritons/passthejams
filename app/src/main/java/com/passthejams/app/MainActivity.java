@@ -96,18 +96,17 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
     }
 
     AdapterView.OnItemClickListener songListListener;
-    //this is the override of the interface method that allows us to
-    //give the main activity access to the itemclicklistener
+    /*this is the override of the interface method that allows us to
+    give the main activity access to the itemclicklistener*/
     @Override
     public void onFragmentInteraction(AdapterView.OnItemClickListener fragmentService) {
         songListListener = fragmentService;
         Log.v(TAG, "changed listener");
     }
 
+    /* currentViewCursor passes the current cursor to the fragment */
     @Override
     public Cursor currentViewCursor() {
-        //return
-        //
         return returnCursor;
     }
 
@@ -116,6 +115,7 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
         return this;
     }
 
+    /* getListener takes the Listener from the Fragment and passes it to the Tab */
     @Override
     public AdapterView.OnItemClickListener getListener() {
         TabHost tabHost = (TabHost) findViewById(android.R.id.tabhost);
@@ -133,10 +133,27 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
         }
     }
 
+    /*
+    passCursor allows Tabs to send their cursor over to Main
+    so that it may send it to the Fragment
+     */
     @Override
     public void passCursor(Cursor c) {
         returnCursor = c;
     }
+
+    /*
+     *This method generates an Intent for GenericTabActivity with the following:
+     * *the layout id
+     * *the list id
+     * *the layout of the row
+     * *the projection string
+     * *the selection string
+     * *the selection arguments
+     * *the uri
+     * *the display fields
+     * *the display text
+     */
     public Intent generateTabIntent(final Shared.TabType type) {
         Intent retIntent = new Intent(this, GenericTabActivity.class);
         int layout_id = 0, list_id = 0, row_id = 0;
@@ -161,7 +178,6 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
                 break;
             case ALBUM:
                 layout_id = R.layout.album_layout;
-                //list_id = R.id.albumGrid;
                 row_id = R.layout.album_tile;
                 projectionString = Shared.PROJECTION_ALBUM;
                 selectionString = MediaStore.Audio.Media.IS_MUSIC + "!=0";
@@ -175,7 +191,6 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
                 break;
             case ARTIST:
                 layout_id = R.layout.artist_layout;
-                //list_id = R.id.artistGrid;
                 row_id = R.layout.artist_tile;
                 projectionString = Shared.PROJECTION_ARTIST;
                 selectionString = MediaStore.Audio.Media.IS_MUSIC + "!=0";
@@ -188,7 +203,6 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
                 break;
             case PLAYLIST:
                 layout_id = R.layout.album_layout;
-                //list_id = R.id.albumGrid;
                 row_id = R.layout.album_tile;
                 projectionString = Shared.PROJECTION_PLAYLIST;
                 selectionString = null;
@@ -211,19 +225,5 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
         retIntent.putExtra(Shared.TabIntent.DISPLAY_FIELDS.name(), displayFields);
         retIntent.putExtra(Shared.TabIntent.DISPLAY_TEXT.name(), displayText);
         return retIntent;
-    }
-    public Cursor fromIntent(Intent i) {
-        int layout_id = i.getIntExtra(Shared.TabIntent.LAYOUT.name(), R.layout.song_layout);
-        int list_id = i.getIntExtra(Shared.TabIntent.LISTVIEW.name(), android.R.id.list);
-
-        int row_id = i.getIntExtra(Shared.TabIntent.ROWID.name(), android.R.id.list);
-
-        String[] projectionString = i.getStringArrayExtra(Shared.TabIntent.PROJECTION_STRING.name());
-        String selectionString = i.getStringExtra(Shared.TabIntent.SELECTION_STRING.name());
-        String[] selectionArguments = i.getStringArrayExtra(Shared.TabIntent.SELECTION_ARGS.name());
-        Uri uri = Uri.parse(i.getStringExtra(Shared.TabIntent.URI.name()));
-
-        //query the database given the passed items
-        return managedQuery(uri, projectionString, selectionString, selectionArguments, null);
     }
 }

@@ -22,7 +22,7 @@ public class Shared {
     public enum Main { POSITION, OPTION, DISCARD_PAUSE}
     public enum Service { NEXT, PLAY, PREVIOUS, PAUSE }
 
-    public enum TabIntent { CURSOR, LAYOUT, LISTVIEW, ROWID, URI, PROJECTION_STRING, SELECTION_STRING, SELECTION_ARGS,
+    public enum TabIntent { LAYOUT, LISTVIEW, ROWID, URI, PROJECTION_STRING, SELECTION_STRING, SELECTION_ARGS,
         DISPLAY_FIELDS, DISPLAY_TEXT }
     public enum TabType { SONG, ARTIST, ALBUM, PLAYLIST }
     static Uri libraryUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -79,8 +79,6 @@ public class Shared {
 
                 test = null;
             }
-            //Bitmap bitmap = new Bitmap(uri);
-
             return test;
         }
         @Override
@@ -89,10 +87,6 @@ public class Shared {
                 ImageView albumArt = (ImageView) imageView;
                 albumArt.setImageURI(uri);
             }
-            /*else if(uri == null && imageView != null) {
-                ImageView albumArt = (ImageView) imageView;
-                albumArt.setImageURI(uri);
-            }*/
         }
     }
 
