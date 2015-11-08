@@ -59,13 +59,14 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
         ef.passCursor(mCursor);
     }
     @Override
-    public void onContentChanged() {
+    public void onResume() {
         Log.v(TAG, "on content changed");
         T lv = (T) findViewById(list_id);
         Activity a = getParent();
         genericTabInterface ef = (genericTabInterface) a;
         lv.setOnItemClickListener(ef.getListener());
         ef.passCursor(mCursor);
+        super.onResume();
     }
     public class myCursorAdapter extends SimpleCursorAdapter {
         public myCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
@@ -80,11 +81,5 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
     public interface genericTabInterface {
         AdapterView.OnItemClickListener getListener();
         void passCursor(Cursor c);
-    }
-    Cursor getCursor(TabHost t) {
-        //TabHost tabHost = (TabHost) getParent().findViewById(android.R.id.tabhost);
-        AbsListView lv = (ListView) t.getTabContentView().findViewById(android.R.id.list);
-        GenericTabActivity.myCursorAdapter adapter = (GenericTabActivity.myCursorAdapter) lv.getAdapter();
-        return adapter.getCursor();
     }
 }
