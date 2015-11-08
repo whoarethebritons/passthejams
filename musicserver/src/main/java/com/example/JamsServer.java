@@ -20,10 +20,14 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 
 
 public class JamsServer implements Runnable {
     private static ServerSocket serverSocky;
+    private static int nextSongId = 1;
+    private static HashMap<JsonObject,Integer> idLookpu = new HashMap<>();
+    private static HashMap<Integer,String> pathLookup = new HashMap<>();
     private Socket socky;
 
     public static void main(String args[]) throws IOException {
@@ -93,9 +97,13 @@ public class JamsServer implements Runnable {
                     try {
                         AudioFile ff = AudioFileIO.read(f);
                         Tag tag = ff.getTag();
-                        song.addProperty("Title",tag.getFirst(FieldKey.TITLE));
-                        song.addProperty("Album",tag.getFirst(FieldKey.ALBUM));
-                        song.addProperty("Artist",tag.getFirst(FieldKey.ARTIST));
+                        //[_id, title, artist, album, album_id]
+                        String jamsId = tag.getFirst("JamsId");
+                        song.addProperty("_id","0");
+                        song.addProperty("title",tag.getFirst(FieldKey.TITLE));
+                        song.addProperty("artist",tag.getFirst(FieldKey.ARTIST));
+                        song.addProperty("album",tag.getFirst(FieldKey.ALBUM));
+                        song.addProperty("album_id","0");
                     } catch (TagException e) {
                         e.printStackTrace();
                     } catch (ReadOnlyFileException e) {

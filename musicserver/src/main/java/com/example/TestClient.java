@@ -1,5 +1,7 @@
 package com.example;
 
+import com.google.gson.JsonArray;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -17,5 +19,9 @@ public class TestClient {
         out.println("getSongs");
         out.flush();
         System.out.println("Songs: "+in.readLine());
+    }
+
+    JsonArray getSongs() {
+
     }
 }
