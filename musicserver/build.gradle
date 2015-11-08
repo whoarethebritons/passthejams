@@ -1,0 +1,9 @@
+apply plugin: 'java'
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile files('libs/JID3.jar')
+    compile files('libs/jaudiotagger-2.2.5.jar')
+    compile files('libs/jaudiotagger-2.2.5-javadoc.jar')
+    compile files('libs/jaudiotagger-2.2.5-sources.jar')
+}

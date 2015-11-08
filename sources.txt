@@ -1,0 +1,11 @@
+External libraries used:
+
+Gson
+musicserver/libs/gson-2.4.jar
+https://github.com/google/gson
+Apache license
+
+Jaudiotagger
+/musicserver/libs/jaudiotagger-2.2.5.jar
+http://www.jthink.net/jaudiotagger/
+LGPL
