@@ -62,6 +62,7 @@ public class Shared {
     }
 
     public static class ImageLoader extends AsyncTask<Object, String, Uri> {
+        final String TAG = "ImageLoader";
         private View imageView;
         @Override
         protected Uri doInBackground(Object... params) {
@@ -76,16 +77,24 @@ public class Shared {
             }
             catch(FileNotFoundException e) {
                 Log.e("Shared", e.getMessage());
-
                 test = null;
             }
+            imageView.setTag(test);
+            Log.d(TAG, imageView.toString() + ":\n" + test);
             return test;
         }
         @Override
         protected void onPostExecute(Uri uri) {
-            if(uri != null && imageView != null) {
+            if(imageView != null) {
                 ImageView albumArt = (ImageView) imageView;
-                albumArt.setImageURI(uri);
+                if(imageView.getTag() != null) {
+                    //Log.d(TAG, imageView.toString() + ":" + imageView.getTag().toString());
+                    albumArt.setImageURI((Uri)imageView.getTag());
+                }
+                else {
+                    //Log.d(TAG, imageView.toString() + ":" + null);
+                    albumArt.setImageResource(R.drawable.default_album);
+                }
             }
         }
     }
