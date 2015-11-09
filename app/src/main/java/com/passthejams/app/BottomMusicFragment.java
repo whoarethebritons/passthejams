@@ -117,14 +117,16 @@ public class BottomMusicFragment extends Fragment{
                 Thread newThread = new Thread(new Runnable() {
                     public void run() {
                         Looper.prepare();
-                        //get the ArrayList from LastFm
-                        ArrayList<TrackInfo> test = new LastFm(getActivity().getApplicationContext(),
-                                mService.getCurrentPlaying()).generateOrGetSimilar(getActivity().getContentResolver());
-                        //call the service passing the ArrayList
-                        mService.addSimilarToQueue(test);
+                        if(mService.getCurrentPlaying() != null) {
+                            //get the ArrayList from LastFm
+                            ArrayList<TrackInfo> test = new LastFm(getActivity().getApplicationContext(),
+                                    mService.getCurrentPlaying()).generateOrGetSimilar(getActivity().getContentResolver());
+                            //call the service passing the ArrayList
+                            mService.addSimilarToQueue(test);
                         /*for (TrackInfo t: test) {
                             Log.v(TAG, t.name);
                         }*/
+                        }
                     }
                 });
                 newThread.start();
@@ -158,7 +160,7 @@ public class BottomMusicFragment extends Fragment{
                     new MusicPlaybackService(). new QueueObjectInfo(mListener.currentViewCursor(),
                             playSong.getIntExtra(Shared.Main.POSITION.name(), -1),
                             false, false);
-           mService.serviceOnPlay(queueObjectInfo,
+            mService.serviceOnPlay(queueObjectInfo,
                     playSong.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), false);
         }
     };
