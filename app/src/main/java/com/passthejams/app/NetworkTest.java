@@ -5,6 +5,7 @@ import android.content.Context;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,8 +15,17 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -81,6 +91,18 @@ public class NetworkTest extends Activity {
                 }
 
                 response.setText(line);
+                JsonArray array = new JsonParser().parse(line).getAsJsonArray();
+                for(JsonElement o:array) {
+                    JsonObject obj = o.getAsJsonObject();
+                    try {
+                        String fileName = new getSong().execute(host,port,obj.get("_id").getAsInt(),obj.get("file_name").getAsString()).get();
+                        Toast.makeText(getApplicationContext(),"Copied "+fileName,Toast.LENGTH_SHORT).show();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (ExecutionException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         });
     }
@@ -252,6 +274,8 @@ public class NetworkTest extends Activity {
                 BufferedReader in =
                         new BufferedReader(
                                 new InputStreamReader(sock.getInputStream()));
+                out.println("getSongs");
+                out.flush();
                 line = in.readLine();
 
 
@@ -267,6 +291,47 @@ public class NetworkTest extends Activity {
                 e.printStackTrace();
             }
             return line;
+        }
+    }
+
+    private class getSong extends AsyncTask<Object,Void,String>
+    {
+        protected String doInBackground(Object... params) {
+            String host = (String) params[0];
+            int port = (Integer) params[1];
+            int _id = (Integer) params[2];
+            String fileName =  (String) params[3];
+            String line = "";
+
+            try {
+                Socket sock = new Socket(host, port);
+                PrintWriter out =
+                        new PrintWriter(sock.getOutputStream(), true);
+                BufferedInputStream in = new BufferedInputStream(sock.getInputStream());
+                File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC),fileName);
+                FileOutputStream fout = new FileOutputStream(file);
+                out.println("getSong/"+_id);
+                out.flush();
+                byte buffer[] = new byte[1024];
+                int read;
+                while((read=in.read(buffer))>0) {
+                    //System.out.println("Read " + read + " bytes");
+                    fout.write(buffer,0,read);
+                }
+
+                fout.close();
+                in.close();
+                out.close();
+                sock.close();
+
+            } catch (UnknownHostException e) {
+                line = ""+ ++nExceptions+e.getMessage();
+                e.printStackTrace();
+            } catch (IOException e) {
+                line = ""+ ++nExceptions+e.getMessage();
+                e.printStackTrace();
+            }
+            return fileName;
         }
     }
 }

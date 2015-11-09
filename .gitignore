@@ -10,7 +10,9 @@
 .idea/misc.xml
 .idea/modules.xml
 .idea/vcs.xml
+#all .iml files should be ignored
 app/app.iml
 passthejams.iml
 app/app.iml
 lastfm/lastfm.iml
+musicserver/musicserver.iml
