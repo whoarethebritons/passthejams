@@ -1,16 +1,10 @@
 package com.passthejams.app;
 
 import android.app.Activity;
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
-import android.view.ActionMode;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
 import android.widget.*;
 
 /**
@@ -64,7 +58,7 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
         //fields to display text in
         int[] displayText = getIntent().getIntArrayExtra(Shared.TabIntent.DISPLAY_TEXT.name());
 
-        SimpleCursorAdapter simpleCursorAdapter = new myCursorAdapter(this, row_layout, mCursor,
+        SimpleCursorAdapter simpleCursorAdapter = new JamsCursorAdapter(this, row_layout, mCursor,
                 displayFields, displayText);
 
         //set adapter
@@ -89,15 +83,6 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
         ef.passCursor(mCursor);
         //call super to perform other actions
         super.onResume();
-    }
-    public class myCursorAdapter extends SimpleCursorAdapter {
-        public myCursorAdapter(Context context, int layout, Cursor c, String[] from, int[] to) {
-            super(context, layout, c, from, to);
-        }
-        @Override
-        public void setViewImage(ImageView v, String value) {
-            Shared.getAlbumArt(getApplicationContext(), v, value);
-        }
     }
 
     public interface genericTabInterface {
