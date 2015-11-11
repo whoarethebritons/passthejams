@@ -119,7 +119,7 @@ public class TabFragment extends Fragment {
                 layout_id = R.layout.artist_layout;
                 row_id = R.layout.artist_tile;
                 projectionString = Shared.PROJECTION_ARTIST;
-                selectionString = MediaStore.Audio.Media.IS_MUSIC + "!=0";
+                selectionString = MediaStore.Audio.Media.IS_MUSIC + "!=0) GROUP BY( "+ MediaStore.Audio.Media.ARTIST_ID;
                 selectionArguments = null;
                 uri = Shared.libraryUri;
                 displayFields = new String[]{
