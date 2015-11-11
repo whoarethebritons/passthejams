@@ -19,11 +19,17 @@
             android:layout_height="fill_parent"
             android:layout_width="fill_parent">
 
-            <TabWidget
-                android:id="@android:id/tabs"
-                android:layout_height="wrap_content"
-                android:layout_width="fill_parent">
-            </TabWidget>
+            <HorizontalScrollView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content">
+
+                <TabWidget
+                    android:id="@android:id/tabs"
+                    android:layout_height="wrap_content"
+                    android:layout_width="fill_parent">
+                </TabWidget>
+            </HorizontalScrollView>
+
 
             <FrameLayout
                 android:id="@android:id/tabcontent"
