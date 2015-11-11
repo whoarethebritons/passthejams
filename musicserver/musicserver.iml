@@ -27,12 +27,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="jaudiotagger-2.2.5-javadoc" level="project" />
     <orderEntry type="library" exported="" name="gson-2.4" level="project" />
-    <orderEntry type="library" exported="" name="gson-2.4-sources" level="project" />
-    <orderEntry type="library" exported="" name="gson-2.4-javadoc" level="project" />
-    <orderEntry type="library" exported="" name="jaudiotagger-2.2.5-sources" level="project" />
     <orderEntry type="library" exported="" name="jaudiotagger-2.2.5" level="project" />
-    <orderEntry type="library" exported="" name="musicserver.musicserver" level="project" />
+    <orderEntry type="library" exported="" name="C__Users_Shadowbeing_Documents_App_passthejams_musicserver_libs_JID3_jar" level="project" />
+    <orderEntry type="library" exported="" name="C__Users_Shadowbeing_Documents_App_passthejams_musicserver_libs_jaudiotagger_2_2_5_javadoc_jar" level="project" />
+    <orderEntry type="library" exported="" name="C__Users_Shadowbeing_Documents_App_passthejams_musicserver_libs_jaudiotagger_2_2_5_sources_jar" level="project" />
   </component>
 </module>

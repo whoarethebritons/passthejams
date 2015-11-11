@@ -60,6 +60,7 @@ public class Shared {
         }
         catch(FileNotFoundException e) {
             Log.e("Shared", e.getMessage());
+            v.setImageResource(R.drawable.default_album);
         }
     }
 
@@ -81,8 +82,6 @@ public class Shared {
                 Log.e("Shared", e.getMessage());
                 test = null;
             }
-            imageView.setTag(test);
-            Log.d(TAG, imageView.toString() + ":\n" + test);
             return test;
         }
         @Override
