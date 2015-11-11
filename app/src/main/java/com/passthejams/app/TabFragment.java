@@ -30,8 +30,9 @@ public class TabFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_tab, container, false);
     }
     @Override
-    public void onStart() {
-        super.onStart();
+    public void onCreate(Bundle savedInstanceState) {
+
+        super.onCreate(savedInstanceState);
         // create the TabHost that will contain the Tabs
         TabHost tabHost = (TabHost) getActivity().findViewById(android.R.id.tabhost);
 
