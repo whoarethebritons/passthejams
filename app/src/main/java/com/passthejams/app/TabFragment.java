@@ -106,13 +106,13 @@ public class TabFragment extends Fragment {
                 layout_id = R.layout.album_layout;
                 row_id = R.layout.album_tile;
                 projectionString = Shared.PROJECTION_ALBUM;
-                selectionString = MediaStore.Audio.Media.IS_MUSIC + "!=0";
+                selectionString = null;
                 selectionArguments = null;
-                uri = Shared.libraryUri;
+                uri = Shared.albumUri;
                 displayFields = new String[]{
                         MediaStore.Audio.Albums.ARTIST,
                         MediaStore.Audio.Albums.ALBUM,
-                        MediaStore.Audio.Albums.ALBUM_ID};
+                        MediaStore.Audio.Albums._ID};
                 displayText =  new int[] {R.id.artistName, R.id.albumTitle, R.id.albumView};
                 break;
             case ARTIST:
