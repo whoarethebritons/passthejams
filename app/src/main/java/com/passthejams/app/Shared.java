@@ -28,6 +28,7 @@ public class Shared {
         DISPLAY_FIELDS, DISPLAY_TEXT }
     public enum TabType { SONG, ARTIST, ALBUM, PLAYLIST }
     static Uri libraryUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+    static Uri albumUri = MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI;
     final static String[] PROJECTION_PLAYLIST = new String[] {
             MediaStore.Audio.Playlists._ID,
             MediaStore.Audio.Playlists.NAME,
@@ -46,10 +47,9 @@ public class Shared {
             MediaStore.Audio.Albums.ALBUM_ID
     };
     final static String[] PROJECTION_ALBUM = {
-            MediaStore.Audio.Media._ID,
-            MediaStore.Audio.Albums.ARTIST,
-            MediaStore.Audio.Albums.ALBUM,
-            MediaStore.Audio.Albums.ALBUM_ID
+            "DISTINCT "+MediaStore.Audio.Albums.ALBUM,
+            MediaStore.Audio.Albums._ID,
+            MediaStore.Audio.Albums.ARTIST
     };
 
     static void getAlbumArt(Context mContext, ImageView v, String album_id) {
