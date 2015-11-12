@@ -3,11 +3,13 @@ package com.passthejams.app;
 import android.content.ContentUris;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
+import android.widget.AbsListView;
 import android.widget.ImageView;
 
 import java.io.FileNotFoundException;
@@ -41,12 +43,14 @@ public class Shared {
             MediaStore.Audio.Media.TITLE,
             MediaStore.Audio.Albums.ARTIST,
             MediaStore.Audio.Albums.ALBUM,
-            MediaStore.Audio.Albums.ALBUM_ID};
+            MediaStore.Audio.Albums.ALBUM_ID
+    };
     final static String[] PROJECTION_ALBUM = {
             MediaStore.Audio.Media._ID,
             MediaStore.Audio.Albums.ARTIST,
             MediaStore.Audio.Albums.ALBUM,
-            MediaStore.Audio.Albums.ALBUM_ID};
+            MediaStore.Audio.Albums.ALBUM_ID
+    };
 
     static void getAlbumArt(Context mContext, ImageView v, String album_id) {
         int id = Integer.parseInt(album_id);
@@ -59,42 +63,6 @@ public class Shared {
         catch(FileNotFoundException e) {
             Log.e("Shared", e.getMessage());
             v.setImageResource(R.drawable.default_album);
-        }
-    }
-
-    public static class ImageLoader extends AsyncTask<Object, String, Uri> {
-        final String TAG = "ImageLoader";
-        private View imageView;
-        @Override
-        protected Uri doInBackground(Object... params) {
-            imageView = (View) params[0];
-            String id = (String) params[1];
-            Context context = (Context) params[2];
-
-            Uri test = ContentUris.withAppendedId(
-                    Uri.parse("content://media/external/audio/albumart"), Integer.parseInt(id));
-            try {
-                context.getContentResolver().openInputStream((test));
-            }
-            catch(FileNotFoundException e) {
-                Log.e("Shared", e.getMessage());
-                test = null;
-            }
-            return test;
-        }
-        @Override
-        protected void onPostExecute(Uri uri) {
-            if(imageView != null) {
-                ImageView albumArt = (ImageView) imageView;
-                if(imageView.getTag() != null) {
-                    //Log.d(TAG, imageView.toString() + ":" + imageView.getTag().toString());
-                    albumArt.setImageURI((Uri)imageView.getTag());
-                }
-                else {
-                    //Log.d(TAG, imageView.toString() + ":" + null);
-                    albumArt.setImageResource(R.drawable.default_album);
-                }
-            }
         }
     }
 

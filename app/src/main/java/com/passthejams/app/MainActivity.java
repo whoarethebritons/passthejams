@@ -109,4 +109,5 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
     public void passCursor(Cursor c) {
         returnCursor = c;
     }
+
 }
