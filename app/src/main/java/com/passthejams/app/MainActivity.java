@@ -1,6 +1,7 @@
 package com.passthejams.app;
 
 import android.app.Activity;
+import android.app.FragmentTransaction;
 import android.app.TabActivity;
 import android.content.Intent;
 import android.database.Cursor;
@@ -18,15 +19,21 @@ import android.widget.TabHost;
 import java.util.List;
 
 
-public class MainActivity extends TabActivity implements BottomMusicFragment.OnFragmentInteractionListener,
+public class MainActivity extends Activity implements BottomMusicFragment.OnFragmentInteractionListener,
         GenericTabActivity.genericTabInterface {
     final String TAG="main";
     Cursor returnCursor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        TabFragment tf = new TabFragment();
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        ft.replace(R.id.mainContent, tf); // f1_container is your FrameLayout container
+        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        ft.addToBackStack(null);
+        ft.commit();
 
     }
 
@@ -46,6 +53,12 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            SettingFragment s1 = new SettingFragment();
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            ft.replace(R.id.mainContent, s1); // f1_container is your FrameLayout container
+            ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            ft.addToBackStack(null);
+            ft.commit();
             return true;
         }
 
