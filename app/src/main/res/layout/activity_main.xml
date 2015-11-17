@@ -8,18 +8,37 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:id="@+id/mainContent"
-        android:layout_above="@+id/bottomBar">
+        android:layout_above="@+id/spacer"
+        android:id="@+id/mainContent" android:layout_alignParentTop="true">
     </FrameLayout>
-
-    <fragment
-        android:name="com.passthejams.app.BottomMusicFragment"
-        android:id="@+id/bottomBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        tools:layout="@layout/fragment_bottom_music"/>
+    <Space android:layout_width="match_parent" android:layout_height="75dp"
+           android:layout_alignParentBottom="true"
+           android:id="@+id/spacer"
+           android:layout_centerHorizontal="true"/>
+    <SlidingDrawer
+            android:id="@+id/drawer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:allowSingleTap="false"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:handle="@+id/handle"
+            android:clickable="false"
+            android:content="@+id/content">
+        <fragment
+            android:name="com.passthejams.app.BottomMusicFragment"
+            android:id="@+id/handle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            tools:layout="@layout/fragment_bottom_music"/>
+        <fragment
+                android:name="com.passthejams.app.NowPlayingFragment"
+                android:id="@+id/content"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:layout="@layout/fragment_now_playing"/>
+    </SlidingDrawer>
 </RelativeLayout>
