@@ -1,6 +1,8 @@
 package com.passthejams.app;
 
 import android.app.Activity;
+import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.app.TabActivity;
 import android.content.Intent;
 import android.database.Cursor;
@@ -10,15 +12,13 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.AbsListView;
-import android.widget.AdapterView;
-import android.widget.ListView;
-import android.widget.TabHost;
+import android.view.View;
+import android.widget.*;
 
 import java.util.List;
 
 
-public class MainActivity extends TabActivity implements BottomMusicFragment.OnFragmentInteractionListener,
+public class MainActivity extends Activity implements BottomMusicFragment.OnFragmentInteractionListener,
         GenericTabActivity.genericTabInterface {
     final String TAG="main";
     Cursor returnCursor;
@@ -32,8 +32,10 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
         ft.replace(R.id.mainContent, tf); // f1_container is your FrameLayout container
         ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         ft.addToBackStack(null);
-        ft.commit();
-
+        ft.commit();/*
+        SlidingDrawer drawer = (SlidingDrawer) findViewById(R.id.drawer);
+        drawer.lock();
+        ImageView albumArt = (ImageView) findViewById(R.id.currentAlbumArt);*/
     }
 
     @Override
@@ -52,12 +54,12 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            SettingFragment s1 = new SettingFragment();
+            /*SettingFragment s1 = new SettingFragment();
             FragmentTransaction ft = getFragmentManager().beginTransaction();
             ft.replace(R.id.mainContent, s1); // f1_container is your FrameLayout container
             ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
             ft.addToBackStack(null);
-            ft.commit();
+            ft.commit();*/
             return true;
         }
 
@@ -126,7 +128,8 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
         FragmentManager fragmentManager = getFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         NowPlayingFragment fragment = new NowPlayingFragment();
-        fragmentTransaction.replace(R.id.fragment_container, fragment);
+        fragmentTransaction.replace(R.id.mainContent, fragment);
+        fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
     }
 }

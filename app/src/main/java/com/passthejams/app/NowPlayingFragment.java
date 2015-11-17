@@ -3,6 +3,7 @@ package com.passthejams.app;
 
 import android.os.Bundle;
 import android.app.Fragment;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +24,10 @@ public class NowPlayingFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_now_playing, container, false);
+        View root = inflater.inflate(R.layout.fragment_now_playing, container, false);
+        Toolbar toolbar = (Toolbar) root.findViewById(R.id.my_awesome_toolbar);
+        toolbar.inflateMenu(R.menu.menu_now_playing);
+        return root;
     }
 
 
