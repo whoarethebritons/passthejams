@@ -2,6 +2,7 @@ package com.passthejams.app;
 
 
 import android.app.Activity;
+import android.app.LocalActivityManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TabHost;
+import android.util.Log;
 
 
 /**
@@ -18,6 +20,7 @@ import android.widget.TabHost;
  */
 public class TabFragment extends Fragment {
 
+    final String TAG="main";
 
     public TabFragment() {
         // Required empty public constructor
@@ -28,14 +31,21 @@ public class TabFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+        Log.v(TAG,"Create tabFragment view");
         return inflater.inflate(R.layout.fragment_tab, container, false);
+
     }
     @Override
     public void onStart() {
         super.onStart();
+        LocalActivityManager lam = new LocalActivityManager(getActivity(),true);
+        lam.dispatchCreate(lam.saveInstanceState());
         // create the TabHost that will contain the Tabs
         TabHost tabHost = (TabHost) getActivity().findViewById(android.R.id.tabhost);
+        tabHost.setup(lam);
+        Log.v(TAG,"Found tabhost");
         if(tabHost.getCurrentView() == null) {
+            Log.v(TAG,"tabhost was null");
             //Name the tag that each tab has
             TabHost.TabSpec albumTab = tabHost.newTabSpec("Albums");
             TabHost.TabSpec songTab = tabHost.newTabSpec("Songs");

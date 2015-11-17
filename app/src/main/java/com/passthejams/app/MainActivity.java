@@ -1,6 +1,7 @@
 package com.passthejams.app;
 
-import android.app.*;
+import android.app.Activity;
+import android.app.TabActivity;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -9,7 +10,6 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -22,18 +22,18 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
         GenericTabActivity.genericTabInterface {
     final String TAG="main";
     Cursor returnCursor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Fragment tab = getFragmentManager().findFragmentById(R.id.mainContent);
-        FragmentManager fragmentManager = getFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        TabFragment fragment = new TabFragment();
-        fragmentTransaction.attach(tab);
-        fragmentTransaction.addToBackStack(null);
-        //fragmentTransaction.add(R.id.fragment_container, fragment);
-        fragmentTransaction.commit();
+        TabFragment tf = new TabFragment();
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        ft.replace(R.id.mainContent, tf); // f1_container is your FrameLayout container
+        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        ft.addToBackStack(null);
+        ft.commit();
+
     }
 
     @Override
@@ -52,6 +52,12 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            SettingFragment s1 = new SettingFragment();
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            ft.replace(R.id.mainContent, s1); // f1_container is your FrameLayout container
+            ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            ft.addToBackStack(null);
+            ft.commit();
             return true;
         }
 
