@@ -2,6 +2,7 @@ package com.passthejams.app;
 
 import android.app.Activity;
 import android.app.TabActivity;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -26,7 +27,9 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        Context context = getApplicationContext();
+        Intent intent = new Intent(this,NetworkService.class);
+        context.startService(intent);
 
     }
 
@@ -50,8 +53,8 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
         }
 
         //start network settings activity
-        if (id == R.id.action_network_test) {
-            Intent oManager = new Intent(this, NetworkTest.class);
+        if (id == R.id.action_network_list) {
+            Intent oManager = new Intent(this, NetworkListActivity.class);
             startActivity(oManager);
             return true;
         }
