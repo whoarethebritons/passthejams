@@ -6,8 +6,8 @@
           android:title="@string/action_settings"
           android:orderInCategory="100"
           app:showAsAction="never"/>
-     <item android:id="@+id/action_network_test"
-         android:title="Network Test"
+     <item android:id="@+id/action_network_list"
+         android:title="Network Devices"
          android:orderInCategory="100"
 
          app:showAsAction="never"/>

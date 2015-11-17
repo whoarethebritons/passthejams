@@ -1,9 +1,9 @@
 package com.passthejams.app;
 
 import android.app.Activity;
-import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.TabActivity;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -12,8 +12,10 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.*;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
+import android.widget.ListView;
+import android.widget.TabHost;
 
 import java.util.List;
 
@@ -27,15 +29,18 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Context context = getApplicationContext();
+        Intent intent = new Intent(this,NetworkService.class);
+        context.startService(intent);
+
         TabFragment tf = new TabFragment();
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.replace(R.id.mainContent, tf); // f1_container is your FrameLayout container
         ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         ft.addToBackStack(null);
-        ft.commit();/*
-        SlidingDrawer drawer = (SlidingDrawer) findViewById(R.id.drawer);
-        drawer.lock();
-        ImageView albumArt = (ImageView) findViewById(R.id.currentAlbumArt);*/
+        ft.commit();
+
     }
 
     @Override
@@ -64,8 +69,8 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         }
 
         //start network settings activity
-        if (id == R.id.action_network_test) {
-            Intent oManager = new Intent(this, NetworkTest.class);
+        if (id == R.id.action_network_list) {
+            Intent oManager = new Intent(this, NetworkListActivity.class);
             startActivity(oManager);
             return true;
         }
@@ -124,12 +129,4 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         returnCursor = c;
     }
 
-    public void nowPlaying(View view) {
-        FragmentManager fragmentManager = getFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        NowPlayingFragment fragment = new NowPlayingFragment();
-        fragmentTransaction.replace(R.id.mainContent, fragment);
-        fragmentTransaction.addToBackStack(null);
-        fragmentTransaction.commit();
-    }
 }

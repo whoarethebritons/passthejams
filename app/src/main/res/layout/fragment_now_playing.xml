@@ -5,14 +5,16 @@
              tools:context="com.passthejams.app.NowPlayingFragment">
 
     <android.support.v7.widget.Toolbar
-            android:id="@+id/my_awesome_toolbar"
+            android:id="@+id/my_toolbar"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
+            android:elevation="4dp"
             android:minHeight="?android:actionBarSize"
             android:background="?attr/colorPrimary" />
     <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:id="@+id/currentAlbumArt"
             android:src="@drawable/default_album"/>
 
 </FrameLayout>
