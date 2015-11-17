@@ -26,10 +26,12 @@ public class NowPlayingFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View root = inflater.inflate(R.layout.fragment_now_playing, container, false);
-        Toolbar toolbar = (Toolbar) root.findViewById(R.id.my_toolbar);
-        // Set an OnMenuItemClickListener to handle menu item clicks
-//        ;
+        return inflater.inflate(R.layout.fragment_now_playing, container, false);
+    }
+
+    @Override
+    public void onStart() {
+        Toolbar toolbar = (Toolbar) getActivity().findViewById(R.id.my_toolbar);
         toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
@@ -39,9 +41,7 @@ public class NowPlayingFragment extends Fragment {
         });
         toolbar.setTitle("Now Playing");
         Log.d("now playing", String.valueOf(toolbar.canShowOverflowMenu()));
-        //((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
-        return root;
+        super.onStart();
     }
-
 
 }
