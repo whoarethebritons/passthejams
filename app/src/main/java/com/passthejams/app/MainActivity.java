@@ -1,7 +1,6 @@
 package com.passthejams.app;
 
-import android.app.Activity;
-import android.app.TabActivity;
+import android.app.*;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -10,6 +9,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -26,8 +26,14 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
+        Fragment tab = getFragmentManager().findFragmentById(R.id.mainContent);
+        FragmentManager fragmentManager = getFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        TabFragment fragment = new TabFragment();
+        fragmentTransaction.attach(tab);
+        fragmentTransaction.addToBackStack(null);
+        //fragmentTransaction.add(R.id.fragment_container, fragment);
+        fragmentTransaction.commit();
     }
 
     @Override
@@ -110,4 +116,11 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
         returnCursor = c;
     }
 
+    public void nowPlaying(View view) {
+        FragmentManager fragmentManager = getFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        NowPlayingFragment fragment = new NowPlayingFragment();
+        fragmentTransaction.replace(R.id.fragment_container, fragment);
+        fragmentTransaction.commit();
+    }
 }
