@@ -1,6 +1,7 @@
 package com.passthejams.app;
 
 import android.app.Activity;
+import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.app.TabActivity;
 import android.content.Context;
@@ -186,4 +187,12 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         returnCursor = c;
     }
 
+    public void nowPlaying(View view) {
+        FragmentManager fragmentManager = getFragmentManager();
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        NowPlayingFragment fragment = new NowPlayingFragment();
+        fragmentTransaction.replace(R.id.mainContent, fragment);
+        fragmentTransaction.addToBackStack(null);
+        fragmentTransaction.commit();
+    }
 }

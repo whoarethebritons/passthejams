@@ -41,7 +41,7 @@ public class NowPlayingFragment extends Fragment {
         });
         toolbar.setTitle("Now Playing");
         Log.d("now playing", String.valueOf(toolbar.canShowOverflowMenu()));
-        //((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
+        super.onStart();
     }
 
 }
