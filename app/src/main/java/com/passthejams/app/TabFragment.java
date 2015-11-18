@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TabHost;
+import android.util.Log;
 
 
 /**
@@ -31,15 +32,21 @@ public class TabFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        Log.v(TAG, "Create tabFragment view");
+
+        Log.v(TAG,"Create tabFragment view");
         return inflater.inflate(R.layout.fragment_tab, container, false);
+
     }
 
     @Override
     public void onStart() {
         super.onStart();
         LocalActivityManager lam = new LocalActivityManager(getActivity(),true);
+
         lam.dispatchCreate(lam.saveInstanceState());
+
+        lam.dispatchResume();
+
         // create the TabHost that will contain the Tabs
         TabHost tabHost = (TabHost) getActivity().findViewById(android.R.id.tabhost);
         tabHost.setup(lam);

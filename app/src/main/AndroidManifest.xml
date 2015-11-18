@@ -28,15 +28,26 @@
 
         <activity
             android:name=".NetworkTest"
-            android:label="@string/title_activity_network_test" >
+            android:label="@string/title_activity_network_list" >
         </activity>
         <activity
             android:name=".LastFm"
             android:label="LastFm" >
-    </activity>
+        </activity>
         <activity
-                android:name=".GenericTabActivity"
-                android:label="GenericTabActivity" >
+            android:name=".GenericTabActivity"
+            android:label="GenericTabActivity" >
+        </activity>
+
+        <service
+            android:name=".NetworkService"
+            android:enabled="true"
+            android:exported="true" >
+        </service>
+
+        <activity
+            android:name=".NetworkListActivity"
+            android:label="@string/title_activity_network_list" >
         </activity>
         <activity
             android:name=".SelectedSongList"

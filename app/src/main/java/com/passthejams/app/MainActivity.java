@@ -3,6 +3,7 @@ package com.passthejams.app;
 import android.app.Activity;
 import android.app.FragmentTransaction;
 import android.app.TabActivity;
+import android.content.Context;
 import android.content.Intent;
 
 import android.database.Cursor;
@@ -27,10 +28,18 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         GenericTabActivity.genericTabInterface {
     final String TAG="main";
     Cursor returnCursor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        Context context = getApplicationContext();
+        Intent intent = new Intent(this,NetworkService.class);
+        context.startService(intent);
+
+
         TabFragment tf = new TabFragment();
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.replace(R.id.mainContent, tf); // f1_container is your FrameLayout container
@@ -56,12 +65,18 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            /*SettingFragment s1 = new SettingFragment();
+            FragmentTransaction ft = getFragmentManager().beginTransaction();
+            ft.replace(R.id.mainContent, s1); // f1_container is your FrameLayout container
+            ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            ft.addToBackStack(null);
+            ft.commit();*/
             return true;
         }
 
         //start network settings activity
-        if (id == R.id.action_network_test) {
-            Intent oManager = new Intent(this, NetworkTest.class);
+        if (id == R.id.action_network_list) {
+            Intent oManager = new Intent(this, NetworkListActivity.class);
             startActivity(oManager);
             return true;
         }
