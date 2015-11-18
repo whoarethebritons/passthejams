@@ -1,8 +1,10 @@
 package com.passthejams.app;
 
 import android.app.Activity;
+import android.app.FragmentTransaction;
 import android.app.TabActivity;
 import android.content.Intent;
+
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,15 +12,18 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TabHost;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.List;
 
 
-public class MainActivity extends TabActivity implements BottomMusicFragment.OnFragmentInteractionListener,
+public class MainActivity extends Activity implements BottomMusicFragment.OnFragmentInteractionListener,
         GenericTabActivity.genericTabInterface {
     final String TAG="main";
     Cursor returnCursor;
@@ -26,7 +31,12 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        TabFragment tf = new TabFragment();
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        ft.replace(R.id.mainContent, tf); // f1_container is your FrameLayout container
+        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        ft.addToBackStack(null);
+        ft.commit();
 
     }
 
@@ -91,11 +101,62 @@ public class MainActivity extends TabActivity implements BottomMusicFragment.OnF
             case "Songs":
                 return songListListener;
             case "Albums":
-                return null;
+                return new AdapterView.OnItemClickListener()
+                {
+                    public void onItemClick(AdapterView<?> parent,
+                                            View v, int position, long id)
+                    {
+                        String albumTitle = (String)((TextView) v.findViewById(R.id.albumTitle)).getText();
+                        SelectedSongList al = new SelectedSongList();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("TITLE", albumTitle);
+                        bundle.putBoolean("SONGLISTTYPE",true);
+                        al.setArguments(bundle);
+                        FragmentTransaction ft = getFragmentManager().beginTransaction();
+                        ft.replace(R.id.mainContent, al);
+                        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                        ft.addToBackStack(null);
+                        ft.commit();
+                    }
+                };
             case "Playlists":
-                return null;
+                return new AdapterView.OnItemClickListener()
+                {
+                    public void onItemClick(AdapterView<?> parent,
+                                            View v, int position, long id)
+                    {
+                        String playlistTitle = (String)((TextView) v.findViewById(R.id.artistName)).getText();
+                        SelectedSongList pl = new SelectedSongList();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("TITLE", playlistTitle);
+                        bundle.putBoolean("SONGLISTTYPE", false);
+                        pl.setArguments(bundle);
+                        FragmentTransaction ft = getFragmentManager().beginTransaction();
+                        ft.replace(R.id.mainContent, pl);
+                        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                        ft.addToBackStack(null);
+                        ft.commit();
+                    }
+                };
             case "Artists":
-                return null;
+                return new AdapterView.OnItemClickListener()
+                {
+                    public void onItemClick(AdapterView<?> parent,
+                                            View v, int position, long id)
+                    {
+                        String artistName = (String)((TextView) v.findViewById(R.id.artistName)).getText();
+                        SelectedAlbumList albl = new SelectedAlbumList();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("ARTISTNAME", artistName);
+                        albl.setArguments(bundle);
+                        FragmentTransaction ft = getFragmentManager().beginTransaction();
+                        ft.replace(R.id.mainContent, albl);
+                        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                        ft.addToBackStack(null);
+                        ft.commit();
+
+                    }
+                };
             default:
                 return null;
         }

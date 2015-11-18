@@ -44,10 +44,11 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
         String[] projectionString = getIntent().getStringArrayExtra(Shared.TabIntent.PROJECTION_STRING.name());
         String selectionString = getIntent().getStringExtra(Shared.TabIntent.SELECTION_STRING.name());
         String[] selectionArguments = getIntent().getStringArrayExtra(Shared.TabIntent.SELECTION_ARGS.name());
+        String sortOrder = getIntent().getStringExtra(Shared.TabIntent.SORT_ORDER.name());
         Uri uri = Uri.parse(getIntent().getStringExtra(Shared.TabIntent.URI.name()));
 
         //query the database given the passed items
-        mCursor = managedQuery(uri, projectionString, selectionString, selectionArguments, null);
+        mCursor = managedQuery(uri, projectionString, selectionString, selectionArguments, sortOrder);
 
         //get the view as a generic that extends AbsListView (i.e. GridView, ListView)
         T lv = (T) findViewById(list_id);

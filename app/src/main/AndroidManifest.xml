@@ -38,6 +38,14 @@
                 android:name=".GenericTabActivity"
                 android:label="GenericTabActivity" >
         </activity>
+        <activity
+            android:name=".SelectedSongList"
+            android:label="SelectedSongList" >
+        </activity>
+        <activity
+            android:name=".SelectedAlbumList"
+            android:label="SelectedAlbumList" >
+        </activity>
     </application>
 
 </manifest>
