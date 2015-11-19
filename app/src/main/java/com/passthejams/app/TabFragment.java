@@ -13,7 +13,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TabHost;
-import android.util.Log;
 
 
 /**
@@ -21,10 +20,11 @@ import android.util.Log;
  */
 public class TabFragment extends Fragment {
 
-    final String TAG="main";
+    final String TAG="TabFrag";
 
     public TabFragment() {
-        // Required empty public constructor
+        // Bundle to save tab, can be used for other info
+        setArguments(new Bundle());
     }
 
 
@@ -32,21 +32,25 @@ public class TabFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-
-        Log.v(TAG,"Create tabFragment view");
+        Log.v(TAG, "Create tabFragment view");
         return inflater.inflate(R.layout.fragment_tab, container, false);
 
+    }
+
+    @Override
+    //Called when a fragment starts a new fragment
+    public void onPause() {
+        super.onPause();
+        TabHost tabHost = (TabHost) getActivity().findViewById(android.R.id.tabhost);
+        getArguments().putInt("mMyCurrentTab", tabHost.getCurrentTab());
+        Log.v(TAG, "Saving tab on pause:" + tabHost.getCurrentTab());
     }
 
     @Override
     public void onStart() {
         super.onStart();
         LocalActivityManager lam = new LocalActivityManager(getActivity(),true);
-
         lam.dispatchCreate(lam.saveInstanceState());
-
-        lam.dispatchResume();
-
         // create the TabHost that will contain the Tabs
         TabHost tabHost = (TabHost) getActivity().findViewById(android.R.id.tabhost);
         tabHost.setup(lam);
@@ -82,6 +86,11 @@ public class TabFragment extends Fragment {
             tabHost.addTab(songTab);
             tabHost.addTab(artistTab);
             tabHost.addTab(playlistTab);
+            //Set tab
+            Log.v(TAG, "Getting tab:" + getArguments().getInt("mMyCurrentTab", 0));
+            tabHost.setCurrentTab(getArguments().getInt("mMyCurrentTab", 0));
+            Log.v(TAG, "Set tab to:" + tabHost.getCurrentTab());
+
         }
     }
 
