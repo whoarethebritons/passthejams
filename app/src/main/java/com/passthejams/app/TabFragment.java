@@ -51,6 +51,7 @@ public class TabFragment extends Fragment {
         super.onStart();
         LocalActivityManager lam = new LocalActivityManager(getActivity(),true);
         lam.dispatchCreate(lam.saveInstanceState());
+        lam.dispatchResume();
         // create the TabHost that will contain the Tabs
         TabHost tabHost = (TabHost) getActivity().findViewById(android.R.id.tabhost);
         tabHost.setup(lam);
