@@ -1,25 +1,19 @@
 package com.passthejams.app;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
-import android.app.TabActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.ListView;
 import android.widget.TabHost;
-
-import java.util.List;
 
 
 public class MainActivity extends Activity implements BottomMusicFragment.OnFragmentInteractionListener,
@@ -133,10 +127,18 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
 
     public void nowPlaying(View view) {
         FragmentManager fragmentManager = getFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        NowPlayingFragment fragment = new NowPlayingFragment();
-        fragmentTransaction.replace(R.id.mainContent, fragment);
-        fragmentTransaction.addToBackStack(null);
-        fragmentTransaction.commit();
+        Fragment f = fragmentManager.findFragmentById(R.id.mainContent);
+        Log.v(TAG, "backstack val: " + fragmentManager.getBackStackEntryCount());
+        if(! (f instanceof NowPlayingFragment)) {
+            Log.v(TAG, String.valueOf(f.isVisible()));
+            Log.v(TAG, "added a now playing");
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            NowPlayingFragment fragment = new NowPlayingFragment();
+            fragmentTransaction.replace(R.id.mainContent, fragment);
+            fragmentTransaction.addToBackStack("nowplaying");
+            fragmentTransaction.commit();
+        }
+
+        Log.v(TAG, "backstack val: " + fragmentManager.getBackStackEntryCount());
     }
 }
