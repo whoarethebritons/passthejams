@@ -9,6 +9,7 @@ import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
+import android.os.Binder;
 import android.os.Build;
 import android.os.Environment;
 import android.os.IBinder;
@@ -50,6 +51,7 @@ import java.util.HashSet;
  */
 public class NetworkService extends Service implements Closeable{
     private static final String TAG = "NetworkService";
+
     private boolean quit = false;
     private ServerSocket serverSocket = null;
 
@@ -74,9 +76,15 @@ public class NetworkService extends Service implements Closeable{
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
+        return mBinder;
     }
+
+    public class NetworkBinder extends Binder {
+        NetworkService getService() {
+            return NetworkService.this;
+        }
+    }
+    NetworkBinder mBinder = new NetworkBinder();
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {

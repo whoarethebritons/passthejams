@@ -6,6 +6,7 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
+
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
@@ -14,6 +15,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.TabHost;
+import android.widget.TextView;
+import android.widget.Toast;
 
 
 public class MainActivity extends Activity implements BottomMusicFragment.OnFragmentInteractionListener,
@@ -26,9 +29,11 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         Context context = getApplicationContext();
         Intent intent = new Intent(this,NetworkService.class);
         context.startService(intent);
+
 
         TabFragment tf = new TabFragment();
         FragmentTransaction ft = getFragmentManager().beginTransaction();
@@ -106,11 +111,62 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
             case "Songs":
                 return songListListener;
             case "Albums":
-                return null;
+                return new AdapterView.OnItemClickListener()
+                {
+                    public void onItemClick(AdapterView<?> parent,
+                                            View v, int position, long id)
+                    {
+                        String albumTitle = (String)((TextView) v.findViewById(R.id.albumTitle)).getText();
+                        SelectedSongList al = new SelectedSongList();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("TITLE", albumTitle);
+                        bundle.putBoolean("SONGLISTTYPE",true);
+                        al.setArguments(bundle);
+                        FragmentTransaction ft = getFragmentManager().beginTransaction();
+                        ft.replace(R.id.mainContent, al);
+                        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                        ft.addToBackStack(null);
+                        ft.commit();
+                    }
+                };
             case "Playlists":
-                return null;
+                return new AdapterView.OnItemClickListener()
+                {
+                    public void onItemClick(AdapterView<?> parent,
+                                            View v, int position, long id)
+                    {
+                        String playlistTitle = (String)((TextView) v.findViewById(R.id.artistName)).getText();
+                        SelectedSongList pl = new SelectedSongList();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("TITLE", playlistTitle);
+                        bundle.putBoolean("SONGLISTTYPE", false);
+                        pl.setArguments(bundle);
+                        FragmentTransaction ft = getFragmentManager().beginTransaction();
+                        ft.replace(R.id.mainContent, pl);
+                        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                        ft.addToBackStack(null);
+                        ft.commit();
+                    }
+                };
             case "Artists":
-                return null;
+                return new AdapterView.OnItemClickListener()
+                {
+                    public void onItemClick(AdapterView<?> parent,
+                                            View v, int position, long id)
+                    {
+                        String artistName = (String)((TextView) v.findViewById(R.id.artistName)).getText();
+                        SelectedAlbumList albl = new SelectedAlbumList();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("ARTISTNAME", artistName);
+                        albl.setArguments(bundle);
+                        FragmentTransaction ft = getFragmentManager().beginTransaction();
+                        ft.replace(R.id.mainContent, albl);
+                        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                        ft.addToBackStack(null);
+                        ft.commit();
+
+                    }
+                };
             default:
                 return null;
         }
