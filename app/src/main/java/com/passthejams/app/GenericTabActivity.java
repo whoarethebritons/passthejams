@@ -26,12 +26,13 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
     Cursor mCursor;
     final String TAG= "Generic Tab";
     int list_id;
+    String tabType;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-
+        tabType = getIntent().getStringExtra(Shared.TabIntent.TYPE.name());
         //the fields to make the layout
         int layout_id = getIntent().getIntExtra(Shared.TabIntent.LAYOUT.name(), R.layout.song_layout);
         list_id = getIntent().getIntExtra(Shared.TabIntent.LISTVIEW.name(), android.R.id.list);
@@ -68,7 +69,7 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
         genericTabInterface ef = (genericTabInterface) getParent();
         lv.setOnItemClickListener(ef.getListener());
         //send over cursor
-        ef.passCursor(mCursor);
+        ef.passCursor(mCursor, tabType);
     }
     //use onResume so that the cursor gets updated each time the tab is switched
     @Override
@@ -81,13 +82,13 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
         //set click listener
         lv.setOnItemClickListener(ef.getListener());
         //pass cursor
-        ef.passCursor(mCursor);
+        ef.passCursor(mCursor, tabType);
         //call super to perform other actions
         super.onResume();
     }
 
     public interface genericTabInterface {
         AdapterView.OnItemClickListener getListener();
-        void passCursor(Cursor c);
+        void passCursor(Cursor c, String type);
     }
 }

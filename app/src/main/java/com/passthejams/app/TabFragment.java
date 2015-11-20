@@ -183,6 +183,7 @@ public class TabFragment extends Fragment {
         retIntent.putExtra(Shared.TabIntent.URI.name(), uri.toString());
         retIntent.putExtra(Shared.TabIntent.DISPLAY_FIELDS.name(), displayFields);
         retIntent.putExtra(Shared.TabIntent.DISPLAY_TEXT.name(), displayText);
+        retIntent.putExtra(Shared.TabIntent.TYPE.name(), type.name());
         return retIntent;
     }
 

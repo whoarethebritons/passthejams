@@ -98,5 +98,4 @@ public class SelectedAlbumList extends Fragment {
         lv.setAdapter(simpleCursorAdapter);
 
     }
-
 }

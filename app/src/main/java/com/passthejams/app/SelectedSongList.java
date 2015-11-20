@@ -72,16 +72,12 @@ public class SelectedSongList extends Fragment {
 
             //set adapter
             lv.setAdapter(simpleCursorAdapter);
-            //get click listener
-            lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                public void onItemClick(AdapterView<?> parent,
-                                        View v, int position, long id) {
-                    String selected =((TextView)v.findViewById(R.id.songView)).getText().toString();
+            genericTabInterface e = (genericTabInterface) getActivity();
 
-                    Toast toast=Toast.makeText(getActivity(), "I want to play the song:\n"+selected, Toast.LENGTH_SHORT);
-                    toast.show();
-                }
-            });
+            //get click listener
+            lv.setOnItemClickListener(e.getListener());
+            //pass cursor
+            e.passCursor(mCursor, Shared.TabType.SONG.name());
         }
         //else we got a playlist
         else{
@@ -135,6 +131,26 @@ public class SelectedSongList extends Fragment {
         }
     }
 
+    //use onResume so that the cursor gets updated each time the tab is switched
+    @Override
+    public void onResume() {
+        Log.v(TAG, "on tab changed");
+        //get the AbsListView
+        ListView lv = (ListView) getActivity().findViewById(android.R.id.list);
+        Activity a = getActivity();
+        genericTabInterface ef = (genericTabInterface) a;
+        //set click listener
+        lv.setOnItemClickListener(ef.getListener());
+        //pass cursor
+        ef.passCursor(mCursor, Shared.TabType.SONG.name());
+        //call super to perform other actions
+        super.onResume();
+    }
+
+    public interface genericTabInterface {
+        AdapterView.OnItemClickListener getListener();
+        void passCursor(Cursor c, String s);
+    }
 
 
 }

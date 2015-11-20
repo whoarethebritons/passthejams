@@ -6,7 +6,6 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
-
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,11 +15,10 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.TabHost;
 import android.widget.TextView;
-import android.widget.Toast;
 
 
 public class MainActivity extends Activity implements BottomMusicFragment.OnFragmentInteractionListener,
-        GenericTabActivity.genericTabInterface {
+        GenericTabActivity.genericTabInterface, SelectedSongList.genericTabInterface{
     final String TAG="main";
     Cursor returnCursor;
 
@@ -107,6 +105,33 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
     @Override
     public AdapterView.OnItemClickListener getListener() {
         TabHost tabHost = (TabHost) findViewById(android.R.id.tabhost);
+        if(tabHost == null) {
+            FragmentManager fragmentManager = getFragmentManager();
+            Fragment f = fragmentManager.findFragmentById(R.id.mainContent);
+            if((f instanceof SelectedSongList)) {
+                return songListListener;
+            }
+            else if(f instanceof SelectedAlbumList) {
+                return new AdapterView.OnItemClickListener()
+                {
+                    public void onItemClick(AdapterView<?> parent,
+                                            View v, int position, long id)
+                    {
+                        String albumTitle = (String)((TextView) v.findViewById(R.id.albumTitle)).getText();
+                        SelectedSongList al = new SelectedSongList();
+                        Bundle bundle = new Bundle();
+                        bundle.putString("TITLE", albumTitle);
+                        bundle.putBoolean("SONGLISTTYPE",true);
+                        al.setArguments(bundle);
+                        FragmentTransaction ft = getFragmentManager().beginTransaction();
+                        ft.replace(R.id.mainContent, al);
+                        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+                        ft.addToBackStack(null);
+                        ft.commit();
+                    }
+                };
+            }
+        }
         switch(tabHost.getCurrentTabTag()) {
             case "Songs":
                 return songListListener;
@@ -177,8 +202,10 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
     so that it may send it to the Fragment
      */
     @Override
-    public void passCursor(Cursor c) {
-        returnCursor = c;
+    public void passCursor(Cursor c, String type) {
+        if(type.equals(Shared.TabType.SONG.name())) {
+            returnCursor = c;
+        }
     }
 
     public void nowPlaying(View view) {
