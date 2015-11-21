@@ -16,6 +16,7 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import java.util.ArrayList;
+import java.util.TreeMap;
 
 public class BottomMusicFragment extends Fragment{
     //boolean value to hold whether the service is bound or not
@@ -86,6 +87,7 @@ public class BottomMusicFragment extends Fragment{
                 Log.v(TAG, "receiving");
                 String artLocation = intent.getStringExtra(Shared.Broadcasters.ART_VALUE.name());
                 ImageView play = (ImageView) getActivity().findViewById(R.id.currentAlbumArt);
+                mListener.setImageVal(artLocation);
                 //method that will set the image to whatever is at the uri
                 //Shared.getAlbumArt(String s) will resolve the uri
                 Shared.getAlbumArt(context, play, artLocation);
@@ -275,11 +277,15 @@ public class BottomMusicFragment extends Fragment{
         super.onDestroy();
     }
 
+    public TreeMap<Integer, TrackInfo> queue() {
+        return mService.getQueue();
+    }
+
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(AdapterView.OnItemClickListener s);
         Cursor currentViewCursor();
         //unused right now
-        Activity setActivity();
+        void setImageVal(String albumid);
     }
 
 }

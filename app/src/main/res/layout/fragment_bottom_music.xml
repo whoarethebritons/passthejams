@@ -9,6 +9,7 @@
         android:layout_height="75dp"
         android:layout_alignParentLeft="true"
         android:onClick="nowPlaying"
+        android:src="@drawable/default_album"
         android:id="@+id/currentAlbumArt"/>
 
     <Button

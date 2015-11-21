@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:orientation="vertical" android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Example Song"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:id="@+id/songView"/>
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Example Artist"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:id="@+id/artistView"
+            android:layout_below="@+id/songView"
+            android:layout_toLeftOf="@+id/artView" />
+</RelativeLayout>

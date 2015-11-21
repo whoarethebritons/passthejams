@@ -96,11 +96,6 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         return returnCursor;
     }
 
-    @Override
-    public Activity setActivity() {
-        return this;
-    }
-
     /* getListener takes the Listener from the Fragment and passes it to the Tab */
     @Override
     public AdapterView.OnItemClickListener getListener() {
@@ -208,17 +203,43 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         }
     }
 
+    String albumid;
+    @Override
+    public void setImageVal(String i) {
+        albumid = i;
+    }
+
     public void nowPlaying(View view) {
         FragmentManager fragmentManager = getFragmentManager();
         Fragment f = fragmentManager.findFragmentById(R.id.mainContent);
         Log.v(TAG, "backstack val: " + fragmentManager.getBackStackEntryCount());
         if(! (f instanceof NowPlayingFragment)) {
+            Bundle b = new Bundle();
+            b.putString(Shared.Broadcasters.ART_VALUE.name(), albumid);
             Log.v(TAG, String.valueOf(f.isVisible()));
             Log.v(TAG, "added a now playing");
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             NowPlayingFragment fragment = new NowPlayingFragment();
+            fragment.setArguments(b);
             fragmentTransaction.replace(R.id.mainContent, fragment);
             fragmentTransaction.addToBackStack("nowplaying");
+            fragmentTransaction.commit();
+        }
+
+        Log.v(TAG, "backstack val: " + fragmentManager.getBackStackEntryCount());
+    }
+
+    public void showQueue(View view) {
+        FragmentManager fragmentManager = getFragmentManager();
+        Fragment f = fragmentManager.findFragmentById(R.id.mainContent);
+        Log.v(TAG, "backstack val: " + fragmentManager.getBackStackEntryCount());
+        if(! (f instanceof NowPlayingFragment.Queue)) {
+            Log.v(TAG, String.valueOf(f.isVisible()));
+            Log.v(TAG, "added a now playing");
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            NowPlayingFragment.Queue fragment = new NowPlayingFragment.Queue();
+            fragmentTransaction.replace(R.id.mainContent, fragment);
+            fragmentTransaction.addToBackStack("queue");
             fragmentTransaction.commit();
         }
 

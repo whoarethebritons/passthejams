@@ -12,6 +12,7 @@ import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import de.umass.lastfm.Track;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -280,5 +281,9 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     /* added to get TrackInfo to send to LastFm */
     public TrackInfo getCurrentPlaying() {
         return songqueue.get(playPosition);
+    }
+
+    public TreeMap<Integer, TrackInfo> getQueue() {
+        return songqueue;
     }
 }
