@@ -33,11 +33,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Service to handle all networking requests.
@@ -151,6 +155,52 @@ public class NetworkService extends Service implements Closeable{
                 }
             }
         }
+    }
+
+    public ArrayList<Device> getDevices() {
+        ArrayList<Device> devices = new ArrayList<>();
+        for(String deviceName:networkDevices.keySet()) {
+            NsdServiceInfo info = networkDevices.get(deviceName);
+            Device d = new Device();
+            d.host = info.getHost();
+            d.port = info.getPort();
+            d.name = deviceName;
+            devices.add(d);
+        }
+        return devices;
+    }
+
+    public void getSongs(final Device device, final Callback callback) {
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                Socket s = null;
+                BufferedReader in = null;
+                PrintWriter out = null;
+                try {
+                    s = new Socket(device.host,device.port);
+                    in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+                    out = new PrintWriter(s.getOutputStream());
+                    out.println("getSongs");
+                    out.flush();
+                    String songs = in.readLine();
+                    callback.stringCallback(NetworkService.this,device,songs);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    if(out != null)try{out.close();}catch (Exception e){}
+                    out = null;
+                    if(in != null)try{in.close();}catch (Exception e){}
+                    in = null;
+                    if(s != null)try{s.close();}catch (Exception e){}
+                    s = null;
+                }
+            }
+        };
+        new Thread(r).start();
+    }
+    public interface Callback {
+        void stringCallback(NetworkService service, Device device, String response);
     }
 
     private class ConnectionHelper implements Runnable {
@@ -427,6 +477,13 @@ public class NetworkService extends Service implements Closeable{
                 Log.v(TAG,"Connected to " + serviceInfo);
             }
         };
+    }
+
+    public static class Device implements Serializable {
+        private static final long serialVersionUID = 0L;
+        public InetAddress  host;
+        public int          port;
+        public String       name;
     }
 
 }

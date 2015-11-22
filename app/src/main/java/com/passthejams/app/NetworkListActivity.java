@@ -9,14 +9,25 @@ import android.os.Bundle;
 import android.app.Activity;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.View;
+import android.widget.Adapter;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class NetworkListActivity extends Activity {
     private static final String TAG = "NetworkListActivity";
     private NetworkService mService = null;
+    private ArrayList<NetworkService.Device> deviceList;
 
     private ServiceConnection conn = new ServiceConnection() {
 
@@ -61,18 +72,62 @@ public class NetworkListActivity extends Activity {
         ListView listView = (ListView) findViewById(R.id.listView2);
 
         ArrayList<String> devices = new ArrayList<>();
+        deviceList = null;
 
         if(mService != null) {
-            for(String key:mService.networkDevices.keySet()) {
-                String item = key+" ";
-                NsdServiceInfo info = mService.networkDevices.get(key);
-                item += info.getHost() + ":" + info.getPort();
+            deviceList = mService.getDevices();
+            for(NetworkService.Device d:deviceList) {
+                String item = d.name+" ";
+                item += d.host + ":" + d.port;
                 devices.add(item);
                 Log.d(TAG,item);
             }
         }
 
+        //Yes, all the nested callbacks
         ArrayAdapter adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,devices);
         listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                NetworkService.Device d = deviceList.get(position);
+                Log.d(TAG,"Selected " + d.name+" "+d.host+":"+d.port);
+                ArrayList<String> list = new ArrayList<String>();
+                list.add("Loading");
+                ArrayAdapter adapter = new ArrayAdapter(NetworkListActivity.this,android.R.layout.simple_list_item_1,list);
+                ListView listView = (ListView) findViewById(R.id.listView2);
+                listView.setAdapter(adapter);
+
+                mService.getSongs(d, new NetworkService.Callback() {
+                    @Override
+                    public void stringCallback(NetworkService service, NetworkService.Device device, String response) {
+                        Log.d(TAG,"Response from "+device.host+":"+device.port+" = "+response);
+                        JsonArray a = new JsonParser().parse(response).getAsJsonArray();
+                        ArrayList<String> songs = new ArrayList<String>();
+                        for(JsonElement o:a) {
+                            JsonObject obj = o.getAsJsonObject();
+                            String line = obj.getAsJsonPrimitive("title").getAsString();
+                            songs.add(line);
+                        }
+                        ArrayAdapter adapter = new ArrayAdapter(NetworkListActivity.this,android.R.layout.simple_list_item_1,songs);
+                        ListView listView = (ListView) findViewById(R.id.listView2);
+                        //listView.setAdapter(adapter);
+                        UpdateList uiUpdate = new UpdateList();
+                        uiUpdate.listView = listView;
+                        uiUpdate.adapter = adapter;
+                        runOnUiThread(uiUpdate);
+                    }
+                });
+            }
+        });
+    }
+
+    private class UpdateList implements Runnable {
+        public ListView listView;
+        public ArrayAdapter adapter;
+        @Override
+        public void run() {
+            listView.setAdapter(adapter);
+        }
     }
 }
