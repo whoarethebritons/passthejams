@@ -155,7 +155,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
                     public void onItemClick(AdapterView<?> parent,
                                             View v, int position, long id)
                     {
-                        String playlistTitle = (String)((TextView) v.findViewById(R.id.artistName)).getText();
+                        String playlistTitle = (String)((TextView) v.findViewById(R.id.playlistName)).getText();
                         SelectedSongList pl = new SelectedSongList();
                         Bundle bundle = new Bundle();
                         bundle.putString("TITLE", playlistTitle);

@@ -159,15 +159,15 @@ public class TabFragment extends Fragment {
                 sortOrder = (MediaStore.Audio.Artists.ARTIST + " ASC");
                 break;
             case PLAYLIST:
-                layout_id = R.layout.artist_layout;
-                row_id = R.layout.artist_tile;
+                layout_id = R.layout.playlist_layout;
+                row_id = R.layout.playlist_tile;
                 projectionString = Shared.PROJECTION_PLAYLIST;
                 selectionString = null;
                 selectionArguments = null;
                 uri = MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI;
                 displayFields = new String[]{
-                        MediaStore.Audio.Playlists.NAME,MediaStore.Audio.Playlists._ID};
-                displayText =  new int[] {R.id.artistName, R.id.albumView};
+                        MediaStore.Audio.Playlists.NAME,MediaStore.Audio.Playlists.NAME};
+                displayText =  new int[] {R.id.playlistName, R.id.playlistLetter};
                 sortOrder = (MediaStore.Audio.Playlists.NAME + " ASC");
                 break;
             default:
