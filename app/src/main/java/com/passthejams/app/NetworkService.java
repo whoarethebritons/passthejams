@@ -103,9 +103,24 @@ public class NetworkService extends Service implements Closeable{
     }
 
     @Override
+    public void onDestroy() {
+        try {
+            close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void close() throws IOException {
         quit = true;
         serverSocket.close();
+        serverSocket = null;
+        if(mNsdManager != null) {
+            mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+            mNsdManager.unregisterService(mRegistrationListener);
+            mNsdManager = null;
+        }
     }
 
     /**
@@ -121,6 +136,7 @@ public class NetworkService extends Service implements Closeable{
 
         @Override
         public void run() {
+            Log.v(TAG,getSongs());
             try {
                 service.serverSocket = new ServerSocket(service.port);
             } catch (IOException e) {
@@ -272,14 +288,19 @@ public class NetworkService extends Service implements Closeable{
             int id = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
 
             JsonObject obj = new JsonObject();
-            obj.addProperty("title",cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)));
-            obj.addProperty("artist",cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)));
+            obj.addProperty("title", cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)));
+            obj.addProperty("artist", cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)));
             obj.addProperty("album",cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)));
-            obj.addProperty("_id",cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
-            obj.addProperty("album_id",cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)));
+            obj.addProperty("_id", cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
+            obj.addProperty("album_id", cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)));
             Uri uri2 = ContentUris.withAppendedId(Shared.libraryUri, id);
             File f = new File(uri2.getPath());
-            obj.addProperty("file_name",f.getName());
+            String fileName = f.getName();
+            Cursor cursor1 =  getContentResolver().query(uri2, new String[]{MediaStore.Audio.AudioColumns.DISPLAY_NAME}, null, null, null);
+            if(cursor1 != null && cursor1.moveToFirst()) {
+                fileName = cursor1.getString(0);
+            }
+            obj.addProperty("file_name", fileName);
             array.add(obj);
         }
         cursor.close();
