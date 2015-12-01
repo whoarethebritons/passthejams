@@ -106,24 +106,21 @@ public class BottomMusicFragment extends Fragment{
         Button previous = (Button) getActivity().findViewById(R.id.previousButton);
         previous.setOnClickListener(buttonListeners(Shared.Service.PREVIOUS, false));
 
-        Button shuffle = (Button) getActivity().findViewById(R.id.shuffleButton);
         /* shuffle button is the LastFm button right now */
-        shuffle.setOnClickListener(new View.OnClickListener() {
+        Button lastFmShuffle = (Button) getActivity().findViewById(R.id.lastfmButton);
+        lastFmShuffle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //must be on a new thread because of NetworkOnMainException
                 Thread newThread = new Thread(new Runnable() {
                     public void run() {
                         Looper.prepare();
-                        if(mService.getCurrentPlaying() != null) {
+                        if (mService.getCurrentPlaying() != null) {
                             //get the ArrayList from LastFm
                             ArrayList<TrackInfo> test = new LastFm(getActivity().getApplicationContext(),
                                     mService.getCurrentPlaying()).generateOrGetSimilar(getActivity().getContentResolver());
                             //call the service passing the ArrayList
                             mService.addSimilarToQueue(test);
-                        /*for (TrackInfo t: test) {
-                            Log.v(TAG, t.name);
-                        }*/
                         }
                     }
                 });
@@ -132,6 +129,25 @@ public class BottomMusicFragment extends Fragment{
             }
         });
 
+
+        Button shuffle = (Button) getActivity().findViewById(R.id.shuffleButton);
+        shuffle.setTag(false);
+        shuffle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean shuffleVal = (boolean) v.getTag();
+                v.setTag(!shuffleVal);
+                shuffleVal = (boolean) v.getTag();
+                //create an intent so that the broadcast receiver can filter
+                Intent shuffleUpdate = new Intent(Shared.Service.BROADCAST_SHUFFLE.name());
+                shuffleUpdate.putExtra(Shared.Service.SHUFFLE_VALUE.name(), shuffleVal);
+                LocalBroadcastManager localBroadcastManager =
+                        LocalBroadcastManager.getInstance(getActivity().getApplicationContext());
+                localBroadcastManager.sendBroadcast(shuffleUpdate);
+                Button play = (Button) getActivity().findViewById(R.id.playButton);
+                play.performClick();
+            }
+        });
     }
 
     /*
@@ -194,7 +210,7 @@ public class BottomMusicFragment extends Fragment{
                                             intent.getIntExtra(Shared.Main.POSITION.name(), 0),
                                             false, false);
                             mService.serviceOnPlay(queueObjectInfo,
-                                    intent.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), true);
+                                    intent.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), false);
                         }
                         break;
                     case NEXT:

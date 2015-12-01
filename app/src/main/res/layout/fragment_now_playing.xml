@@ -24,4 +24,15 @@
             android:id="@+id/button" android:layout_below="@+id/my_toolbar" android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"/>
 
+
+        <!--<Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ic_action_repeat"
+                android:layout_gravity="left"
+                android:layout_alignParentBottom="true"
+                android:id="@+id/repeatButton"/>-->
+
+
 </RelativeLayout>

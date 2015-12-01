@@ -1,32 +1,31 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_horizontal"
+              android:orientation="vertical"
+             android:stretchColumns="*"
     tools:context="com.passthejams.app.BottomMusicFragment">
 
+    <TableRow android:layout_width="wrap_content" android:layout_height="wrap_content"
+            >
     <ImageView
         android:layout_width="75dp"
         android:layout_height="75dp"
-        android:layout_alignParentLeft="true"
         android:onClick="nowPlaying"
         android:src="@drawable/default_album"
-        android:id="@+id/currentAlbumArt"/>
+        android:id="@+id/currentAlbumArt" android:contentDescription="albumart"/>
 
     <Button
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/currentAlbumArt"
-        android:layout_centerInParent="true"
         android:background="@android:drawable/ic_media_previous"
         android:id="@+id/previousButton"
         android:singleLine="false" />
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/playPause"
-        android:layout_centerInParent="true"
-        android:layout_toRightOf="@+id/previousButton">
+        android:id="@+id/playPause">
         <Button
             style="?android:attr/buttonStyleSmall"
             android:layout_width="wrap_content"
@@ -49,18 +48,21 @@
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/playPause"
-        android:layout_centerInParent="true"
         android:background="@android:drawable/ic_media_next"
         android:id="@+id/nextButton" />
-
     <Button
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/nextButton"
-        android:layout_centerInParent="true"
-        android:text="Shuffle"
-        android:id="@+id/shuffleButton" />
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ic_action_shuffle"
+            android:id="@+id/shuffleButton" />
+        <Button
+                android:visibility="invisible"
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/last_fm"
+                android:id="@+id/lastfmButton"/>
+    </TableRow>
 
-</RelativeLayout>
+</TableLayout>

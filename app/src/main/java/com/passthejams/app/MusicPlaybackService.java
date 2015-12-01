@@ -1,8 +1,7 @@
 package com.passthejams.app;
 
 import android.app.Service;
-import android.content.ContentUris;
-import android.content.Intent;
+import android.content.*;
 import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -17,6 +16,7 @@ import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.TreeMap;
 
 /**
@@ -87,9 +87,12 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     //position in treemap
     int playPosition;
+    boolean mShuffle = false;
+    //int mRepeat = 0; //where mRepeat=0 is off, 1 is repeat queue, 2 is repeat song
 
     //broadcast manager to update ui
     LocalBroadcastManager localBroadcastManager;
+    BroadcastReceiver shuffleReceiver;//, repeatReceiver;
 
     JamsQueue<Integer, TrackInfo> songqueue = new JamsQueue<>();
 
@@ -101,6 +104,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     @Override
     public void onCreate() {
         super.onCreate();
+        localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
         songqueue.setOnQueueChangeListener(new NowPlayingFragment.OnQueueChangeListener() {
             @Override
             public void onEvent() {
@@ -116,6 +120,34 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         //create listeners for when the media player has loaded & finishes playing
         mMediaPlayer.setOnPreparedListener(this);
         mMediaPlayer.setOnCompletionListener(this);
+
+        /*button switching handling*/
+        shuffleReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.v(TAG, "receiving shuffle clicked");
+                mShuffle = intent.getBooleanExtra(Shared.Service.SHUFFLE_VALUE.name(), false);
+                Log.d(TAG, String.valueOf(mShuffle));
+            }
+        };
+        //actual registration of that listener
+        localBroadcastManager.registerReceiver(shuffleReceiver,
+                new IntentFilter(Shared.Service.BROADCAST_SHUFFLE.name()));
+
+
+        /*button switching handling*//*
+        repeatReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.v(TAG, "receiving repeat clicked");
+                mRepeat = intent.getIntExtra(Shared.Service.REPEAT_VALUE.name(), 0);
+            }
+        };
+        //actual registration of that listener
+        localBroadcastManager.registerReceiver(repeatReceiver,
+                new IntentFilter(Shared.Service.BROADCAST_REPEAT.name()));*/
+
+
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -155,20 +187,28 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     /* takes QueueObjectInfo inputQ which allows it to create the queue
      * boolean discard which tells it whether to discard a pause or not
-     * boolean discardQ which tells it whether to discard the queue or not*/
+     * boolean discardQ which tells it whether to discard the queue or not
+     *      if discardQ is false, the queue is discarded*/
     public void serviceOnPlay(QueueObjectInfo inputQ, boolean discard, boolean discardQ) {
         Log.v(TAG, "Cursor size:" + inputQ.mCursor.getCount());
         int temp = 0;
 
         int mPlayOrder = 0;
-        if(!discardQ) {
-            songqueue.clear();
-        }
+
         //keeping queue
         if(!discardQ) {
+            discard = true;
+            songqueue.clear();
+            ArrayList<Integer> playOrders = new ArrayList<Integer>();
+            for(int i = 0; i < inputQ.mCursor.getCount(); i++) {
+                playOrders.add(i);
+            }
+            if(mShuffle) {
+                Collections.shuffle(playOrders);
+            }
             //add all songs from the current cursor to the queue
             while (inputQ.mCursor.moveToPosition(temp)) {
-                songqueue.put(mPlayOrder, new TrackInfo(
+                songqueue.put(playOrders.get(mPlayOrder), new TrackInfo(
                         inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media._ID)),
                         inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)),
                         inputQ.mCursor.getString(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
@@ -178,7 +218,9 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
                 mPlayOrder++;
                 temp++;
             }
+
         }
+        Log.d(TAG, songqueue.toString());
         //handle whether this is a new click or not
         if(discard || pausedSongHolder.index == -1) {
             discardPause();
@@ -215,7 +257,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             Log.v(TAG, "sending over album id: " + trackInfo);
             Gson g = new Gson();
             albumArt.putExtra(Shared.Broadcasters.ART_VALUE.name(), g.toJson(trackInfo, TrackInfo.class));
-            localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
+
             localBroadcastManager.sendBroadcast(albumArt);
 
             try {
@@ -303,8 +345,11 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         songqueue.put(playOrder, baseSong);
         //add all of the similar songs
         for(TrackInfo t : trackInfos) {
-            if(t != baseSong) {
+            if(!t.equals(baseSong)) {
                 songqueue.put(++playOrder, t);
+            }
+            else {
+                Log.d(TAG, "added song is base song");
             }
         }
         discardPause();
