@@ -16,6 +16,7 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
@@ -351,7 +352,18 @@ public class NetworkService extends Service implements Closeable{
 
     private void sendSong(int id, OutputStream out) {
         Uri uri = ContentUris.withAppendedId(Shared.libraryUri, id);
-        File f = new File(uri.getPath());
+        Log.v(TAG,"Sending uri "+uri);
+        Cursor cursor = getContentResolver().query(uri,new String[]{MediaStore.Audio.AudioColumns.DATA},null,null,null);
+        File f = null;
+        if(cursor != null) {
+            if(cursor.moveToFirst()) {
+                f = new File(cursor.getString(0));
+            }
+            cursor.close();;
+        }
+        if(f==null) {
+            f = new File(uri.getPath());
+        }
         sendFile(f, out);
     }
 
@@ -413,6 +425,7 @@ public class NetworkService extends Service implements Closeable{
         File songFile = new File(dir,song.file_name);
         recieveFile(songFile, in);
 
+
         final Song song2 = new Song();
         MediaScannerConnection.OnScanCompletedListener listener = new MediaScannerConnection.OnScanCompletedListener() {
             //this is really annoying
@@ -421,13 +434,15 @@ public class NetworkService extends Service implements Closeable{
             public void onScanCompleted(String s, Uri uri) {
                 synchronized (song) {
                     if(uri!=null) {
+                        Log.v(TAG,"Added to media store "+uri);
                         song.loadFromUri(uri);
                     }
                     song.notifyAll();
                 }
             }
         };
-        MediaScannerConnection.scanFile(context, new String[]{songFile.getAbsolutePath()}, null, listener);
+        Log.v(TAG,"Adding file to mediastore "+songFile.getAbsolutePath()+ " mime "+song.getMimeType());
+        MediaScannerConnection.scanFile(context, new String[]{songFile.getPath()}, new String[]{song.getMimeType()}, listener);
         synchronized (song2) {
             try {
                 song2.wait();
@@ -478,6 +493,9 @@ public class NetworkService extends Service implements Closeable{
         } finally {
             if(fout != null) try{fout.close();}catch (IOException e){};
             fout = null;
+        }
+        if(!f.exists()) {
+            Log.e(TAG,"Written file "+f.getAbsolutePath()+" doesn't exist");
         }
         Log.v(TAG,"Wrote "+total+" bytes");
     }
@@ -653,6 +671,13 @@ public class NetworkService extends Service implements Closeable{
 
         public String toJsonString() {
             return new Gson().toJson(toJson());
+        }
+
+        public String getMimeType() {
+            int index = file_name.lastIndexOf(".")+1;
+            String extension = file_name.substring(index).toLowerCase();
+            MimeTypeMap mime = MimeTypeMap.getSingleton();
+            return mime.getMimeTypeFromExtension(extension);
         }
     }
 
