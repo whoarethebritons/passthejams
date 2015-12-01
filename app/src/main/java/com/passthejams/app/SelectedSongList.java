@@ -51,7 +51,7 @@ public class SelectedSongList extends Fragment {
             //query the database for album sorted by track number
             mCursor = getActivity().managedQuery(Shared.libraryUri, Shared.PROJECTION_SONG,
                     MediaStore.Audio.Media.IS_MUSIC + "!=0 AND " +
-                    MediaStore.Audio.Albums.ALBUM + " = " + "'" + listTitle + "'",
+                    MediaStore.Audio.Albums.ALBUM + " = " + "'" + listTitle.replace("'","''") + "'",
                     null, (MediaStore.Audio.Media.TRACK + " ASC"));
 
             //get the view as a ListView
