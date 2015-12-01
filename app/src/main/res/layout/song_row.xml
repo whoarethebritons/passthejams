@@ -8,23 +8,31 @@
         android:layout_height="wrap_content"
         android:text="Example Song"
         android:textAppearance="?android:attr/textAppearanceLarge"
+        android:singleLine="true"
         android:id="@+id/songView"
-        android:layout_toLeftOf="@+id/artView" />
+        android:layout_toLeftOf="@+id/artView"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentEnd="false"
+        android:layout_alignParentStart="false" />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Example Artist"
         android:textAppearance="?android:attr/textAppearanceMedium"
+        android:singleLine="true"
         android:id="@+id/artistView"
         android:layout_below="@+id/songView"
-        android:layout_toLeftOf="@+id/artView" />
+        android:layout_toLeftOf="@+id/artView"
+        android:layout_alignParentLeft="true" />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Example Album"
         android:id="@+id/albumView"
         android:layout_below="@+id/artistView"
-        android:layout_toLeftOf="@+id/artView" />
+        android:layout_toLeftOf="@+id/artView"
+        android:singleLine="true"
+        android:layout_alignParentLeft="true" />
 
     <ImageView
         android:layout_width="75dp"
@@ -33,5 +41,6 @@
         android:id="@+id/artView"
         android:src="@drawable/default_album"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"/>
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true" />
 </RelativeLayout>

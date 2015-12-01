@@ -3,6 +3,7 @@ package com.passthejams.app;
 import android.app.Activity;
 import android.app.Fragment;
 import android.database.Cursor;
+import android.database.MergeCursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -24,7 +25,7 @@ public class SelectedSongList extends Fragment {
     final String TAG= "SongList";
     String listTitle;
     int playlistID;
-    boolean songListType;//1 for album list 0 for playlist list
+    boolean albumSongList;//1 for album list 0 for playlist list
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -39,19 +40,16 @@ public class SelectedSongList extends Fragment {
 
         int layout_id = R.layout.song_layout;
         Bundle bundle = this.getArguments();
-        songListType = bundle.getBoolean("SONGLISTTYPE");
+        albumSongList = bundle.getBoolean("SONGLISTTYPE");
         listTitle = bundle.getString("TITLE");
         int row_layout = R.layout.song_row;
         //if null then we get a list from an album
-        if (songListType) {
+        if (albumSongList) {
             Log.v(TAG, "Getting songs from album: " + listTitle);
-            //all the fields to create the query
-            String[] mediaList = {MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE,
-                    MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM,
-                    MediaStore.Audio.Albums.ALBUM_ID};
+
 
             //query the database for album sorted by track number
-            mCursor = getActivity().managedQuery(Shared.libraryUri, mediaList,
+            mCursor = getActivity().managedQuery(Shared.libraryUri, Shared.PROJECTION_SONG,
                     MediaStore.Audio.Media.IS_MUSIC + "!=0 AND " +
                     MediaStore.Audio.Albums.ALBUM + " = " + "'" + listTitle + "'",
                     null, (MediaStore.Audio.Media.TRACK + " ASC"));
@@ -103,6 +101,36 @@ public class SelectedSongList extends Fragment {
             //cursor with songs from given playlist
             mCursor = getActivity().managedQuery(playlistMembers, proj, null, null,
                     MediaStore.Audio.Playlists.Members.DEFAULT_SORT_ORDER);
+            //Start rebuilding using shared URI
+            //Cursor where we merge cursors
+            Cursor passCursor;
+            //Check to make sure cursor isn't empty
+            if (mCursor.moveToFirst()){
+                    //get the first song's id
+                    String data = mCursor.getString(mCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID));
+                    //temp cursor should only return 1 song
+                    Cursor temp = getActivity().managedQuery(Shared.libraryUri,
+                            Shared.PROJECTION_SONG,
+                            MediaStore.Audio.Media._ID +" = "+"'"+data+"'",
+                            null, (MediaStore.Audio.Media.TRACK + " ASC"));
+                    // initialize passcursor with first item
+                    passCursor = temp;
+                    // get any other items in mCursor
+                    while(mCursor.moveToNext()){
+                        //get the rest of the song ids
+                        data = mCursor.getString(mCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID));
+                        temp = getActivity().managedQuery(Shared.libraryUri,
+                            Shared.PROJECTION_SONG,
+                            MediaStore.Audio.Media._ID + " = " + "'" + data + "'",
+                            null, (MediaStore.Audio.Media.TRACK + " ASC"));
+                        //cursor array for merge cursor, passCursor probably needs to be first
+                        Cursor[] toMerge = new Cursor[]{passCursor,temp};
+                        //passcursor gains rows 1 by 1 as long as there are rows left in mCursor
+                        passCursor = new MergeCursor(toMerge);
+                     }
+                mCursor = passCursor;
+                }
+
             ListView lv = (ListView) getView().findViewById(android.R.id.list);
             lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 
@@ -118,32 +146,27 @@ public class SelectedSongList extends Fragment {
 
             //set adapter
             lv.setAdapter(simpleCursorAdapter);
+            genericTabInterface e = (genericTabInterface) getActivity();
             //get click listener
-            lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                public void onItemClick(AdapterView<?> parent,
-                                        View v, int position, long id) {
-                    String selected =((TextView)v.findViewById(R.id.songView)).getText().toString();
-
-                    Toast toast=Toast.makeText(getActivity(), "I want to play the song:\n"+selected, Toast.LENGTH_SHORT);
-                    toast.show();
-                }
-            });
+            lv.setOnItemClickListener(e.getListener());
+            //pass cursor
+            e.passCursor(mCursor, Shared.TabType.SONG.name());
         }
     }
 
     //use onResume so that the cursor gets updated each time the tab is switched
     @Override
     public void onResume() {
-        Log.v(TAG, "on tab changed");
-        //get the AbsListView
-        ListView lv = (ListView) getActivity().findViewById(android.R.id.list);
-        Activity a = getActivity();
-        genericTabInterface ef = (genericTabInterface) a;
-        //set click listener
-        lv.setOnItemClickListener(ef.getListener());
-        //pass cursor
-        ef.passCursor(mCursor, Shared.TabType.SONG.name());
-        //call super to perform other actions
+            Log.v(TAG, "onResume: On tab changed");
+            //get the AbsListView
+            ListView lv = (ListView) getActivity().findViewById(android.R.id.list);
+            Activity a = getActivity();
+            genericTabInterface ef = (genericTabInterface) a;
+            //set click listener
+            lv.setOnItemClickListener(ef.getListener());
+            //pass cursor
+            ef.passCursor(mCursor, Shared.TabType.SONG.name());
+            //call super to perform other actions
         super.onResume();
     }
 
