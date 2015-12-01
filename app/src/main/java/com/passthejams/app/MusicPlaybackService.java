@@ -57,11 +57,9 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         int mStartPosition;
         boolean mShuffle;
         boolean mRepeat;
-        public QueueObjectInfo(Cursor c, int start, boolean shuffle, boolean repeat) {
+        public QueueObjectInfo(Cursor c, int start) {
             mCursor = c;
             mStartPosition = start;
-            mShuffle = shuffle;
-            mRepeat = repeat;
         }
     }
 
@@ -88,11 +86,10 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     //position in treemap
     int playPosition;
     boolean mShuffle = false;
-    //int mRepeat = 0; //where mRepeat=0 is off, 1 is repeat queue, 2 is repeat song
 
     //broadcast manager to update ui
     LocalBroadcastManager localBroadcastManager;
-    BroadcastReceiver shuffleReceiver;//, repeatReceiver;
+    BroadcastReceiver shuffleReceiver;
 
     JamsQueue<Integer, TrackInfo> songqueue = new JamsQueue<>();
 
@@ -133,21 +130,6 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         //actual registration of that listener
         localBroadcastManager.registerReceiver(shuffleReceiver,
                 new IntentFilter(Shared.Service.BROADCAST_SHUFFLE.name()));
-
-
-        /*button switching handling*//*
-        repeatReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Log.v(TAG, "receiving repeat clicked");
-                mRepeat = intent.getIntExtra(Shared.Service.REPEAT_VALUE.name(), 0);
-            }
-        };
-        //actual registration of that listener
-        localBroadcastManager.registerReceiver(repeatReceiver,
-                new IntentFilter(Shared.Service.BROADCAST_REPEAT.name()));*/
-
-
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {

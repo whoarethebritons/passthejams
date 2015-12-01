@@ -172,8 +172,7 @@ public class BottomMusicFragment extends Fragment{
             //call the play method on the service
             MusicPlaybackService.QueueObjectInfo queueObjectInfo =
                     new MusicPlaybackService(). new QueueObjectInfo(mListener.currentViewCursor(),
-                            playSong.getIntExtra(Shared.Main.POSITION.name(), -1),
-                            false, false);
+                            playSong.getIntExtra(Shared.Main.POSITION.name(), -1));
             mService.serviceOnPlay(queueObjectInfo,
                     playSong.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), false);
         }
@@ -207,8 +206,7 @@ public class BottomMusicFragment extends Fragment{
                         if(mListener.currentViewCursor() != null) {
                             MusicPlaybackService.QueueObjectInfo queueObjectInfo =
                                     new MusicPlaybackService().new QueueObjectInfo(mListener.currentViewCursor(),
-                                            intent.getIntExtra(Shared.Main.POSITION.name(), 0),
-                                            false, false);
+                                            intent.getIntExtra(Shared.Main.POSITION.name(), 0));
                             mService.serviceOnPlay(queueObjectInfo,
                                     intent.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), false);
                         }

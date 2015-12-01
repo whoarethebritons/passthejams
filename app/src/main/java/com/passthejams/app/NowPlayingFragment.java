@@ -102,22 +102,6 @@ public class NowPlayingFragment extends Fragment {
     public void onStart() {
 
         super.onStart();
-        /*Button repeat = (Button) getActivity().findViewById(R.id.repeatButton);
-        repeat.setTag(0);
-        repeat.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int repeatVal = (int) v.getTag();
-                repeatVal = (repeatVal + 1)%3;
-                v.setTag(repeatVal);
-                //create an intent so that the broadcast receiver can filter
-                Intent shuffleUpdate = new Intent(Shared.Service.BROADCAST_REPEAT.name());
-                shuffleUpdate.putExtra(Shared.Service.REPEAT_VALUE.name(), repeatVal);
-                LocalBroadcastManager localBroadcastManager =
-                        LocalBroadcastManager.getInstance(getActivity().getApplicationContext());
-                localBroadcastManager.sendBroadcast(shuffleUpdate);
-            }
-        });*/
     }
     @Override
     public void onStop() {
