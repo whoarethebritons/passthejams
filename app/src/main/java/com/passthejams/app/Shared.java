@@ -2,14 +2,9 @@ package com.passthejams.app;
 
 import android.content.ContentUris;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Rect;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.view.View;
-import android.widget.AbsListView;
 import android.widget.ImageView;
 
 import java.io.FileNotFoundException;
@@ -20,7 +15,8 @@ import java.io.FileNotFoundException;
  * mainly for final Strings so you can just change them once
  */
 public class Shared {
-    public enum Broadcasters { BROADCAST_BUTTON, BROADCAST_ART, BUTTON_VALUE, ART_VALUE }
+    public enum Broadcasters { BROADCAST_BUTTON, BROADCAST_ART, BUTTON_VALUE, ART_VALUE,
+        BROADCAST_SONG, SONG_VALUE, BROADCAST_QUEUE, QUEUE_VALUE}
     public enum Main { POSITION, OPTION, DISCARD_PAUSE}
     public enum Service { NEXT, PLAY, PREVIOUS, PAUSE }
 

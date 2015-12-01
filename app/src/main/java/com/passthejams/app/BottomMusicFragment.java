@@ -15,6 +15,8 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.TreeMap;
 
@@ -25,19 +27,11 @@ public class BottomMusicFragment extends Fragment{
     MusicPlaybackService mService;
     //broadcast receivers for ui updates from service
     BroadcastReceiver receiver, artReceiver;
-    //unused right now
-    Activity holderActivity;
 
     //for interacting with holder activities
     private OnFragmentInteractionListener mListener;
 
     final String TAG="fragment";
-
-
-
-    public static BottomMusicFragment newInstance(Activity inActivity) {
-        return new BottomMusicFragment();
-    }
 
     public BottomMusicFragment() {}
 
@@ -84,13 +78,15 @@ public class BottomMusicFragment extends Fragment{
         artReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.v(TAG, "receiving");
+                Log.v(TAG, "receiving");Gson g = new Gson();
                 String artLocation = intent.getStringExtra(Shared.Broadcasters.ART_VALUE.name());
+                TrackInfo t = g.fromJson(artLocation, TrackInfo.class);
+                //setNowPlayingArt(t);
                 ImageView play = (ImageView) getActivity().findViewById(R.id.currentAlbumArt);
-                mListener.setImageVal(artLocation);
+                mListener.setImageVal(String.valueOf(t.album_id));
                 //method that will set the image to whatever is at the uri
                 //Shared.getAlbumArt(String s) will resolve the uri
-                Shared.getAlbumArt(context, play, artLocation);
+                Shared.getAlbumArt(context, play, String.valueOf(t.album_id));
             }
         };
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(artReceiver,
@@ -279,6 +275,10 @@ public class BottomMusicFragment extends Fragment{
 
     public TreeMap<Integer, TrackInfo> queue() {
         return mService.getQueue();
+    }
+
+    public TrackInfo currentSong() {
+        return mService.getCurrentPlaying();
     }
 
     public interface OnFragmentInteractionListener {

@@ -1,28 +1,29 @@
 package com.passthejams.app;
 
 import android.app.Service;
-import android.content.*;
+import android.content.ContentUris;
+import android.content.Intent;
 import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
-import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import de.umass.lastfm.Track;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.PriorityQueue;
 import java.util.TreeMap;
 
 /**
  * Created by Eden on 7/20/2015.
  */
-public class MusicPlaybackService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
+public class MusicPlaybackService extends Service implements MediaPlayer.OnPreparedListener,
+        MediaPlayer.OnCompletionListener {
     /*
     Intents will have the following:
         position of song to begin playing
@@ -64,6 +65,19 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         }
     }
 
+    public class JamsQueue<K, V> extends TreeMap<K, V> {
+        private NowPlayingFragment.OnQueueChangeListener mListener;
+
+        public void setOnQueueChangeListener(NowPlayingFragment.OnQueueChangeListener e) {
+            mListener = e;
+        }
+        public void doEvent() {
+            if(mListener != null) {
+                mListener.onEvent();
+            }
+        }
+    }
+
     //the media player everything will be playing from
     MediaPlayer mMediaPlayer = new MediaPlayer();
     //a paused holder so that there is not more than one
@@ -77,7 +91,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     //broadcast manager to update ui
     LocalBroadcastManager localBroadcastManager;
 
-    TreeMap<Integer, TrackInfo> songqueue = new TreeMap<Integer, TrackInfo>();
+    JamsQueue<Integer, TrackInfo> songqueue = new JamsQueue<>();
 
     //for logging
     final String TAG = "Service";
@@ -87,6 +101,18 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     @Override
     public void onCreate() {
         super.onCreate();
+        songqueue.setOnQueueChangeListener(new NowPlayingFragment.OnQueueChangeListener() {
+            @Override
+            public void onEvent() {
+                //sends album art to fragment to display the current artwork
+                Intent queue = new Intent(Shared.Broadcasters.BROADCAST_QUEUE.name());
+                Gson g = new Gson();
+                queue.putExtra(Shared.Broadcasters.QUEUE_VALUE.name(), g.toJson(songqueue,
+                        new TypeToken<JamsQueue<Integer, TrackInfo>>(){}.getType()));
+                localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
+                localBroadcastManager.sendBroadcast(queue);
+            }
+        });
         //create listeners for when the media player has loaded & finishes playing
         mMediaPlayer.setOnPreparedListener(this);
         mMediaPlayer.setOnCompletionListener(this);
@@ -115,6 +141,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     public void serviceOnNext() {
         discardPause();
         playPosition++;
+        songqueue.doEvent();
         changeSong();
     }
 
@@ -122,6 +149,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     public void serviceOnPrevious() {
         discardPause();
         playPosition--;
+        songqueue.doEvent();
         changeSong();
     }
 
@@ -133,6 +161,9 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         int temp = 0;
 
         int mPlayOrder = 0;
+        if(!discardQ) {
+            songqueue.clear();
+        }
         //keeping queue
         if(!discardQ) {
             //add all songs from the current cursor to the queue
@@ -168,20 +199,22 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     public boolean changeSong(){
         int seekPosition=0;
         //if playPosition has not gone past the queue
-        if(playPosition <= songqueue.lastKey()) {
+        if(playPosition <= songqueue.lastKey() && playPosition >= songqueue.firstKey()) {
             Log.v(TAG, "position: " + playPosition);
             cursorPosition = playPosition;
             //get the TrackInfo
             TrackInfo trackInfo = songqueue.get(playPosition);
             //get the item's uri
+
             Uri contentUri = ContentUris.withAppendedId(Shared.libraryUri,
                     songqueue.get(playPosition).id);
             Log.v("Service", trackInfo.name);
 
             //sends album art to fragment to display the current artwork
             Intent albumArt = new Intent(Shared.Broadcasters.BROADCAST_ART.name());
-            Log.v(TAG, "sending over album id: " + trackInfo.album_id);
-            albumArt.putExtra(Shared.Broadcasters.ART_VALUE.name(), String.valueOf(trackInfo.album_id));
+            Log.v(TAG, "sending over album id: " + trackInfo);
+            Gson g = new Gson();
+            albumArt.putExtra(Shared.Broadcasters.ART_VALUE.name(), g.toJson(trackInfo, TrackInfo.class));
             localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
             localBroadcastManager.sendBroadcast(albumArt);
 
@@ -270,13 +303,16 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         songqueue.put(playOrder, baseSong);
         //add all of the similar songs
         for(TrackInfo t : trackInfos) {
-            songqueue.put(++playOrder, t);
+            if(t != baseSong) {
+                songqueue.put(++playOrder, t);
+            }
         }
         discardPause();
         playPosition = 0;
         changeSong();
         Log.d(TAG, "insert size: " + trackInfos.size());
         Log.d(TAG, "Queue size: " + String.valueOf(songqueue.size()));
+        songqueue.doEvent();
     }
     /* added to get TrackInfo to send to LastFm */
     public TrackInfo getCurrentPlaying() {
