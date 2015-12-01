@@ -440,7 +440,9 @@ public class NetworkService extends Service implements Closeable{
 
     private void sendFile(File f, OutputStream out) {
         byte buffer[] = new byte[BUFFER_SIZE];
-        try(FileInputStream in = new FileInputStream(f)) {
+        FileInputStream in = null;
+        try {
+            in = new FileInputStream(f);
             int read = 0;
             while ((read = in.read(buffer)) > 0) {
                 out.write(buffer, 0, read);
@@ -450,6 +452,9 @@ public class NetworkService extends Service implements Closeable{
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if(in != null) try{in.close();}catch (IOException e){};
+            in = null;
         }
     }
 
@@ -458,7 +463,9 @@ public class NetworkService extends Service implements Closeable{
         byte buffer[] = new byte[BUFFER_SIZE];
         int read;
         long total = 0;
-        try(FileOutputStream fout = new FileOutputStream(f)) {
+        FileOutputStream fout = null;
+        try{
+            fout = new FileOutputStream(f);
             while ((read = in.read(buffer)) > 0) {
                 fout.write(buffer, 0, read);
                 total += read;
@@ -468,6 +475,9 @@ public class NetworkService extends Service implements Closeable{
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            if(fout != null) try{fout.close();}catch (IOException e){};
+            fout = null;
         }
         Log.v(TAG,"Wrote "+total+" bytes");
     }
