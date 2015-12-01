@@ -1,6 +1,7 @@
 package com.passthejams.app;
 
 import android.app.Service;
+import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
@@ -80,6 +81,7 @@ public class NetworkService extends Service implements Closeable{
 
     @Override
     public IBinder onBind(Intent intent) {
+        Song.contentResolver = getContentResolver();
         return mBinder;
     }
 
@@ -92,6 +94,7 @@ public class NetworkService extends Service implements Closeable{
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Song.contentResolver = getContentResolver();
         //set up server
         quit = false;
         MainLoop loop = new MainLoop(this);
@@ -200,7 +203,7 @@ public class NetworkService extends Service implements Closeable{
                     out.println("getSongs");
                     out.flush();
                     String songs = in.readLine();
-                    callback.stringCallback(NetworkService.this,device,songs);
+                    callback.stringCallback(NetworkService.this, device, songs);
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
@@ -217,6 +220,44 @@ public class NetworkService extends Service implements Closeable{
     }
     public interface Callback {
         void stringCallback(NetworkService service, Device device, String response);
+    }
+
+    public void getSong(final Song song, final Device device, final GetSongCallback callback) {
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+
+                Socket sock = null;
+                PrintWriter writer = null;
+                try {
+                    sock = new Socket(device.host,device.port);
+                    writer = new PrintWriter(sock.getOutputStream());
+                    writer.println("getSong/"+song._id);
+                    writer.flush();
+
+                    Song song2 = recievePermanent(song, sock.getInputStream());
+                    if(callback != null) {
+                        callback.onSuccess(NetworkService.this,device,song2);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    if(callback != null) {
+                        callback.onError(NetworkService.this,device,song,e);
+                    }
+                } finally {
+                    if(writer != null) try{writer.close();} catch (Exception e) {};
+                    writer = null;
+                    if(sock != null) try{sock.close();} catch (IOException e) {};
+                    sock = null;
+                }
+            }
+        };
+        new Thread(r).start();
+    }
+
+    public interface GetSongCallback {
+        void onSuccess(NetworkService service, Device device, Song song);
+        void onError(NetworkService service, Device device, Song song, Exception error);
     }
 
     private class ConnectionHelper implements Runnable {
@@ -282,7 +323,7 @@ public class NetworkService extends Service implements Closeable{
         Context context = getApplicationContext();
         Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         String selection = MediaStore.Audio.Media.IS_MUSIC + " != 0 ";
-        Cursor cursor = context.getContentResolver().query(uri,Shared.PROJECTION_SONG,selection,null,null);
+        Cursor cursor = context.getContentResolver().query(uri, Shared.PROJECTION_SONG, selection, null, null);
         JsonArray array = new JsonArray();
         while(cursor.moveToNext()) {
             int id = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
@@ -300,6 +341,7 @@ public class NetworkService extends Service implements Closeable{
             if(cursor1 != null && cursor1.moveToFirst()) {
                 fileName = cursor1.getString(0);
             }
+            if(cursor1!=null)cursor1.close();
             obj.addProperty("file_name", fileName);
             array.add(obj);
         }
@@ -341,10 +383,10 @@ public class NetworkService extends Service implements Closeable{
 
     /**
      * Recieves the song file over the input stream, permanetly adding to the media store.
-     * @param json
+     * @param song
      * @param in
      */
-    private void recievePermanent(JsonObject json, InputStream in) {
+    private Song recievePermanent(Song song, InputStream in) {
         Context context = getApplicationContext();
         //TODO: make a setting to say where to store new songs
         File dir = context.getExternalFilesDir(Environment.DIRECTORY_MUSIC);
@@ -368,10 +410,32 @@ public class NetworkService extends Service implements Closeable{
                 }
             }
         }
-        String fileName = json.getAsJsonPrimitive("file_name").getAsString();
-        File songFile = new File(dir,fileName);
-        recieveFile(songFile,in);
-        MediaScannerConnection.scanFile(context, new String[]{songFile.getAbsolutePath()}, null, null);
+        File songFile = new File(dir,song.file_name);
+        recieveFile(songFile, in);
+
+        final Song song2 = new Song();
+        MediaScannerConnection.OnScanCompletedListener listener = new MediaScannerConnection.OnScanCompletedListener() {
+            //this is really annoying
+            public Song song = song2;
+            @Override
+            public void onScanCompleted(String s, Uri uri) {
+                synchronized (song) {
+                    if(uri!=null) {
+                        song.loadFromUri(uri);
+                    }
+                    song.notifyAll();
+                }
+            }
+        };
+        MediaScannerConnection.scanFile(context, new String[]{songFile.getAbsolutePath()}, null, listener);
+        synchronized (song2) {
+            try {
+                song2.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return song2;
     }
 
     private void sendFile(File f, OutputStream out) {
@@ -390,11 +454,14 @@ public class NetworkService extends Service implements Closeable{
     }
 
     private void recieveFile(File f, InputStream in) {
+        Log.v(TAG,"Recieving file "+f.getAbsolutePath());
         byte buffer[] = new byte[BUFFER_SIZE];
         int read;
+        long total = 0;
         try(FileOutputStream fout = new FileOutputStream(f)) {
             while ((read = in.read(buffer)) > 0) {
                 fout.write(buffer, 0, read);
+                total += read;
             }
             fout.flush();
         } catch (FileNotFoundException e) {
@@ -402,6 +469,7 @@ public class NetworkService extends Service implements Closeable{
         } catch (IOException e) {
             e.printStackTrace();
         }
+        Log.v(TAG,"Wrote "+total+" bytes");
     }
 
 
@@ -505,6 +573,77 @@ public class NetworkService extends Service implements Closeable{
         public InetAddress  host;
         public int          port;
         public String       name;
+    }
+
+    public static class Song implements  Serializable {
+        private static final long serialVersionUID = 0L;
+        private static ContentResolver contentResolver = null;
+        public String title;
+        public String artist;
+        public String album;
+        public int _id;
+        public int album_id;
+        public String file_name;
+
+        public Song() {
+            title = null;
+            artist = null;
+            album = null;
+            _id = -1;
+            album_id = -1;
+            file_name = null;
+        }
+
+        public Song(JsonObject json) {
+            title = json.get("title").getAsString();
+            artist = json.get("artist").getAsString();
+            album = json.get("album").getAsString();
+            _id = json.get("_id").getAsInt();
+            album_id = json.get("album_id").getAsInt();
+            file_name = json.get("file_name").getAsString();
+        }
+
+        public Song(Uri uri) {
+            loadFromUri(uri);
+        }
+
+        public void loadFromUri(Uri uri) {
+            String columns[] = new String[]{
+                    MediaStore.Audio.AudioColumns.TITLE,
+                    MediaStore.Audio.AudioColumns.ARTIST,
+                    MediaStore.Audio.AudioColumns.ALBUM,
+                    MediaStore.Audio.AudioColumns._ID,
+                    MediaStore.Audio.AudioColumns.ALBUM_ID,
+                    MediaStore.Audio.AudioColumns.DISPLAY_NAME
+            };
+            Cursor cursor =  contentResolver.query(uri, columns, null, null, null);
+            if(cursor!=null) {
+                if(cursor.moveToFirst()) {
+                    title = cursor.getString(0);
+                    artist = cursor.getString(1);
+                    album = cursor.getString(2);
+                    _id = cursor.getInt(3);
+                    album_id = cursor.getInt(4);
+                    file_name = cursor.getString(5);
+                }
+                cursor.close();
+            }
+        }
+
+        public JsonObject toJson() {
+            JsonObject json = new JsonObject();
+            json.addProperty("title",title);
+            json.addProperty("artist",artist);
+            json.addProperty("album",album);
+            json.addProperty("_id",_id);
+            json.addProperty("album_id",album_id);
+            json.addProperty("file_name",file_name);
+            return json;
+        }
+
+        public String toJsonString() {
+            return new Gson().toJson(toJson());
+        }
     }
 
 }
