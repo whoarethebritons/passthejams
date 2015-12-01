@@ -28,6 +28,8 @@ public class NetworkListActivity extends Activity {
     private static final String TAG = "NetworkListActivity";
     private NetworkService mService = null;
     private ArrayList<NetworkService.Device> deviceList;
+    private ArrayList<NetworkService.Song> songList = null;
+    private NetworkService.Device device = null;
 
     private ServiceConnection conn = new ServiceConnection() {
 
@@ -91,6 +93,7 @@ public class NetworkListActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 NetworkService.Device d = deviceList.get(position);
+                device = d;
                 Log.d(TAG,"Selected " + d.name+" "+d.host+":"+d.port);
                 ArrayList<String> list = new ArrayList<String>();
                 list.add("Loading");
@@ -100,17 +103,37 @@ public class NetworkListActivity extends Activity {
 
                 mService.getSongs(d, new NetworkService.Callback() {
                     @Override
-                    public void stringCallback(NetworkService service, NetworkService.Device device, String response) {
+                    public void stringCallback(final NetworkService service, final NetworkService.Device device, String response) {
                         Log.d(TAG,"Response from "+device.host+":"+device.port+" = "+response);
                         JsonArray a = new JsonParser().parse(response).getAsJsonArray();
                         ArrayList<String> songs = new ArrayList<String>();
+                        songList = new ArrayList<NetworkService.Song>();
                         for(JsonElement o:a) {
                             JsonObject obj = o.getAsJsonObject();
                             String line = obj.getAsJsonPrimitive("title").getAsString();
                             songs.add(line);
+                            songList.add(new NetworkService.Song(obj));
                         }
                         ArrayAdapter adapter = new ArrayAdapter(NetworkListActivity.this,android.R.layout.simple_list_item_1,songs);
                         ListView listView = (ListView) findViewById(R.id.listView2);
+                        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                            @Override
+                            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                                NetworkService.Song song = songList.get(i);
+                                Log.v(TAG,"Copying " +song.title+", "+song.file_name+" to id "+song._id);
+                                service.getSong(song, device, new NetworkService.GetSongCallback() {
+                                    @Override
+                                    public void onSuccess(NetworkService service, NetworkService.Device device, NetworkService.Song song) {
+                                        Log.v(TAG,"Copied " +song.title+", "+song.file_name+" to id "+song._id);
+                                    }
+
+                                    @Override
+                                    public void onError(NetworkService service, NetworkService.Device device, NetworkService.Song song, Exception error) {
+                                        Log.v(TAG,"Failed to copy " +song.title+", "+song.file_name+" to id "+song._id,error);
+                                    }
+                                });
+                            }
+                        });
                         //listView.setAdapter(adapter);
                         UpdateList uiUpdate = new UpdateList();
                         uiUpdate.listView = listView;
