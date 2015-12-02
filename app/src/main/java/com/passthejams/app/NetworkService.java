@@ -1,12 +1,8 @@
 package com.passthejams.app;
 
 import android.app.Service;
-import android.content.ContentResolver;
-import android.content.ContentUris;
-import android.content.Context;
-import android.content.Intent;
+import android.content.*;
 import android.database.Cursor;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
@@ -18,32 +14,17 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 import android.widget.Toast;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import java.io.BufferedReader;
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.Serializable;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Service to handle all networking requests.
@@ -303,7 +284,7 @@ public class NetworkService extends Service implements Closeable{
                     service.suggestSong(json);
                 } else {
                     out = new PrintWriter(socket.getOutputStream());
-                    out.println(service.undefined);
+                    out.println(undefined);
                     out.flush();
                 }
             } catch (IOException e) {
@@ -427,22 +408,19 @@ public class NetworkService extends Service implements Closeable{
 
 
         final Song song2 = new Song();
-        MediaScannerConnection.OnScanCompletedListener listener = new MediaScannerConnection.OnScanCompletedListener() {
-            //this is really annoying
-            public Song song = song2;
-            @Override
-            public void onScanCompleted(String s, Uri uri) {
-                synchronized (song) {
-                    if(uri!=null) {
-                        Log.v(TAG,"Added to media store "+uri);
-                        song.loadFromUri(uri);
-                    }
-                    song.notifyAll();
-                }
-            }
-        };
         Log.v(TAG,"Adding file to mediastore "+songFile.getAbsolutePath()+ " mime "+song.getMimeType());
-        MediaScannerConnection.scanFile(context, new String[]{songFile.getPath()}, new String[]{song.getMimeType()}, listener);
+
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.MediaColumns.DATA, songFile.getAbsolutePath());
+        values.put(MediaStore.MediaColumns.TITLE, song.title);
+        values.put(MediaStore.MediaColumns.MIME_TYPE, song.getMimeType());
+        values.put(MediaStore.Audio.Media.ARTIST, song.artist);
+        values.put(MediaStore.Audio.Media.ALBUM, song.album);
+        values.put(MediaStore.Audio.Media.IS_MUSIC, true);
+
+        Uri uri = MediaStore.Audio.Media.getContentUriForPath(songFile.getAbsolutePath());
+        this.getContentResolver().insert(uri, values);
+
         synchronized (song2) {
             try {
                 song2.wait();
@@ -450,6 +428,7 @@ public class NetworkService extends Service implements Closeable{
                 e.printStackTrace();
             }
         }
+        song2.notifyAll();
         return song2;
     }
 
@@ -603,7 +582,7 @@ public class NetworkService extends Service implements Closeable{
         public String       name;
     }
 
-    public static class Song implements  Serializable {
+    public static class Song implements Serializable {
         private static final long serialVersionUID = 0L;
         private static ContentResolver contentResolver = null;
         public String title;

@@ -106,7 +106,7 @@ public class BottomMusicFragment extends Fragment{
         Button previous = (Button) getActivity().findViewById(R.id.previousButton);
         previous.setOnClickListener(buttonListeners(Shared.Service.PREVIOUS, false));
 
-        /* shuffle button is the LastFm button right now */
+        /* the LastFm button */
         Button lastFmShuffle = (Button) getActivity().findViewById(R.id.lastfmButton);
         lastFmShuffle.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -130,21 +130,30 @@ public class BottomMusicFragment extends Fragment{
             }
         });
 
-
+        /*the shuffle button*/
         Button shuffle = (Button) getActivity().findViewById(R.id.shuffleButton);
+        //the tag contains a boolean to decide whether to shuffle or not
         shuffle.setTag(false);
         shuffle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //retrieve tag
                 boolean shuffleVal = (boolean) v.getTag();
+                Log.d(TAG, "shuffleVal was " + shuffleVal);
+                //invert tag and set to new
                 v.setTag(!shuffleVal);
+                //hold new tag
                 shuffleVal = (boolean) v.getTag();
+                Log.d(TAG, "shuffleVal is now " + shuffleVal);
                 //create an intent so that the broadcast receiver can filter
                 Intent shuffleUpdate = new Intent(Shared.Service.BROADCAST_SHUFFLE.name());
+                //send over the shuffle boolean value
                 shuffleUpdate.putExtra(Shared.Service.SHUFFLE_VALUE.name(), shuffleVal);
+                //broadcast it
                 LocalBroadcastManager localBroadcastManager =
                         LocalBroadcastManager.getInstance(getActivity().getApplicationContext());
                 localBroadcastManager.sendBroadcast(shuffleUpdate);
+                //calls play
                 Button play = (Button) getActivity().findViewById(R.id.playButton);
                 play.performClick();
             }
