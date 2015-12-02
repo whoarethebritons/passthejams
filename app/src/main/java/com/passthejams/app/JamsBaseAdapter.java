@@ -49,7 +49,7 @@ public class JamsBaseAdapter extends ArrayAdapter {
 
         trackHolder.song = (TextView) convertView.findViewById(R.id.songView);
         TrackInfo temp = (TrackInfo) getItem(position);
-        trackHolder.song.setText(temp.name);
+        trackHolder.song.setText(temp.title);
 
         trackHolder.artist = (TextView) convertView.findViewById(R.id.artistView);
         trackHolder.artist.setText(temp.artist);

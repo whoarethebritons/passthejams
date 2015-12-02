@@ -261,8 +261,8 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             //get the item's uri
 
             Uri contentUri = ContentUris.withAppendedId(Shared.libraryUri,
-                    songQueue.get(playPosition).id);
-            Log.v("Service", trackInfo.name);
+                    songQueue.get(playPosition)._id);
+            Log.v("Service", trackInfo.title);
 
             //sends album art to fragment to display the current artwork
             Intent albumArt = new Intent(Shared.Broadcasters.BROADCAST_ART.name());

@@ -94,7 +94,7 @@ public class NowPlayingFragment extends Fragment {
         //Shared.getAlbumArt(String s) will resolve the uri
         if(artLocation != null) {
             Shared.getAlbumArt(getActivity().getApplicationContext(), album, String.valueOf(artLocation.album_id));
-            toolbar.setTitle(artLocation.name + " -- " + artLocation.artist);
+            toolbar.setTitle(artLocation.title + " -- " + artLocation.artist);
         }
     }
 
@@ -203,7 +203,7 @@ public class NowPlayingFragment extends Fragment {
 
             trackHolder.song = (TextView) convertView.findViewById(R.id.songView);
             TrackInfo temp = (TrackInfo) getItem(position);
-            trackHolder.song.setText(temp.name);
+            trackHolder.song.setText(temp.title);
 
             trackHolder.artist = (TextView) convertView.findViewById(R.id.artistView);
             trackHolder.artist.setText(temp.artist);

@@ -63,7 +63,6 @@ public class NetworkService extends Service implements Closeable{
 
     @Override
     public IBinder onBind(Intent intent) {
-        Song.contentResolver = getContentResolver();
         return mBinder;
     }
 
@@ -76,7 +75,6 @@ public class NetworkService extends Service implements Closeable{
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Song.contentResolver = getContentResolver();
         //set up server
         quit = false;
         MainLoop loop = new MainLoop(this);
@@ -204,7 +202,7 @@ public class NetworkService extends Service implements Closeable{
         void stringCallback(NetworkService service, Device device, String response);
     }
 
-    public void getSong(final Song song, final Device device, final GetSongCallback callback) {
+    public void getSong(final TrackInfo song, final Device device, final GetSongCallback callback) {
         Runnable r = new Runnable() {
             @Override
             public void run() {
@@ -217,7 +215,7 @@ public class NetworkService extends Service implements Closeable{
                     writer.println("getSong/"+song._id);
                     writer.flush();
 
-                    Song song2 = recievePermanent(song, sock.getInputStream());
+                    TrackInfo song2 = recievePermanent(song, sock.getInputStream());
                     if(callback != null) {
                         callback.onSuccess(NetworkService.this,device,song2);
                     }
@@ -238,8 +236,8 @@ public class NetworkService extends Service implements Closeable{
     }
 
     public interface GetSongCallback {
-        void onSuccess(NetworkService service, Device device, Song song);
-        void onError(NetworkService service, Device device, Song song, Exception error);
+        void onSuccess(NetworkService service, Device device, TrackInfo song);
+        void onError(NetworkService service, Device device, TrackInfo song, Exception error);
     }
 
     private class ConnectionHelper implements Runnable {
@@ -379,7 +377,7 @@ public class NetworkService extends Service implements Closeable{
      * @param song
      * @param in
      */
-    private Song recievePermanent(Song song, InputStream in) {
+    private TrackInfo recievePermanent(TrackInfo song, InputStream in) {
         Context context = getApplicationContext();
         //TODO: make a setting to say where to store new songs
         File dir = context.getExternalFilesDir(Environment.DIRECTORY_MUSIC);
@@ -422,7 +420,7 @@ public class NetworkService extends Service implements Closeable{
         Log.v(TAG,uri.toString());
         Uri uri2 = this.getContentResolver().insert(uri, values);
         Log.v(TAG,"Uri of new song: "+uri2);
-        Song song2 = new Song(uri2);
+        TrackInfo song2 = new TrackInfo(uri2,getContentResolver());
 
         return song2;
     }
@@ -577,82 +575,6 @@ public class NetworkService extends Service implements Closeable{
         public String       name;
     }
 
-    public static class Song implements Serializable {
-        private static final long serialVersionUID = 0L;
-        private static ContentResolver contentResolver = null;
-        public String title;
-        public String artist;
-        public String album;
-        public int _id;
-        public int album_id;
-        public String file_name;
 
-        public Song() {
-            title = null;
-            artist = null;
-            album = null;
-            _id = -1;
-            album_id = -1;
-            file_name = null;
-        }
-
-        public Song(JsonObject json) {
-            title = json.get("title").getAsString();
-            artist = json.get("artist").getAsString();
-            album = json.get("album").getAsString();
-            _id = json.get("_id").getAsInt();
-            album_id = json.get("album_id").getAsInt();
-            file_name = json.get("file_name").getAsString();
-        }
-
-        public Song(Uri uri) {
-            loadFromUri(uri);
-        }
-
-        public void loadFromUri(Uri uri) {
-            String columns[] = new String[]{
-                    MediaStore.Audio.AudioColumns.TITLE,
-                    MediaStore.Audio.AudioColumns.ARTIST,
-                    MediaStore.Audio.AudioColumns.ALBUM,
-                    MediaStore.Audio.AudioColumns._ID,
-                    MediaStore.Audio.AudioColumns.ALBUM_ID,
-                    MediaStore.Audio.AudioColumns.DISPLAY_NAME
-            };
-            Cursor cursor =  contentResolver.query(uri, columns, null, null, null);
-            if(cursor!=null) {
-                if(cursor.moveToFirst()) {
-                    title = cursor.getString(0);
-                    artist = cursor.getString(1);
-                    album = cursor.getString(2);
-                    _id = cursor.getInt(3);
-                    album_id = cursor.getInt(4);
-                    file_name = cursor.getString(5);
-                }
-                cursor.close();
-            }
-        }
-
-        public JsonObject toJson() {
-            JsonObject json = new JsonObject();
-            json.addProperty("title",title);
-            json.addProperty("artist",artist);
-            json.addProperty("album",album);
-            json.addProperty("_id",_id);
-            json.addProperty("album_id",album_id);
-            json.addProperty("file_name",file_name);
-            return json;
-        }
-
-        public String toJsonString() {
-            return new Gson().toJson(toJson());
-        }
-
-        public String getMimeType() {
-            int index = file_name.lastIndexOf(".")+1;
-            String extension = file_name.substring(index).toLowerCase();
-            MimeTypeMap mime = MimeTypeMap.getSingleton();
-            return mime.getMimeTypeFromExtension(extension);
-        }
-    }
 
 }

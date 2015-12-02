@@ -43,8 +43,8 @@ public class LastFm extends Activity{
     public ArrayList<TrackInfo> generateOrGetSimilar(ContentResolver contentResolver) {
         Cursor mCursor;
         //get current trackinfo
-        int id = trackInfo.id;
-        String song = trackInfo.name;
+        int id = trackInfo._id;
+        String song = trackInfo.title;
         String artist = trackInfo.artist;
         int album_id;
         ArrayList<TrackInfo> similar = new ArrayList<>();
