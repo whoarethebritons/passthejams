@@ -106,7 +106,6 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
                         Log.d(TAG, "lastfm clicked");
                         BottomMusicFragment f = (BottomMusicFragment)
                                 getParent().getFragmentManager().findFragmentById(R.id.bottomBar);
-                        f.isVisible();
                         //Intent intent = makeActionIntent(button.name(), v.getVerticalScrollbarPosition(), discard);
                         Intent intent = new Intent(getParent(), MusicPlaybackService.class);
                         //specifies what action we will be performing
@@ -124,6 +123,11 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
                         lastfm.performClick();
                         return true;
                     case R.id.action_add_to_queue:
+                        BottomMusicFragment fr = (BottomMusicFragment)
+                                getParent().getFragmentManager().findFragmentById(R.id.bottomBar);
+                        ListView lv = (ListView) findViewById(android.R.id.list);
+
+                        fr.mService.addToQueue((Cursor)lv.getAdapter().getItem(p));
                         return true;
                     default:
                         return false;

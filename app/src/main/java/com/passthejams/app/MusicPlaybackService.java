@@ -349,4 +349,13 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     public TreeMap<Integer, TrackInfo> getQueue() {
         return songqueue;
     }
+
+    public void addToQueue(Cursor c) {
+        int play = songqueue.size();
+        songqueue.put(play, new TrackInfo(
+                c.getInt(c.getColumnIndex(MediaStore.Audio.Media._ID)),
+                c.getInt(c.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)),
+                c.getString(c.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+                c.getString(c.getColumnIndex(MediaStore.Audio.Media.ARTIST))));
+    }
 }

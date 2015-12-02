@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
+                android:descendantFocusability="blocksDescendants"
     android:layout_height="wrap_content">
 
     <TextView
@@ -50,5 +51,6 @@
             android:layout_alignParentRight="true"
             android:onClick="showMenu"
             android:id="@+id/imageButton"
+            android:focusable="false"
             android:background="@drawable/abc_ic_menu_moreoverflow_mtrl_alpha"/>
 </RelativeLayout>
