@@ -384,34 +384,34 @@ public class NetworkService extends Service implements Closeable{
         //TODO: make a setting to say where to store new songs
         File dir = context.getExternalFilesDir(Environment.DIRECTORY_MUSIC);
         //only newer versions support looking at sd cards
-        if (Build.VERSION.SDK_INT >= 19) {
-            if (!Environment.isExternalStorageRemovable()) {
-                //this device defaults to internal storage
-                //for now, get the first true external storage
-                for (File f : context.getExternalFilesDirs(Environment.DIRECTORY_MUSIC)) {
-                    if(Build.VERSION.SDK_INT >= 21) {
-                        if (Environment.isExternalStorageRemovable(f)) {
-                            dir = f;
-                            break;
-                        }
-                    } else {
-                        if(!f.equals(dir)) {
-                            dir = f;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
+//        if (Build.VERSION.SDK_INT >= 19) {
+//            if (!Environment.isExternalStorageRemovable()) {
+//                //this device defaults to internal storage
+//                //for now, get the first true external storage
+//                for (File f : context.getExternalFilesDirs(Environment.DIRECTORY_MUSIC)) {
+//                    if(Build.VERSION.SDK_INT >= 21) {
+//                        if (Environment.isExternalStorageRemovable(f)) {
+//                            dir = f;
+//                            break;
+//                        }
+//                    } else {
+//                        if(!f.equals(dir)) {
+//                            dir = f;
+//                            break;
+//                        }
+//                    }
+//                }
+//            }
+//        }
         File songFile = new File(dir,song.file_name);
         recieveFile(songFile, in);
 
 
-        final Song song2 = new Song();
-        Log.v(TAG,"Adding file to mediastore "+songFile.getAbsolutePath()+ " mime "+song.getMimeType());
+        Log.v(TAG, "Adding file to mediastore " + songFile.getAbsolutePath() + " mime " + song.getMimeType());
 
         ContentValues values = new ContentValues();
         values.put(MediaStore.MediaColumns.DATA, songFile.getAbsolutePath());
+        values.put(MediaStore.MediaColumns.DISPLAY_NAME, songFile.getName());
         values.put(MediaStore.MediaColumns.TITLE, song.title);
         values.put(MediaStore.MediaColumns.MIME_TYPE, song.getMimeType());
         values.put(MediaStore.Audio.Media.ARTIST, song.artist);
@@ -419,16 +419,11 @@ public class NetworkService extends Service implements Closeable{
         values.put(MediaStore.Audio.Media.IS_MUSIC, true);
 
         Uri uri = MediaStore.Audio.Media.getContentUriForPath(songFile.getAbsolutePath());
-        this.getContentResolver().insert(uri, values);
+        Log.v(TAG,uri.toString());
+        Uri uri2 = this.getContentResolver().insert(uri, values);
+        Log.v(TAG,"Uri of new song: "+uri2);
+        Song song2 = new Song(uri2);
 
-        synchronized (song2) {
-            try {
-                song2.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        song2.notifyAll();
         return song2;
     }
 
