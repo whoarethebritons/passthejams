@@ -7,7 +7,7 @@
           android:orderInCategory="100"
           app:showAsAction="never"/>
      <item android:id="@+id/action_network_list"
-         android:title="Network Devices"
+         android:title="@string/NetworkTitle"
          android:orderInCategory="100"
 
          app:showAsAction="never"/>

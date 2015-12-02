@@ -84,7 +84,7 @@ public class NowPlayingFragment extends Fragment {
     @Override
     public void onPause() {
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(artReceiver);
-        getActivity().findViewById(R.id.lastfmButton).setVisibility(View.INVISIBLE);
+        //getActivity().findViewById(R.id.lastfmButton).setVisibility(View.INVISIBLE);
         super.onPause();
     }
 
@@ -100,7 +100,6 @@ public class NowPlayingFragment extends Fragment {
 
     @Override
     public void onStart() {
-
         super.onStart();
     }
     @Override
@@ -123,8 +122,17 @@ public class NowPlayingFragment extends Fragment {
             View root =  inflater.inflate(R.layout.song_layout, container, false);
             FragmentManager fragmentManager = getFragmentManager();
 
+            /*
+            BottomMusicFragment has access to the MusicPlaybackService
+            retrieved so communication can happen easier
+            */
             BottomMusicFragment f = (BottomMusicFragment) fragmentManager.findFragmentById(R.id.bottomBar);
-            MusicPlaybackService.JamsQueue<Integer, TrackInfo> tempq = (MusicPlaybackService.JamsQueue) f.queue();
+            MusicPlaybackService.JamsQueue<Integer, TrackInfo> tempq = (MusicPlaybackService
+                    .JamsQueue<Integer,TrackInfo>) f.queue();
+
+            /*
+            set the list adapter for the view
+             */
             mListAdapter = new JamsArrayAdapter(getActivity().getApplicationContext(),
                     R.layout.song_row, R.id.songView, tempq);
             ListView lv = (ListView) root.findViewById(android.R.id.list);
@@ -140,16 +148,16 @@ public class NowPlayingFragment extends Fragment {
                 @Override
                 public void onReceive(Context context, Intent intent) {
                     Log.v(TAG, "receiving");
+                    String jsonQueue = intent.getStringExtra(Shared.Broadcasters.QUEUE_VALUE.name());
+                    Log.d(TAG, jsonQueue);
+
+                    //convert the json string to JamsQueue<Integer,TrackInfo>
                     Gson g = new Gson();
-                    String artLocation = intent.getStringExtra(Shared.Broadcasters.QUEUE_VALUE.name());
-                    Log.d(TAG, artLocation);
-                    TreeMap<Integer, TrackInfo> t = (g.fromJson(artLocation,
+                    TreeMap<Integer, TrackInfo> t = (g.fromJson(jsonQueue,
                             new TypeToken<MusicPlaybackService.JamsQueue<Integer, TrackInfo>>(){}.getType()));
 
-                    mListAdapter = new JamsArrayAdapter(getActivity().getApplicationContext(),
-                            R.layout.song_row, R.id.songView, t);
-                    ListView lv = (ListView) mRoot.findViewById(android.R.id.list);
-                    lv.setAdapter(mListAdapter);
+                    //update the queue
+                    mListAdapter.updateQueue(t);
                 }
             };
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(queueReceiver,
@@ -161,14 +169,10 @@ public class NowPlayingFragment extends Fragment {
             super.onPause();
             LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(queueReceiver);
         }
-        public JamsArrayAdapter getAdapter() {
-            return mListAdapter;
-        }
     }
 
     public static class JamsArrayAdapter extends ArrayAdapter {
         TreeMap<Integer, TrackInfo> queue;
-        int mId;
         private class TrackHolder {
             TextView song;
             TextView artist;
@@ -211,6 +215,15 @@ public class NowPlayingFragment extends Fragment {
             convertView.setTag(trackHolder);
 
             return convertView;
+        }
+
+        /**
+         * @param queue changes the data source
+         * then notifies data changed
+         */
+        public void updateQueue(TreeMap<Integer, TrackInfo> queue) {
+            this.queue = queue;
+            notifyDataSetChanged();
         }
     }
 
