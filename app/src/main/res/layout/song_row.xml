@@ -12,7 +12,7 @@
         android:id="@+id/songView"
         android:layout_toLeftOf="@+id/artView"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentEnd="false"
+        android:layout_alignParentRight="false"
         android:layout_alignParentStart="false" />
     <TextView
         android:layout_width="wrap_content"
@@ -40,7 +40,15 @@
         android:paddingLeft="10dp"
         android:id="@+id/artView"
         android:src="@drawable/default_album"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true"
+        android:layout_toLeftOf="@+id/imageButton"
         android:layout_centerVertical="true" />
+    <ImageButton
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerInParent="true"
+            android:layout_alignParentRight="true"
+            android:onClick="showMenu"
+            android:id="@+id/imageButton"
+            android:background="@drawable/abc_ic_menu_moreoverflow_mtrl_alpha"/>
 </RelativeLayout>

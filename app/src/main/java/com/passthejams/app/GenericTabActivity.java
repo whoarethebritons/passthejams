@@ -1,10 +1,14 @@
 package com.passthejams.app;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
 import android.widget.*;
 
 /**
@@ -87,6 +91,47 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
         super.onResume();
     }
 
+    public void showMenu(View view) {
+        PopupMenu popup = new PopupMenu(this, view);
+        MenuInflater inflater = popup.getMenuInflater();
+        inflater.inflate(R.menu.menu_song, popup.getMenu());
+
+        final int p = (int) view.getTag();
+        Log.v(TAG, String.valueOf(p));
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.action_last_fm:
+                        Log.d(TAG, "lastfm clicked");
+                        BottomMusicFragment f = (BottomMusicFragment)
+                                getParent().getFragmentManager().findFragmentById(R.id.bottomBar);
+                        f.isVisible();
+                        //Intent intent = makeActionIntent(button.name(), v.getVerticalScrollbarPosition(), discard);
+                        Intent intent = new Intent(getParent(), MusicPlaybackService.class);
+                        //specifies what action we will be performing
+                        intent.putExtra(Shared.Main.OPTION.name(), Shared.Service.PLAY.name());
+                        //specifies position in database of the song
+                        intent.putExtra(Shared.Main.POSITION.name(), p);
+                        //whether we are unpausing or skipping
+                        intent.putExtra(Shared.Main.DISCARD_PAUSE.name(), false);
+                        MusicPlaybackService.QueueObjectInfo queueObjectInfo =
+                                new MusicPlaybackService().new QueueObjectInfo(mCursor,
+                                        intent.getIntExtra(Shared.Main.POSITION.name(), 0));
+                        f.mService.serviceOnPlay(queueObjectInfo,
+                                intent.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), false);
+                        Button lastfm = (Button) getParent().findViewById(R.id.lastfmButton);
+                        lastfm.performClick();
+                        return true;
+                    case R.id.action_add_to_queue:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+        });
+        popup.show();
+    }
     public interface genericTabInterface {
         AdapterView.OnItemClickListener getListener();
         void passCursor(Cursor c, String type);

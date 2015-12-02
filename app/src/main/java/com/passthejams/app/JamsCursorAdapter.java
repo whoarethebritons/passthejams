@@ -2,15 +2,10 @@ package com.passthejams.app;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.net.Uri;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.SimpleCursorAdapter;
-
-import java.util.concurrent.ExecutionException;
 
 /**
  * Created by Eden on 11/8/2015.
@@ -29,5 +24,16 @@ public class JamsCursorAdapter extends SimpleCursorAdapter {
     @Override
     public void setViewImage(ImageView v, String value) {
         Shared.getAlbumArt(mContext, v, value);
+    }
+
+    @Override
+    public void bindView(View view, Context context, Cursor cursor) {
+        super.bindView(view, context, cursor);
+        int pos = cursor.getPosition();
+        View v = view.findViewById(R.id.imageButton);
+        if(v != null) {
+            v.setTag(pos);
+            Log.v(TAG, String.valueOf(pos));
+        }
     }
 }

@@ -118,7 +118,8 @@ public class BottomMusicFragment extends Fragment{
                         if (mService.getCurrentPlaying() != null) {
                             //get the ArrayList from LastFm
                             ArrayList<TrackInfo> test = new LastFm(getActivity().getApplicationContext(),
-                                    mService.getCurrentPlaying()).generateOrGetSimilar(getActivity().getContentResolver());
+                                    mService.getCurrentPlaying())
+                                    .generateOrGetSimilar(getActivity().getContentResolver());
                             //call the service passing the ArrayList
                             mService.addSimilarToQueue(test);
                         }
@@ -294,6 +295,7 @@ public class BottomMusicFragment extends Fragment{
     public TrackInfo currentSong() {
         return mService.getCurrentPlaying();
     }
+
 
     public interface OnFragmentInteractionListener {
         void onFragmentInteraction(AdapterView.OnItemClickListener s);
