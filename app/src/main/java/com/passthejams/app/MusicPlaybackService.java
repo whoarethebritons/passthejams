@@ -24,21 +24,25 @@ import java.util.TreeMap;
  */
 public class MusicPlaybackService extends Service implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnCompletionListener {
-    /*
-    Intents will have the following:
-        position of song to begin playing
-        action that is being requested
+    /**
+     * Intents will have the following:
+     * position of song to begin playing
+     * action that is being requested
      */
 
-    //used for binding service
     public class PlaybackBinder extends Binder {
+        /**
+         * @return MusicPlaybackService for binding
+         */
         MusicPlaybackService getService() {
             return MusicPlaybackService.this;
         }
     }
     PlaybackBinder mBinder = new PlaybackBinder();
 
-    //holds a paused song, the position of the song in the database and the position to seek to
+    /**
+     * holds a paused song, the position of the song in the database and the position to seek to
+     */
     class PausedSongHolder {
         int index;
         int seekTo;
@@ -51,12 +55,12 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         public int getIndex(){return index;}
         public int getSeekTo(){return seekTo;}
     }
-    //holds the object to make the queue from
+    /**
+     *  holds the object to make the queue from
+     */
     class QueueObjectInfo {
         Cursor mCursor;
         int mStartPosition;
-        boolean mShuffle;
-        boolean mRepeat;
         public QueueObjectInfo(Cursor c, int start) {
             mCursor = c;
             mStartPosition = start;
@@ -66,9 +70,16 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     public class JamsQueue<K, V> extends TreeMap<K, V> {
         private NowPlayingFragment.OnQueueChangeListener mListener;
 
+        /**
+         * @param e sets callback listener
+         */
         public void setOnQueueChangeListener(NowPlayingFragment.OnQueueChangeListener e) {
             mListener = e;
         }
+
+        /**
+         * performs callback
+         */
         public void doEvent() {
             if(mListener != null) {
                 mListener.onEvent();
@@ -83,7 +94,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     //position for logs
     int cursorPosition;
 
-    //position in treemap
+    //position in TreeMap
     int playPosition;
     boolean mShuffle = false;
 
@@ -91,25 +102,26 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     LocalBroadcastManager localBroadcastManager;
     BroadcastReceiver shuffleReceiver;
 
-    JamsQueue<Integer, TrackInfo> songqueue = new JamsQueue<>();
+    JamsQueue<Integer, TrackInfo> songQueue = new JamsQueue<>();
 
     //for logging
     final String TAG = "Service";
-    //these are possibly confusing
+    //TODO: these are possibly confusing
     final boolean PLAY = true, PAUSE=false;
 
     @Override
     public void onCreate() {
         super.onCreate();
         localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
-        songqueue.setOnQueueChangeListener(new NowPlayingFragment.OnQueueChangeListener() {
+        songQueue.setOnQueueChangeListener(new NowPlayingFragment.OnQueueChangeListener() {
             @Override
             public void onEvent() {
                 //sends album art to fragment to display the current artwork
                 Intent queue = new Intent(Shared.Broadcasters.BROADCAST_QUEUE.name());
                 Gson g = new Gson();
-                queue.putExtra(Shared.Broadcasters.QUEUE_VALUE.name(), g.toJson(songqueue,
-                        new TypeToken<JamsQueue<Integer, TrackInfo>>(){}.getType()));
+                queue.putExtra(Shared.Broadcasters.QUEUE_VALUE.name(), g.toJson(songQueue,
+                        new TypeToken<JamsQueue<Integer, TrackInfo>>() {
+                        }.getType()));
                 localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
                 localBroadcastManager.sendBroadcast(queue);
             }
@@ -118,7 +130,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         mMediaPlayer.setOnPreparedListener(this);
         mMediaPlayer.setOnCompletionListener(this);
 
-        /*button switching handling*/
+        /*shuffle switching handling*/
         shuffleReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -136,6 +148,11 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         return flags;
     }
 
+    /**
+     * pauses current song
+     * saves it to the pausedSongHolder
+     * sends update information to UI to display the play button
+     */
     public void serviceOnPause() {
         if(mMediaPlayer.isPlaying()) {
             //set the paused song holder to contain the position of the cursor and seek position
@@ -151,26 +168,36 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             sendButtonValue(PAUSE);
         }
     }
-    //get rid of paused song if it exists, move to next in cursor
+
+    /**
+     * gets rid of paused song if it exists
+     * moves to next in cursor
+     * sends that the queue should be updated with currently playing song
+     */
     public void serviceOnNext() {
         discardPause();
         playPosition++;
-        songqueue.doEvent();
+        songQueue.doEvent();
         changeSong();
     }
 
-    //get rid of paused song if it exists, move to previous in cursor
+    /**
+     * gets rid of paused song if it exists
+     * moves to previous in cursor
+     * sends that the queue should be updated with currently playing song
+     */
     public void serviceOnPrevious() {
         discardPause();
         playPosition--;
-        songqueue.doEvent();
+        songQueue.doEvent();
         changeSong();
     }
 
-    /* takes QueueObjectInfo inputQ which allows it to create the queue
-     * boolean discard which tells it whether to discard a pause or not
-     * boolean discardQ which tells it whether to discard the queue or not
-     *      if discardQ is false, the queue is discarded*/
+    /**
+     * @param inputQ type QueueObjectInfo holds cursor and current position
+     * @param discard type boolean: when true will discard a previous pause
+     * @param discardQ type boolean: when false will discard a previous queue
+     */
     public void serviceOnPlay(QueueObjectInfo inputQ, boolean discard, boolean discardQ) {
         Log.v(TAG, "Cursor size:" + inputQ.mCursor.getCount());
         int temp = 0;
@@ -180,7 +207,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         //keeping queue
         if(!discardQ) {
             discard = true;
-            songqueue.clear();
+            songQueue.clear();
             ArrayList<Integer> playOrders = new ArrayList<Integer>();
             for(int i = 0; i < inputQ.mCursor.getCount(); i++) {
                 playOrders.add(i);
@@ -190,7 +217,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             }
             //add all songs from the current cursor to the queue
             while (inputQ.mCursor.moveToPosition(temp)) {
-                songqueue.put(playOrders.get(mPlayOrder), new TrackInfo(
+                songQueue.put(playOrders.get(mPlayOrder), new TrackInfo(
                         inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media._ID)),
                         inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)),
                         inputQ.mCursor.getString(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
@@ -202,7 +229,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             }
 
         }
-        Log.d(TAG, songqueue.toString());
+        Log.d(TAG, songQueue.toString());
         //handle whether this is a new click or not
         if(discard || pausedSongHolder.index == -1) {
             discardPause();
@@ -220,18 +247,21 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
 
     }
 
+    /**
+     * @return boolean representing whether song change was successful
+     */
     public boolean changeSong(){
         int seekPosition=0;
         //if playPosition has not gone past the queue
-        if(playPosition <= songqueue.lastKey() && playPosition >= songqueue.firstKey()) {
+        if(playPosition <= songQueue.lastKey() && playPosition >= songQueue.firstKey()) {
             Log.v(TAG, "position: " + playPosition);
             cursorPosition = playPosition;
             //get the TrackInfo
-            TrackInfo trackInfo = songqueue.get(playPosition);
+            TrackInfo trackInfo = songQueue.get(playPosition);
             //get the item's uri
 
             Uri contentUri = ContentUris.withAppendedId(Shared.libraryUri,
-                    songqueue.get(playPosition).id);
+                    songQueue.get(playPosition).id);
             Log.v("Service", trackInfo.name);
 
             //sends album art to fragment to display the current artwork
@@ -272,7 +302,9 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         }
     }
 
-    //method to communicate to fragment about ui
+    /**
+     * method to communicate to fragment about ui
+     */
     public void sendButtonValue(boolean value) {
         //create an intent so that the broadcast receiver can filter
         Intent playPauseUpdate = new Intent(Shared.Broadcasters.BROADCAST_BUTTON.name());
@@ -285,7 +317,9 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         pausedSongHolder = new PausedSongHolder();
     }
 
-    //once media player is ready to play
+    /**
+     * once media player is ready to play
+     */
     @Override
     public void onPrepared(MediaPlayer mp) {
         //seek to paused song seek (or 0 if there is no paused song)
@@ -303,7 +337,6 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     @Override
     public boolean onUnbind(Intent intent) {
         mMediaPlayer.release();
-        //queue.close();
         stopSelf();
         return true;
     }
@@ -314,21 +347,22 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         serviceOnNext();
     }
 
-    /*
-        addSimilarToQueue takes an ArrayList of TrackInfo and adds it to the songqueue
-        called after LastFm to add similar songs
+    /**
+     * @param trackInfos type ArrayList<TrackInfo>
+     * is added to the songQueue
+     * called after LastFm to add similar songs
      */
     public void addSimilarToQueue(ArrayList<TrackInfo> trackInfos) {
-        TrackInfo baseSong = songqueue.get(playPosition);
+        TrackInfo baseSong = songQueue.get(playPosition);
         //clear the current queue
-        songqueue.clear();
+        songQueue.clear();
         int playOrder = 0;
         //add the original song
-        songqueue.put(playOrder, baseSong);
+        songQueue.put(playOrder, baseSong);
         //add all of the similar songs
         for(TrackInfo t : trackInfos) {
             if(!t.equals(baseSong)) {
-                songqueue.put(++playOrder, t);
+                songQueue.put(++playOrder, t);
             }
             else {
                 Log.d(TAG, "added song is base song");
@@ -338,21 +372,29 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         playPosition = 0;
         changeSong();
         Log.d(TAG, "insert size: " + trackInfos.size());
-        Log.d(TAG, "Queue size: " + String.valueOf(songqueue.size()));
-        songqueue.doEvent();
+        Log.d(TAG, "Queue size: " + String.valueOf(songQueue.size()));
+        songQueue.doEvent();
     }
-    /* added to get TrackInfo to send to LastFm */
+    /**
+     *  @return TrackInfo to send to LastFm
+     */
     public TrackInfo getCurrentPlaying() {
-        return songqueue.get(playPosition);
+        return songQueue.get(playPosition);
     }
 
+    /**
+     * @return TreeMap of songs in the queue
+     */
     public TreeMap<Integer, TrackInfo> getQueue() {
-        return songqueue;
+        return songQueue;
     }
 
+    /**
+     * @param c type Cursor contains one item
+     */
     public void addToQueue(Cursor c) {
-        int play = songqueue.size();
-        songqueue.put(play, new TrackInfo(
+        int play = songQueue.size();
+        songQueue.put(play, new TrackInfo(
                 c.getInt(c.getColumnIndex(MediaStore.Audio.Media._ID)),
                 c.getInt(c.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)),
                 c.getString(c.getColumnIndex(MediaStore.Audio.Media.TITLE)),
