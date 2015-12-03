@@ -1,12 +1,11 @@
 package com.passthejams.app;
 
 
-import android.app.Activity;
+import android.app.Fragment;
 import android.app.LocalActivityManager;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,6 +16,7 @@ import android.widget.TabHost;
 
 /**
  * A simple {@link Fragment} subclass.
+ * Holds the TabHost used for Library navigation
  */
 public class TabFragment extends Fragment {
 
@@ -95,8 +95,9 @@ public class TabFragment extends Fragment {
         }
     }
 
-    /*
-     *This method generates an Intent for GenericTabActivity with the following:
+    /**
+     * @param type describes whether it is song,artist,album,etc
+     * @return an Intent for GenericTabActivity with the following:
      * *the layout id
      * *the list id
      * *the layout of the row
@@ -107,16 +108,16 @@ public class TabFragment extends Fragment {
      * *the display fields
      * *the display text
      */
-    public Intent generateTabIntent(final Shared.TabType type) {
+    private Intent generateTabIntent(final Shared.TabType type) {
         Intent retIntent = new Intent(getActivity(), GenericTabActivity.class);
-        int layout_id = 0, list_id = 0, row_id = 0;
+        int layout_id = 0, row_id = 0;
         String[] projectionString = new String[0], selectionArguments = new String[0], displayFields = new String[0];
         String selectionString = null;
         String sortOrder = null;
         Uri uri = null;
         int[] displayText = new int[0];
 
-        list_id = android.R.id.list;
+        int list_id = android.R.id.list;
         switch (type) {
             case SONG:
                 layout_id = R.layout.song_layout;

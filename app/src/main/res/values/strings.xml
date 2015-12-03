@@ -14,4 +14,7 @@
     <string name="ExampleSong">Example Song</string>
     <string name="NetworkTitle">Network Devices</string>
     <string name="ExampleAlbum">Example Album</string>
+    <string name="ExampleArtist">Example Artist</string>
+    <string name="NowPlaying">Now Playing</string>
+    <string name="ExamplePlaylist">example Playlist</string>
 </resources>

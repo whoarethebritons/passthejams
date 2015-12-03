@@ -13,7 +13,7 @@
         android:layout_height="75dp"
         android:onClick="nowPlaying"
         android:src="@drawable/default_album"
-        android:id="@+id/currentAlbumArt" android:contentDescription="albumart"/>
+        android:id="@+id/currentAlbumArt" android:contentDescription="@string/ExampleAlbum"/>
 
     <Button
         style="?android:attr/buttonStyleSmall"

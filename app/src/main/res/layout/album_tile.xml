@@ -7,13 +7,13 @@
         android:layout_width="150dp"
         android:layout_height="150dp"
         android:id="@+id/albumView"
-        android:adjustViewBounds="false" />
+        android:adjustViewBounds="false" android:contentDescription="@string/ExampleAlbum"/>
 
     <TextView
         android:layout_width="150dp"
         android:layout_height="30dp"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Example Album"
+        android:text="@string/ExampleAlbum"
         android:id="@+id/albumTitle"
         android:textColor="#ffffff"
         android:singleLine="true"
@@ -23,7 +23,7 @@
         android:layout_width="150dp"
         android:layout_height="30dp"
         android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Example Artist"
+        android:text="@string/ExampleArtist"
         android:id="@+id/artistName"
         android:maxLines="1" />
 

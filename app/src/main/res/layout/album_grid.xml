@@ -7,11 +7,11 @@
     <ImageView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:src="@android:drawable/ic_dialog_alert"
-            android:id="@+id/imageView"/>
+            android:src="@drawable/default_album"
+            android:id="@+id/imageView" android:contentDescription="@string/ExampleAlbum"/>
     <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Example Album"
+            android:text="@string/ExampleAlbum"
             android:id="@+id/textView" android:layout_below="@+id/imageView" android:layout_centerHorizontal="true"/>
 </RelativeLayout>

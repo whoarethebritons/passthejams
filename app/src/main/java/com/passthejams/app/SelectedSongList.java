@@ -14,8 +14,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
-import android.widget.TextView;
-import android.widget.Toast;
 
 /**
  * Created by Admiral Sandvich on 11/15/2015.
@@ -37,8 +35,6 @@ public class SelectedSongList extends Fragment {
     public void onStart()
     {
         super.onStart();
-
-        int layout_id = R.layout.song_layout;
         Bundle bundle = this.getArguments();
         albumSongList = bundle.getBoolean("SONGLISTTYPE");
         listTitle = bundle.getString("TITLE");

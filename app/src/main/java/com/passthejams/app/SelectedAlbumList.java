@@ -1,10 +1,7 @@
 package com.passthejams.app;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
-import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -13,12 +10,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.GridView;
-import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 
 /**
  * Created by Admiral Sandvich on 11/15/2015.
@@ -39,8 +31,6 @@ public class SelectedAlbumList extends Fragment {
     public void onStart() {
         super.onStart();
 
-        //the fields to make the layout
-        int layout_id = R.layout.album_layout;
         //artistName = getIntent().getStringExtra("ARTISTNAME");
         Bundle bundle = this.getArguments();
         artistName = bundle.getString("ARTISTNAME");

@@ -14,7 +14,10 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.*;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -23,12 +26,14 @@ import java.util.TreeMap;
 
 /**
  * A simple {@link Fragment} subclass.
+ * NowPlayingFragment displays the information about the current song
+ * Queue fragment displays the songs that are going to be played next or were played previously
  */
 public class NowPlayingFragment extends Fragment {
-    BroadcastReceiver artReceiver;
-    ImageView album;
-    Toolbar toolbar;
-    final String TAG = "Now Playing";
+    private BroadcastReceiver artReceiver;
+    private ImageView album;
+    private Toolbar toolbar;
+    private final String TAG = "Now Playing";
 
     public NowPlayingFragment() {
         // Required empty public constructor
@@ -42,15 +47,22 @@ public class NowPlayingFragment extends Fragment {
         View root =  inflater.inflate(R.layout.fragment_now_playing, container, false);
         String id = getArguments().getString(Shared.Broadcasters.ART_VALUE.name());
         album = (ImageView) root.findViewById(R.id.nowPlayingArt);
+
+        //TODO: Add a menu to the toolbar to get rid of Queue button
+        //add the toolbar that displays the currently playing song
         toolbar = (Toolbar) root.findViewById(R.id.my_toolbar);
         toolbar.inflateMenu(R.menu.menu_now_playing);
-
         toolbar.setTitle("Now Playing");
+
         Log.d(TAG, String.valueOf(toolbar.canShowOverflowMenu()));
         Log.d(TAG, album.toString());
+
+        //retrieve the BottomMusicFragment so that we can see the currently playing song
         FragmentManager fragmentManager = getFragmentManager();
         BottomMusicFragment f = (BottomMusicFragment) fragmentManager.findFragmentById(R.id.bottomBar);
         TrackInfo current = f.currentSong();
+
+        //set the album art of the ImageView
         setNowPlayingArt(current);
         Log.d(TAG, "sent : " + id + "to imageview");
         return root;
@@ -88,7 +100,12 @@ public class NowPlayingFragment extends Fragment {
         super.onPause();
     }
 
-    public void setNowPlayingArt(TrackInfo artLocation) {
+    /**
+     * @param artLocation takes in TrackInfo that will be used to retrieve the album_id so that
+     *                    the album art can be displayed
+     *                    also sets the toolbar to the song name & artist
+     */
+    private void setNowPlayingArt(TrackInfo artLocation) {
         Log.v(TAG, "trackinfo changed");
         //method that will set the image to whatever is at the uri
         //Shared.getAlbumArt(String s) will resolve the uri
@@ -130,9 +147,7 @@ public class NowPlayingFragment extends Fragment {
             MusicPlaybackService.JamsQueue<Integer, TrackInfo> tempq = (MusicPlaybackService
                     .JamsQueue<Integer,TrackInfo>) f.queue();
 
-            /*
-            set the list adapter for the view
-             */
+            /* set the list adapter for the view */
             mListAdapter = new JamsArrayAdapter(getActivity().getApplicationContext(),
                     R.layout.song_row, R.id.songView, tempq);
             ListView lv = (ListView) root.findViewById(android.R.id.list);
@@ -196,6 +211,12 @@ public class NowPlayingFragment extends Fragment {
             return 0;
         }
 
+        /**
+         * @param position of the item
+         * @param convertView the view that is null or being recycled if it exists
+         * @param parent the ViewGroup that convertView is a part of
+         * @return the inflated View with the correct TrackHolder values set as its tag
+         */
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             if(convertView == null) {
@@ -228,6 +249,9 @@ public class NowPlayingFragment extends Fragment {
     }
 
     public interface OnQueueChangeListener {
+        /**
+         * Fires an event when the queue is changed
+         */
         void onEvent();
     }
 
