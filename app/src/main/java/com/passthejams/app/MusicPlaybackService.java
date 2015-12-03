@@ -21,6 +21,10 @@ import java.util.TreeMap;
 
 /**
  * Created by Eden on 7/20/2015.
+ * MusicPlaybackService is a Service running in the background during
+ * the lifetime of the application. It is bound to the BottomMusicFragment.
+ * BottomMusicFragment (and other fragments/activities that utilize its methods)
+ * allows the user to interact with the MusicPlaybackService and access its methods.
  */
 public class MusicPlaybackService extends Service implements MediaPlayer.OnPreparedListener,
         MediaPlayer.OnCompletionListener {
@@ -38,7 +42,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             return MusicPlaybackService.this;
         }
     }
-    PlaybackBinder mBinder = new PlaybackBinder();
+    private PlaybackBinder mBinder = new PlaybackBinder();
 
     /**
      * holds a paused song, the position of the song in the database and the position to seek to
@@ -88,26 +92,26 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     }
 
     //the media player everything will be playing from
-    MediaPlayer mMediaPlayer = new MediaPlayer();
+    private MediaPlayer mMediaPlayer = new MediaPlayer();
     //a paused holder so that there is not more than one
-    PausedSongHolder pausedSongHolder = new PausedSongHolder();
+    private PausedSongHolder pausedSongHolder = new PausedSongHolder();
     //position for logs
-    int cursorPosition;
+    private int cursorPosition;
 
     //position in TreeMap
-    int playPosition;
-    boolean mShuffle = false;
+    private int playPosition;
+    private boolean mShuffle = false;
 
     //broadcast manager to update ui
-    LocalBroadcastManager localBroadcastManager;
-    BroadcastReceiver shuffleReceiver;
+    private LocalBroadcastManager localBroadcastManager;
+    private BroadcastReceiver shuffleReceiver;
 
-    JamsQueue<Integer, TrackInfo> songQueue = new JamsQueue<>();
+    private JamsQueue<Integer, TrackInfo> songQueue = new JamsQueue<>();
 
     //for logging
     final String TAG = "Service";
     //TODO: these are possibly confusing
-    final boolean PLAY = true, PAUSE=false;
+    private final boolean PLAY = true, PAUSE=false;
 
     @Override
     public void onCreate() {
@@ -208,7 +212,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         if(!discardQ) {
             discard = true;
             songQueue.clear();
-            ArrayList<Integer> playOrders = new ArrayList<Integer>();
+            ArrayList<Integer> playOrders = new ArrayList<>();
             for(int i = 0; i < inputQ.mCursor.getCount(); i++) {
                 playOrders.add(i);
             }
@@ -250,7 +254,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     /**
      * @return boolean representing whether song change was successful
      */
-    public boolean changeSong(){
+    private boolean changeSong(){
         int seekPosition=0;
         //if playPosition has not gone past the queue
         if(playPosition <= songQueue.lastKey() && playPosition >= songQueue.firstKey()) {
@@ -305,14 +309,14 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     /**
      * method to communicate to fragment about ui
      */
-    public void sendButtonValue(boolean value) {
+    private void sendButtonValue(boolean value) {
         //create an intent so that the broadcast receiver can filter
         Intent playPauseUpdate = new Intent(Shared.Broadcasters.BROADCAST_BUTTON.name());
         playPauseUpdate.putExtra(Shared.Broadcasters.BUTTON_VALUE.name(), value);
         localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
         localBroadcastManager.sendBroadcast(playPauseUpdate);
     }
-    public void discardPause() {
+    private void discardPause() {
         Log.v(TAG, "discarded pause");
         pausedSongHolder = new PausedSongHolder();
     }
@@ -337,6 +341,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     @Override
     public boolean onUnbind(Intent intent) {
         mMediaPlayer.release();
+        LocalBroadcastManager.getInstance(getApplicationContext()).unregisterReceiver(shuffleReceiver);
         stopSelf();
         return true;
     }

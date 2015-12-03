@@ -26,7 +26,7 @@ public class BottomMusicFragment extends Fragment{
     //variable to hold the music service so that methods can be directly run
     MusicPlaybackService mService;
     //broadcast receivers for ui updates from service
-    BroadcastReceiver receiver, artReceiver;
+    private BroadcastReceiver receiver, artReceiver;
 
     //for interacting with holder activities
     private OnFragmentInteractionListener mListener;
@@ -35,11 +35,6 @@ public class BottomMusicFragment extends Fragment{
 
     public BottomMusicFragment() {}
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-
-        super.onCreate(savedInstanceState);
-    }
     @Override
     public void onStart() {
         super.onStart();
@@ -78,10 +73,10 @@ public class BottomMusicFragment extends Fragment{
         artReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.v(TAG, "receiving");Gson g = new Gson();
+                Log.v(TAG, "receiving");
+                Gson g = new Gson();
                 String artLocation = intent.getStringExtra(Shared.Broadcasters.ART_VALUE.name());
                 TrackInfo t = g.fromJson(artLocation, TrackInfo.class);
-                //setNowPlayingArt(t);
                 ImageView play = (ImageView) getActivity().findViewById(R.id.currentAlbumArt);
                 mListener.setImageVal(String.valueOf(t.album_id));
                 //method that will set the image to whatever is at the uri
@@ -160,11 +155,11 @@ public class BottomMusicFragment extends Fragment{
         });
     }
 
-    /*
+    /**
     ItemClickListener, will probably be reused and maybe in a different fragment
     that specifically uses the listviews to play the songs
     */
-    AdapterView.OnItemClickListener listItemClick = new AdapterView.OnItemClickListener() {
+    private AdapterView.OnItemClickListener listItemClick = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             int pos = parent.getPositionForView(view);
@@ -189,7 +184,7 @@ public class BottomMusicFragment extends Fragment{
     };
 
     //method for making intents for the button listeners
-    public Intent makeActionIntent(String option, int position, boolean discard) {
+    private Intent makeActionIntent(String option, int position, boolean discard) {
         Log.v(TAG, option);
         Intent intent = new Intent(getActivity(), MusicPlaybackService.class);
         //specifies what action we will be performing
@@ -201,7 +196,7 @@ public class BottomMusicFragment extends Fragment{
         return intent;
     }
     //button listeners
-    public View.OnClickListener buttonListeners(final Shared.Service button, final boolean discard) {
+    private View.OnClickListener buttonListeners(final Shared.Service button, final boolean discard) {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -214,9 +209,12 @@ public class BottomMusicFragment extends Fragment{
                 switch(button) {
                     case PLAY:
                         if(mListener.currentViewCursor() != null) {
+                            //QueueObjectInfo containing the cursor and position of song
+                            //when play is pressed assume it is position 0 we are requesting
                             MusicPlaybackService.QueueObjectInfo queueObjectInfo =
                                     new MusicPlaybackService().new QueueObjectInfo(mListener.currentViewCursor(),
                                             intent.getIntExtra(Shared.Main.POSITION.name(), 0));
+                            //TODO: pressing play always discards queue
                             mService.serviceOnPlay(queueObjectInfo,
                                     intent.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), false);
                         }
@@ -238,7 +236,7 @@ public class BottomMusicFragment extends Fragment{
     }
 
     //gets the service if we can successfully bind to it
-    ServiceConnection mServiceConnection = new ServiceConnection() {
+    private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.v(TAG, "bind success");
@@ -277,7 +275,6 @@ public class BottomMusicFragment extends Fragment{
         super.onAttach(activity);
         try {
             mListener = (OnFragmentInteractionListener) activity;
-            //holderActivity = mListener.setActivity();
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
@@ -291,25 +288,41 @@ public class BottomMusicFragment extends Fragment{
     }
     @Override
     public void onDestroy() {
-        Log.v(TAG, "destroyed");
         getActivity().unbindService(mServiceConnection);
         mBound = false;
         super.onDestroy();
     }
 
+    /**
+     * @return TreeMap for use in Queue fragment
+     */
     public TreeMap<Integer, TrackInfo> queue() {
         return mService.getQueue();
     }
 
+    /**
+     * @return TrackInfo for use in NowPlaying & Queue fragments
+     */
     public TrackInfo currentSong() {
         return mService.getCurrentPlaying();
     }
 
 
     public interface OnFragmentInteractionListener {
+        /**
+         * @param s sends OnItemClickListener
+         */
         void onFragmentInteraction(AdapterView.OnItemClickListener s);
+
+        /**
+         * @return Cursor from query that is currently displayed
+         */
         Cursor currentViewCursor();
-        //unused right now
+
+        /**
+         * @param albumid passes the Album Art's id when song changes
+         *                then when NowPlaying is opened it has the art id
+         */
         void setImageVal(String albumid);
     }
 

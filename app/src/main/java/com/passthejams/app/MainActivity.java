@@ -22,10 +22,7 @@ import android.widget.*;
 public class MainActivity extends Activity implements BottomMusicFragment.OnFragmentInteractionListener,
         GenericTabActivity.genericTabInterface, SelectedSongList.genericTabInterface{
     final String TAG="main";
-    Cursor returnCursor;
-    private String[] mDrawerItems;
-    private ListView mDrawerList;
-    private DrawerLayout mDrawerLayout;
+    private Cursor returnCursor;
     private ActionBarDrawerToggle mDrawerToggle;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
@@ -35,12 +32,12 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
+        /*start network service*/
         Context context = getApplicationContext();
         Intent intent = new Intent(this,NetworkService.class);
         context.startService(intent);
 
-
+        /*insert tab fragment into layout*/
         TabFragment tf = new TabFragment();
         FragmentTransaction ft = getFragmentManager().beginTransaction();
         ft.replace(R.id.mainContent, tf); // mainContent is the container for the fragments
@@ -49,16 +46,16 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         ft.commit();
 
         //the items that go in the drawer menu
-        mDrawerItems = new String[]{"Queue", "Network"};
+        String[] mDrawerItems = new String[]{"Queue", "Network"};
 
         mTitle = mDrawerTitle = getTitle();
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerList = (ListView) findViewById(R.id.left_drawer);
+        DrawerLayout mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ListView mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
         // set a custom shadow that overlays the main content when the drawer opens
         mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
         // set up the drawer's list view with items and click listener
-        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
+        mDrawerList.setAdapter(new ArrayAdapter<>(this,
                 android.R.layout.simple_list_item_1, mDrawerItems));
         mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
@@ -74,13 +71,17 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
             /** Called when a drawer has settled in a completely closed state. */
             public void onDrawerClosed(View view) {
                 super.onDrawerClosed(view);
-                getActionBar().setTitle(mTitle);
+                if(getActionBar() != null) {
+                    getActionBar().setTitle(mTitle);
+                }
             }
 
             /** Called when a drawer has settled in a completely open state. */
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
-                getActionBar().setTitle(mDrawerTitle);
+                if(getActionBar() != null) {
+                    getActionBar().setTitle(mDrawerTitle);
+                }
             }
         };
 
@@ -88,8 +89,10 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         mDrawerLayout.setDrawerListener(mDrawerToggle);
 
         // enable ActionBar app icon to behave as action to toggle nav drawer
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-        getActionBar().setHomeButtonEnabled(true);
+        if(getActionBar() != null) {
+            getActionBar().setDisplayHomeAsUpEnabled(true);
+            getActionBar().setHomeButtonEnabled(true);
+        }
 
 
     }
@@ -97,7 +100,8 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView parent, View view, int position, long id) {
-            System.out.println("item click");//selectItem(position);
+            //TODO: have the drawer items open their respective views
+            System.out.println("item click");
         }
     }
 
@@ -122,7 +126,8 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         }
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            /*SettingFragment s1 = new SettingFragment();
+            /* TODO: Settings Fragment/Activity
+            SettingFragment s1 = new SettingFragment();
             FragmentTransaction ft = getFragmentManager().beginTransaction();
             ft.replace(R.id.mainContent, s1); // f1_container is your FrameLayout container
             ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
@@ -130,7 +135,6 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
             ft.commit();*/
             return true;
         }
-
         //start network settings activity
         if (id == R.id.action_network_list) {
             Intent oManager = new Intent(this, NetworkListActivity.class);
@@ -159,22 +163,28 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         super.onDestroy();
     }
 
-    AdapterView.OnItemClickListener songListListener;
-    /*this is the override of the interface method that allows us to
-    give the main activity access to the itemclicklistener*/
+    private AdapterView.OnItemClickListener songListListener;
+
+    /**
+     * @param fragmentService gives the main activity access to the itemclicklistener
+     */
     @Override
     public void onFragmentInteraction(AdapterView.OnItemClickListener fragmentService) {
         songListListener = fragmentService;
         Log.v(TAG, "changed listener");
     }
 
-    /* currentViewCursor passes the current cursor to the fragment */
+    /**
+     * @return returnCursor passes to the fragment */
     @Override
     public Cursor currentViewCursor() {
         return returnCursor;
     }
 
-    /* getListener takes the Listener from the Fragment and passes it to the Tab */
+    /**
+     * @return OnItemClickListener to pass to the Tab
+     * getListener takes the Listener from the Fragment and passes it to the Tab
+     */
     @Override
     public AdapterView.OnItemClickListener getListener() {
         TabHost tabHost = (TabHost) findViewById(android.R.id.tabhost);
@@ -204,6 +214,9 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
                     }
                 };
             }
+        }
+        if(tabHost == null) {
+            return null;
         }
         switch(tabHost.getCurrentTabTag()) {
             case "Songs":
@@ -270,9 +283,11 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         }
     }
 
-    /*
-    passCursor allows Tabs to send their cursor over to Main
-    so that it may send it to the Fragment
+    /**
+     * @param c is a Cursor from one of the Tab views
+     * @param type is what the Cursor is displaying (song, album, artist)
+     * passCursor allows Tabs to send their cursor over to Main
+     * so that it may send it to the Fragment
      */
     @Override
     public void passCursor(Cursor c, String type) {
@@ -281,12 +296,21 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         }
     }
 
-    String albumid;
+    private String albumid;
+
+    /**
+     * @param i allows MainActivity to pass the String albumid to NowPlayingFragment
+     *          this is so it can load the album art onCreateView
+     */
     @Override
     public void setImageVal(String i) {
         albumid = i;
     }
 
+    /**
+     * @param view is a view that the user clicks on
+     *             that opens the NowPlayingFragment if one is not open
+     */
     public void nowPlaying(View view) {
         FragmentManager fragmentManager = getFragmentManager();
         Fragment f = fragmentManager.findFragmentById(R.id.mainContent);
@@ -307,10 +331,15 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         Log.v(TAG, "backstack val: " + fragmentManager.getBackStackEntryCount());
     }
 
+    /**
+     * @param view is a view that the user clicks on
+     *             that opens the Queue fragment if one is not open
+     */
     public void showQueue(View view) {
         FragmentManager fragmentManager = getFragmentManager();
         Fragment f = fragmentManager.findFragmentById(R.id.mainContent);
         Log.v(TAG, "backstack val: " + fragmentManager.getBackStackEntryCount());
+        //if Queue is not already open
         if(! (f instanceof NowPlayingFragment.Queue)) {
             Log.v(TAG, String.valueOf(f.isVisible()));
             Log.v(TAG, "added a now playing");

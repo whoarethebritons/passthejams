@@ -6,37 +6,42 @@ import android.content.Context;
 import android.database.Cursor;
 import android.provider.MediaStore;
 import android.util.Log;
+import com.snappydb.DB;
+import com.snappydb.DBFactory;
 import com.snappydb.SnappydbException;
 import de.umass.lastfm.Caller;
 import de.umass.lastfm.ResponseBuilder;
 import de.umass.lastfm.Result;
 import de.umass.lastfm.Track;
+import de.umass.lastfm.cache.FileSystemCache;
+import de.umass.util.StringUtilities;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.snappydb.DB;
-import com.snappydb.DBFactory;
-import de.umass.lastfm.cache.FileSystemCache;
-import de.umass.util.StringUtilities;
-
 /**
  * Created by eden on 9/11/15.
+ * LastFm is used to retrieve similar songs from the Last.Fm database
+ * then check if the user owns those songs
+ * and finally add them to the app's personal database of similar songs
  */
 public class LastFm extends Activity{
-    TrackInfo trackInfo;
-    String key="1d8a009cf65d2b94309cd1d52731b6d4";
     final String TAG = "LastFm";
-    DB snappydb;
-    Context mContext;
-    public LastFm(){}
+    private TrackInfo trackInfo;
+    //TODO: better way to store API key from Last.Fm
+    private String key="1d8a009cf65d2b94309cd1d52731b6d4";
+
+    private DB snappydb;
+    private Context mContext;
     public LastFm(Context c, TrackInfo trackInfo) {
         this.trackInfo = trackInfo;
         mContext = c;
         try {
             snappydb = DBFactory.open(c, "passthejams"); //create or open an existing database using the default name
         } catch (SnappydbException e) {
+            Log.e(TAG, e.getMessage());
         }
     }
 
@@ -47,20 +52,19 @@ public class LastFm extends Activity{
         String song = trackInfo.title;
         String artist = trackInfo.artist;
         int album_id;
-        ArrayList<TrackInfo> similar = new ArrayList<>();
+        ArrayList<TrackInfo> similar = new ArrayList<TrackInfo>();
 
+        //TODO: limit application to at most 5 requests per second
         try {
             //if it already exists, get the ArrayList from the database
             similar = snappydb.getObject(String.valueOf(id), similar.getClass());
             Log.d(TAG, "exists in db");
         } catch (SnappydbException e) {
-            Log.d(TAG, "does not exist in db");
-
-            //give Last.Fm a cache
+            /*overriding setup of Caller from LastFm API mainly by adding Android's cache directory*/
             FileSystemCache fileSystemCache = new FileSystemCache(mContext.getCacheDir());
             Caller caller = Caller.getInstance();
             caller.setCache(fileSystemCache);
-            Map<String, String> params = new HashMap<String, String>();
+            Map<String, String> params = new HashMap<>();
             if (StringUtilities.isMbid(song)) {
                 params.put("mbid", song);
             } else {
@@ -89,14 +93,14 @@ public class LastFm extends Activity{
                 //write this information to the database
                 snappydb.put(String.valueOf(id), similar);
             } catch (SnappydbException e1) {
-                e1.printStackTrace();
+                Log.e(TAG, e1.getMessage());
             }
         }
 
         try {
             snappydb.close();
         } catch (SnappydbException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage());
         }
         //return ArrayList that Fragment will add to queue
         return similar;

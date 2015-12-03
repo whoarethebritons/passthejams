@@ -27,16 +27,17 @@ import android.widget.*;
  * *the display text
  */
 public class GenericTabActivity<T extends AbsListView> extends Activity {
-    Cursor mCursor;
+    private Cursor mCursor;
     final String TAG= "Generic Tab";
-    int list_id;
-    String tabType;
+    private int list_id;
+    private String tabType;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         tabType = getIntent().getStringExtra(Shared.TabIntent.TYPE.name());
+
         //the fields to make the layout
         int layout_id = getIntent().getIntExtra(Shared.TabIntent.LAYOUT.name(), R.layout.song_layout);
         list_id = getIntent().getIntExtra(Shared.TabIntent.LISTVIEW.name(), android.R.id.list);
@@ -114,11 +115,14 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
                         intent.putExtra(Shared.Main.POSITION.name(), p);
                         //whether we are unpausing or skipping
                         intent.putExtra(Shared.Main.DISCARD_PAUSE.name(), false);
+                        //requests position of song in list given current cursor
                         MusicPlaybackService.QueueObjectInfo queueObjectInfo =
                                 new MusicPlaybackService().new QueueObjectInfo(mCursor,
                                         intent.getIntExtra(Shared.Main.POSITION.name(), 0));
+                        //calls play
                         f.mService.serviceOnPlay(queueObjectInfo,
                                 intent.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), false);
+                        //so that it can then run the lastfm method
                         Button lastfm = (Button) getParent().findViewById(R.id.lastfmButton);
                         lastfm.performClick();
                         return true;
@@ -126,7 +130,7 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
                         BottomMusicFragment fr = (BottomMusicFragment)
                                 getParent().getFragmentManager().findFragmentById(R.id.bottomBar);
                         ListView lv = (ListView) findViewById(android.R.id.list);
-
+                        //get item at requested position and add it to queue using BottomMusicFragment
                         fr.mService.addToQueue((Cursor)lv.getAdapter().getItem(p));
                         return true;
                     default:
@@ -137,7 +141,15 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
         popup.show();
     }
     public interface genericTabInterface {
+        /**
+         * @return OnItemClickListener from observer
+         */
         AdapterView.OnItemClickListener getListener();
+
+        /**
+         * @param c sends current Cursor to observer
+         * @param type sends type (i.e. song, album, artist) of Cursor to observer
+         */
         void passCursor(Cursor c, String type);
     }
 }
