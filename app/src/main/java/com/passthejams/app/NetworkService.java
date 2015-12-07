@@ -20,6 +20,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.io.*;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -43,24 +45,23 @@ public class NetworkService extends Service implements Closeable{
     private ServerSocket serverSocket = null;
 
     //TODO: get settings storage
-    public String name = "Name Me";
+    public String name = "Test Phone";
     public static final String undefined = "This operation is undefined";
     public static final int BUFFER_SIZE = 1024;
 
     private int port = 0;
-    String mServiceName = null;
-    NsdManager.RegistrationListener mRegistrationListener = null;
-    NsdManager mNsdManager = null;
-    NsdManager.DiscoveryListener mDiscoveryListener = null;
-    public static final String SERVICE_TYPE = "_http._tcp.";
+    private NsdHelper mNsdHelper = null;
 
-    NsdServiceInfo mService = null;
-
-    HashMap<String,NsdServiceInfo> networkDevices = new HashMap<>();
+    //nsd doesn't work if the socket is on an IPv6 address
+    //This doesn't seem to help though.
+    static {
+        System.setProperty("java.net.preferIPv4Stack" , "true");
+    }
 
     public NetworkService() {
     }
 
+    //Methods for binding with service
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
@@ -73,6 +74,13 @@ public class NetworkService extends Service implements Closeable{
     }
     NetworkBinder mBinder = new NetworkBinder();
 
+    /**
+     * Called when this service is started.
+     * @param intent
+     * @param flags
+     * @param startId
+     * @return
+     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         //set up server
@@ -85,6 +93,9 @@ public class NetworkService extends Service implements Closeable{
         return START_STICKY;
     }
 
+    /**
+     * Cleans up when this service is stopped.
+     */
     @Override
     public void onDestroy() {
         try {
@@ -94,15 +105,17 @@ public class NetworkService extends Service implements Closeable{
         }
     }
 
+    /**
+     * Used to stop this service. Closes the socket which will cause the network thread to stop.
+     * @throws IOException
+     */
     @Override
     public void close() throws IOException {
         quit = true;
         serverSocket.close();
         serverSocket = null;
-        if(mNsdManager != null) {
-            mNsdManager.stopServiceDiscovery(mDiscoveryListener);
-            mNsdManager.unregisterService(mRegistrationListener);
-            mNsdManager = null;
+        if(mNsdHelper != null) {
+            mNsdHelper.close();
         }
     }
 
@@ -119,31 +132,25 @@ public class NetworkService extends Service implements Closeable{
 
         @Override
         public void run() {
+            //initialize socket and nsd
             Log.v(TAG,getSongs());
             try {
-                service.serverSocket = new ServerSocket(service.port);
+                serverSocket = new ServerSocket(port);
             } catch (IOException e) {
                 e.printStackTrace();
-                service.serverSocket = null;
+                serverSocket = null;
                 return;
             }
-            service.port = service.serverSocket.getLocalPort();
+            port = serverSocket.getLocalPort();
             Log.d(TAG, "Started ServerSocket on "+serverSocket.getInetAddress()+":" + port);
+            if(serverSocket.getInetAddress() instanceof Inet6Address) {
+                Log.v(TAG,"sever binded to ipv6 address");
+            }
+            mNsdHelper = new NsdHelper("Passthejams",port,serverSocket.getInetAddress(),NetworkService.this);
+            mNsdHelper.registerService();
+            mNsdHelper.startDiscovery();
 
-            NsdServiceInfo serviceInfo = new NsdServiceInfo();
-
-            serviceInfo.setServiceName("PassTheJams");
-            serviceInfo.setServiceType(SERVICE_TYPE);
-            serviceInfo.setPort(service.port);
-
-            service.initializeRegistrationListener();
-            service.initializeDiscoveryListener();
-
-            service.mNsdManager = (NsdManager) getSystemService(Context.NSD_SERVICE);
-            service.mNsdManager.registerService(
-                    serviceInfo, NsdManager.PROTOCOL_DNS_SD, service.mRegistrationListener);
-            service.mNsdManager.discoverServices(SERVICE_TYPE,
-                    NsdManager.PROTOCOL_DNS_SD, service.mDiscoveryListener);
+            //main network loop
             while(!service.quit) {
                 try {
                     Socket socky = service.serverSocket.accept();
@@ -156,19 +163,67 @@ public class NetworkService extends Service implements Closeable{
         }
     }
 
+    /**
+     * Returns a list of devices found on the network with nsd.
+     * @return
+     */
     public ArrayList<Device> getDevices() {
         ArrayList<Device> devices = new ArrayList<>();
-        for(String deviceName:networkDevices.keySet()) {
-            NsdServiceInfo info = networkDevices.get(deviceName);
-            Device d = new Device();
-            d.host = info.getHost();
-            d.port = info.getPort();
-            d.name = deviceName;
-            devices.add(d);
+
+        for(String deviceName:mNsdHelper.getNetworkDevices().keySet()) {
+            devices.add(mNsdHelper.getNetworkDevices().get(deviceName));
         }
         return devices;
     }
 
+    //==============================================================================================
+    //methods for talking to other devices
+    //==============================================================================================
+
+    /**
+     * Talks to the other device and gets its name.
+     * @param device
+     * @param callback
+     */
+    public void getDeviceName(final Device device, final GetDeviceNameCallback callback) {
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                Socket s = null;
+                BufferedReader in = null;
+                PrintWriter out = null;
+                try {
+                    s = new Socket(device.host,device.port);
+                    in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+                    out = new PrintWriter(s.getOutputStream());
+                    out.println("getName");
+                    out.flush();
+                    String name = in.readLine();
+                    if(callback != null) callback.onSuccess(device,name);
+                } catch (IOException e) {
+                    if(callback != null) callback.onError(device,e);
+                } finally {
+                    if(out != null)try{out.close();}catch (Exception e){}
+                    out = null;
+                    if(in != null)try{in.close();}catch (Exception e){}
+                    in = null;
+                    if(s != null)try{s.close();}catch (Exception e){}
+                    s = null;
+                }
+            }
+        };
+        new Thread(r).start();
+    }
+    public interface GetDeviceNameCallback {
+        void onSuccess(Device device, String name);
+        void onError(Device device, Exception e);
+    }
+
+    /**
+     * Talks to the other device, retries a json string representing all of its songs.
+     * @param device
+     * @param callback
+     */
     public void getSongs(final Device device, final Callback callback) {
         Runnable r = new Runnable() {
             @Override
@@ -202,6 +257,13 @@ public class NetworkService extends Service implements Closeable{
         void stringCallback(NetworkService service, Device device, String response);
     }
 
+    /**
+     * Talks to the other device, and retrieves a song from it. TrackInfo song must have a song id
+     * from the other device. The song is copied and added to the mediastore.
+     * @param song
+     * @param device
+     * @param callback
+     */
     public void getSong(final TrackInfo song, final Device device, final GetSongCallback callback) {
         Runnable r = new Runnable() {
             @Override
@@ -240,6 +302,13 @@ public class NetworkService extends Service implements Closeable{
         void onError(NetworkService service, Device device, TrackInfo song, Exception error);
     }
 
+    //==============================================================================================
+    //Dealing with incoming requests
+    //==============================================================================================
+
+    /**
+     * This runnable is called to handle all incoming connections.
+     */
     private class ConnectionHelper implements Runnable {
         NetworkService service = null;
         Socket socket = null;
@@ -329,9 +398,14 @@ public class NetworkService extends Service implements Closeable{
         return new Gson().toJson(array);
     }
 
+    /**
+     * Copies the song with given id to out.
+     * @param id
+     * @param out
+     */
     private void sendSong(int id, OutputStream out) {
         Uri uri = ContentUris.withAppendedId(Shared.libraryUri, id);
-        Log.v(TAG,"Sending uri "+uri);
+        Log.v(TAG, "Sending uri " + uri);
         Cursor cursor = getContentResolver().query(uri,new String[]{MediaStore.Audio.AudioColumns.DATA},null,null,null);
         File f = null;
         if(cursor != null) {
@@ -346,10 +420,18 @@ public class NetworkService extends Service implements Closeable{
         sendFile(f, out);
     }
 
+    /**
+     * Unimplemented. Should return json of TrackInfo of current song.
+     * @return
+     */
     private  String getCurrentSong() {
         return "";
     }
 
+    /**
+     * Retrieves json of a suggested song and notifies the user. Not fully implemented.
+     * @param json
+     */
     private void suggestSong(JsonObject json) {
         Context context = getApplicationContext();
         String song = json.getAsJsonPrimitive("title").getAsString();
@@ -359,6 +441,7 @@ public class NetworkService extends Service implements Closeable{
 
     /**
      * Recieves the song file over the input stream, saving to a temporary file.
+     * Not currently used or tested.
      * @param json
      * @param in
      */
@@ -407,6 +490,8 @@ public class NetworkService extends Service implements Closeable{
 
         Log.v(TAG, "Adding file to mediastore " + songFile.getAbsolutePath() + " mime " + song.getMimeType());
 
+        //Calling ScanMedia didn't add the file as a song
+        //Instead, we must add it manually
         ContentValues values = new ContentValues();
         values.put(MediaStore.MediaColumns.DATA, songFile.getAbsolutePath());
         values.put(MediaStore.MediaColumns.DISPLAY_NAME, songFile.getName());
@@ -425,6 +510,11 @@ public class NetworkService extends Service implements Closeable{
         return song2;
     }
 
+    /**
+     * Copies the given file to an output stream.
+     * @param f
+     * @param out
+     */
     private void sendFile(File f, OutputStream out) {
         byte buffer[] = new byte[BUFFER_SIZE];
         FileInputStream in = null;
@@ -445,6 +535,7 @@ public class NetworkService extends Service implements Closeable{
         }
     }
 
+    //Recieves a given file from the input stream.
     private void recieveFile(File f, InputStream in) {
         Log.v(TAG,"Recieving file "+f.getAbsolutePath());
         byte buffer[] = new byte[BUFFER_SIZE];
@@ -471,110 +562,4 @@ public class NetworkService extends Service implements Closeable{
         }
         Log.v(TAG,"Wrote "+total+" bytes");
     }
-
-
-    //nsd stuff
-    public void initializeRegistrationListener() {
-        mRegistrationListener = new NsdManager.RegistrationListener() {
-            @Override
-            public void onServiceRegistered(NsdServiceInfo nsdServiceInfo) {
-                mServiceName = nsdServiceInfo.getServiceName();
-            }
-            @Override
-            public void onRegistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
-                //error
-                //display error to screen
-            }
-
-            @Override
-            public void onServiceUnregistered(NsdServiceInfo serviceInfo) {
-
-            }
-
-            @Override
-            public void onUnregistrationFailed(NsdServiceInfo serviceInfo, int errorCode) {
-
-            }
-        };
-    }
-
-    public void initializeDiscoveryListener() {
-        mDiscoveryListener = new NsdManager.DiscoveryListener() {
-            @Override
-            public void onDiscoveryStarted(String regType) {
-                Log.d(TAG, "Service discovery started.");
-                networkDevices = new HashMap<>();
-            }
-
-            @Override
-            public void onServiceFound(NsdServiceInfo service) {
-                if(service.getServiceType().equals(SERVICE_TYPE)) {
-                    if(service.getServiceName().contains("PassTheJams") &&
-                            (!service.getServiceName().equals(mServiceName)||true)) {
-                        Log.v(TAG, "Service discovery success " + service);
-                        mNsdManager.resolveService(service, newResolveListener());
-                        //networkDevices.put(service.getServiceName(), service);
-                    }
-                }
-            }
-
-            @Override
-            public void onServiceLost(NsdServiceInfo service) {
-                if(service.getServiceType().equals(SERVICE_TYPE)) {
-                    if(service.getServiceName().contains("PassTheJams") &&
-                            !service.getServiceName().equals(mServiceName)) {
-                        Log.e(TAG, "Service lost: " + service);
-                        networkDevices.remove(service.getServiceName());
-                    }
-                }
-            }
-
-            @Override
-            public void onDiscoveryStopped(String service) {
-                networkDevices = new HashMap<>();
-            }
-            @Override
-            public void onStartDiscoveryFailed(String serviceType, int errorCode) {
-                Log.e(TAG, "Discovery failed: Error code:" + errorCode);
-                try {
-                    //mNsdManager.stopServiceDiscovery(this);
-                }catch(IllegalArgumentException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onStopDiscoveryFailed(String serviceType, int errorCode) {
-                Log.e(TAG, "Discovery failed: Error code:" + errorCode);
-                //mNsdManager.stopServiceDiscovery(this);
-            }
-        };
-    }
-
-    public NsdManager.ResolveListener newResolveListener() {
-        return new NsdManager.ResolveListener() {
-
-            @Override
-            public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
-                // Called when the resolve fails.  Use the error code to debug.
-                Log.e(TAG, "Resolve failed" + errorCode);
-            }
-
-            @Override
-            public void onServiceResolved(NsdServiceInfo serviceInfo) {
-                networkDevices.put(serviceInfo.getServiceName(),serviceInfo);
-                Log.v(TAG,"Connected to " + serviceInfo);
-            }
-        };
-    }
-
-    public static class Device implements Serializable {
-        private static final long serialVersionUID = 0L;
-        public InetAddress  host;
-        public int          port;
-        public String       name;
-    }
-
-
-
 }
