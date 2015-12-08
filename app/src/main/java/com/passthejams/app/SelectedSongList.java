@@ -16,7 +16,10 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
 /**
- * Created by Admiral Sandvich on 11/15/2015.
+ * Created by Francisco on 11/15/2015.
+ * Given a name of a song list and the type(album or playlist)
+ * Return a view with the songs in the album or playlist and
+ * have the songs playable when the song is clicked.
  */
 public class SelectedSongList extends Fragment {
     Cursor mCursor;
@@ -36,16 +39,19 @@ public class SelectedSongList extends Fragment {
     {
         super.onStart();
         Bundle bundle = this.getArguments();
+        //Find out if album or playlist
         albumSongList = bundle.getBoolean("SONGLISTTYPE");
+        //Name of the song or playlist
         listTitle = bundle.getString("TITLE");
         int row_layout = R.layout.song_row;
-        //if null then we get a list from an album
-        if (albumSongList) {
+        //Different queries required to display an album vs a playlist
+        if (albumSongList) {//we got an album
             Log.v(TAG, "Getting songs from album: " + listTitle);
 
-
             //query the database for album sorted by track number
-            mCursor = getActivity().managedQuery(Shared.libraryUri, Shared.PROJECTION_SONG,
+            //replace required to query albums with apostrophes
+            mCursor = getActivity().managedQuery(Shared.libraryUri,
+                    Shared.PROJECTION_SONG,
                     MediaStore.Audio.Media.IS_MUSIC + "!=0 AND " +
                     MediaStore.Audio.Albums.ALBUM + " = " + "'" + listTitle.replace("'","''") + "'",
                     null, (MediaStore.Audio.Media.TRACK + " ASC"));
@@ -68,7 +74,7 @@ public class SelectedSongList extends Fragment {
             lv.setAdapter(simpleCursorAdapter);
             genericTabInterface e = (genericTabInterface) getActivity();
 
-            //get click listener
+            //get click listener to play song
             lv.setOnItemClickListener(e.getListener());
             //pass cursor
             e.passCursor(mCursor, Shared.TabType.SONG.name());
@@ -76,6 +82,7 @@ public class SelectedSongList extends Fragment {
         //else we got a playlist
         else{
             Log.v(TAG, "Getting songs from playlist: " + listTitle);
+
             //get the playlist id from db given playlist name
             Cursor cursor = getActivity().managedQuery(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
                     Shared.PROJECTION_PLAYLIST,
@@ -94,7 +101,7 @@ public class SelectedSongList extends Fragment {
             };
             //Gets table of songs that are in the specified playlist
             Uri playlistMembers = MediaStore.Audio.Playlists.Members.getContentUri("external",playlistID);
-            //cursor with songs from given playlist
+            //cursor with songs from given playlist sorted by insertion order
             mCursor = getActivity().managedQuery(playlistMembers, proj, null, null,
                     MediaStore.Audio.Playlists.Members.DEFAULT_SORT_ORDER);
             //Start rebuilding using shared URI
@@ -103,27 +110,28 @@ public class SelectedSongList extends Fragment {
             //Check to make sure cursor isn't empty
             if (mCursor.moveToFirst()){
                     //get the first song's id
-                    String data = mCursor.getString(mCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID));
+                    String audioID = mCursor.getString(mCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID));
                     //temp cursor should only return 1 song
                     Cursor temp = getActivity().managedQuery(Shared.libraryUri,
                             Shared.PROJECTION_SONG,
-                            MediaStore.Audio.Media._ID +" = "+"'"+data+"'",
+                            MediaStore.Audio.Media._ID +" = "+"'"+audioID+"'",
                             null, (MediaStore.Audio.Media.TRACK + " ASC"));
                     // initialize passcursor with first item
                     passCursor = temp;
                     // get any other items in mCursor
                     while(mCursor.moveToNext()){
                         //get the rest of the song ids
-                        data = mCursor.getString(mCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID));
+                        audioID = mCursor.getString(mCursor.getColumnIndex(MediaStore.Audio.Playlists.Members.AUDIO_ID));
                         temp = getActivity().managedQuery(Shared.libraryUri,
                             Shared.PROJECTION_SONG,
-                            MediaStore.Audio.Media._ID + " = " + "'" + data + "'",
+                            MediaStore.Audio.Media._ID + " = " + "'" + audioID + "'",
                             null, (MediaStore.Audio.Media.TRACK + " ASC"));
-                        //cursor array for merge cursor, passCursor probably needs to be first
+                        //cursor array for merge cursor, passCursor needs to be first
                         Cursor[] toMerge = new Cursor[]{passCursor,temp};
                         //passcursor gains rows 1 by 1 as long as there are rows left in mCursor
                         passCursor = new MergeCursor(toMerge);
                      }
+                //passCursor is now built like mCursor but with proper URI and columns to play songs
                 mCursor = passCursor;
                 }
 

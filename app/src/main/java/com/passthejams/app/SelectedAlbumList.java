@@ -13,7 +13,9 @@ import android.view.ViewGroup;
 import android.widget.*;
 
 /**
- * Created by Admiral Sandvich on 11/15/2015.
+ * Created by Francisco on 11/15/2015.
+ * Given an artist name provide a list of albums that artist has appeared on.
+ * Clicking on an album then provides a new view with the songs in the selected album.
  */
 public class SelectedAlbumList extends Fragment {
     Cursor mCursor;
@@ -30,8 +32,7 @@ public class SelectedAlbumList extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-
-        //artistName = getIntent().getStringExtra("ARTISTNAME");
+        //Get passed parameters
         Bundle bundle = this.getArguments();
         artistName = bundle.getString("ARTISTNAME");
         int row_layout = R.layout.album_tile;
@@ -50,7 +51,7 @@ public class SelectedAlbumList extends Fragment {
         //Uri returns table with all albums containing an artist
         Uri artistAlbums = MediaStore.Audio.Artists.Albums.getContentUri("external", artistID);
         //query to get albums for a given artistID
-        //necessary so it shows albums that an artist is in but no the author of EX:compilations
+        //necessary so it shows albums that an artist is in but not the author of EX:compilations
         mCursor = getActivity().managedQuery(artistAlbums, null, null, null,
                 MediaStore.Audio.Albums.DEFAULT_SORT_ORDER);
 
@@ -65,6 +66,7 @@ public class SelectedAlbumList extends Fragment {
 
         //fields to display text in
         int[] displayText = new int[]{R.id.artistName, R.id.albumTitle, R.id.albumView};
+        //Here is where we take the name of the album of the selected album and create a new SelectedSongList
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent,
                                     View v, int position, long id) {
@@ -81,6 +83,7 @@ public class SelectedAlbumList extends Fragment {
                 ft.commit();
             }
         });
+        //Take the cursor an fill in the view with the appropriate info from the columns
         SimpleCursorAdapter simpleCursorAdapter = new JamsCursorAdapter(getActivity(), row_layout, mCursor,
                 displayFields, displayText);
 
