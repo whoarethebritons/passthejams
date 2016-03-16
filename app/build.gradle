@@ -32,4 +32,5 @@ dependencies {
     compile 'com.snappydb:snappydb-lib:0.5.2'
     compile 'com.esotericsoftware.kryo:kryo:2.24.0'
     compile 'com.google.code.gson:gson:2.4'
+    compile 'asia.ivity.android:drag-sort-listview:1.0'
 }

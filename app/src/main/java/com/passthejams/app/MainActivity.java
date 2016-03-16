@@ -20,7 +20,7 @@ import android.widget.*;
 
 
 public class MainActivity extends Activity implements BottomMusicFragment.OnFragmentInteractionListener,
-        GenericTabActivity.genericTabInterface, SelectedSongList.genericTabInterface{
+        GenericTabActivity.genericTabInterface, SelectedSongList.genericTabInterface, PlaylistSongList.genericTabInterface{
     final String TAG="main";
     private Cursor returnCursor;
     final int NOTIFICATION_ID = 24;
@@ -192,7 +192,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         if(tabHost == null) {
             FragmentManager fragmentManager = getFragmentManager();
             Fragment f = fragmentManager.findFragmentById(R.id.mainContent);
-            if((f instanceof SelectedSongList)) {
+            if((f instanceof SelectedSongList || f instanceof PlaylistSongList)) {
                 return songListListener;
             }
             else if(f instanceof SelectedAlbumList) {
@@ -248,10 +248,9 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
                                             View v, int position, long id)
                     {
                         String playlistTitle = (String)((TextView) v.findViewById(R.id.playlistName)).getText();
-                        SelectedSongList pl = new SelectedSongList();
+                        PlaylistSongList pl = new PlaylistSongList();
                         Bundle bundle = new Bundle();
                         bundle.putString("TITLE", playlistTitle);
-                        bundle.putBoolean("SONGLISTTYPE", false);
                         pl.setArguments(bundle);
                         FragmentTransaction ft = getFragmentManager().beginTransaction();
                         ft.replace(R.id.mainContent, pl);
