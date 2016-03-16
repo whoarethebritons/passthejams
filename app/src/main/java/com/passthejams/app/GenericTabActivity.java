@@ -133,6 +133,13 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
                         //get item at requested position and add it to queue using BottomMusicFragment
                         fr.mService.addToQueue((Cursor)lv.getAdapter().getItem(p));
                         return true;
+                    case R.id.action_play_next:
+                        BottomMusicFragment fr2 = (BottomMusicFragment)
+                                getParent().getFragmentManager().findFragmentById(R.id.bottomBar);
+                        ListView lv2 = (ListView) findViewById(android.R.id.list);
+                        //get item at requested position and add it to queue using BottomMusicFragment
+                        fr2.mService.playNext((Cursor)lv2.getAdapter().getItem(p));
+                        return true;
                     default:
                         return false;
                 }

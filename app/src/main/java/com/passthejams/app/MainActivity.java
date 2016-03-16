@@ -23,6 +23,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         GenericTabActivity.genericTabInterface, SelectedSongList.genericTabInterface{
     final String TAG="main";
     private Cursor returnCursor;
+    final int NOTIFICATION_ID = 24;
     private ActionBarDrawerToggle mDrawerToggle;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
@@ -93,7 +94,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
             getActionBar().setDisplayHomeAsUpEnabled(true);
             getActionBar().setHomeButtonEnabled(true);
         }
-
+        //createNotification();
 
     }
 
@@ -352,4 +353,15 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
 
         Log.v(TAG, "backstack val: " + fragmentManager.getBackStackEntryCount());
     }
+
+    /**
+     * Create and show a notification with a custom layout.
+     * This callback is defined through the 'onClick' attribute of the
+     * 'Show Notification' button in the XML layout.
+     *
+     * @param v
+     */
+    /*public void showNotificationClicked(View v) {
+        createNotification();
+    }*/
 }

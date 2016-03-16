@@ -15,7 +15,7 @@ import java.io.FileNotFoundException;
  * mainly for final Strings so you can just change them once
  */
 public class Shared {
-    public enum Broadcasters { BROADCAST_BUTTON, BROADCAST_ART, BUTTON_VALUE, ART_VALUE,
+    public enum Broadcasters { BROADCAST_BUTTON, BROADCAST_ART, BROADCAST_NOTIFY, BROADCAST_EXTERNAL_ART, BUTTON_VALUE, ART_VALUE,
         BROADCAST_SONG, SONG_VALUE, BROADCAST_QUEUE, QUEUE_VALUE}
     public enum Main { POSITION, OPTION, DISCARD_PAUSE}
     public enum Service { NEXT, PLAY, PREVIOUS, PAUSE, BROADCAST_SHUFFLE, BROADCAST_REPEAT, SHUFFLE_VALUE,
