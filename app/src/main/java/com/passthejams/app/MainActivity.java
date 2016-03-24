@@ -27,6 +27,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
     private ActionBarDrawerToggle mDrawerToggle;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
+    String[] mDrawerItems;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,7 +48,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         ft.commit();
 
         //the items that go in the drawer menu
-        String[] mDrawerItems = new String[]{"Queue", "Network"};
+        mDrawerItems = new String[]{"Queue", "Network", "Search"};
 
         mTitle = mDrawerTitle = getTitle();
         DrawerLayout mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -103,6 +104,21 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         public void onItemClick(AdapterView parent, View view, int position, long id) {
             //TODO: have the drawer items open their respective views
             System.out.println("item click");
+            Log.d(TAG, "clicked position: " + position);
+            switch(mDrawerItems[position]) {
+                case "Queue":
+                    Log.v(TAG, "drawer menu clicked position: " + mDrawerItems[position]);
+                    break;
+                case "Network":
+                    Log.v(TAG, "drawer menu clicked position: " + mDrawerItems[position]);
+                    break;
+                case "Search": //currently the Search
+                    Log.v(TAG, "drawer menu clicked position: " + mDrawerItems[position]);
+                    Intent intent = new Intent(getApplicationContext(), SearchActivity.class);
+                    startActivity(intent);
+                    break;
+
+            }
         }
     }
 
