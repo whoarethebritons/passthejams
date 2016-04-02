@@ -97,6 +97,16 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
 
     }
 
+    @Override
+    protected void onResume(){
+        super.onResume();
+        TabFragment tfnew = new TabFragment();
+        FragmentTransaction ftnew = getFragmentManager().beginTransaction();
+        ftnew.replace(R.id.mainContent, tfnew); // mainContent is the container for the fragments
+        ftnew.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        ftnew.addToBackStack(null);
+        ftnew.commit();
+    }
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView parent, View view, int position, long id) {
@@ -126,13 +136,8 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         }
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            /* TODO: Settings Fragment/Activity
-            SettingFragment s1 = new SettingFragment();
-            FragmentTransaction ft = getFragmentManager().beginTransaction();
-            ft.replace(R.id.mainContent, s1); // f1_container is your FrameLayout container
-            ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-            ft.addToBackStack(null);
-            ft.commit();*/
+            Intent oManager = new Intent(this, SettingsActivity.class);
+            startActivity(oManager);
             return true;
         }
         //start network settings activity

@@ -1,0 +1,36 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+   <CheckBoxPreference
+       android:key="tabAlbumsCheck"
+       android:title="@string/Tabs_Albums"
+       android:summaryOff="@string/Tabs_Albums_Off"
+       android:summaryOn="@string/Tabs_Albums_On"
+       android:defaultValue="true"
+       />
+
+    <CheckBoxPreference
+        android:key="tabSongsCheck"
+        android:title="@string/Tabs_Songs"
+        android:summaryOff="@string/Tabs_Songs_Off"
+        android:summaryOn="@string/Tabs_Songs_On"
+        android:defaultValue="true"
+        />
+
+    <CheckBoxPreference
+        android:key="tabArtistsCheck"
+        android:title="@string/Tabs_Artists"
+        android:summaryOff="@string/Tabs_Artists_Off"
+        android:summaryOn="@string/Tabs_Artists_On"
+        android:defaultValue="true"
+        />
+
+    <CheckBoxPreference
+        android:key="tabPlaylistsCheck"
+        android:title="@string/Tabs_Playlists"
+        android:summaryOff="@string/Tabs_Playlists_Off"
+        android:summaryOn="@string/Tabs_Playlists_On"
+        android:defaultValue="true"
+        />
+
+
+</PreferenceScreen>

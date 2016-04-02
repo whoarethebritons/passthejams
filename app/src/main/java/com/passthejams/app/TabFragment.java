@@ -4,8 +4,10 @@ package com.passthejams.app;
 import android.app.Fragment;
 import android.app.LocalActivityManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -58,35 +60,54 @@ public class TabFragment extends Fragment {
         Log.v(TAG,"Found tabhost");
         if(tabHost.getCurrentView() == null) {
             Log.v(TAG,"tabhost was null");
+            SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            boolean viewAlbums,viewSongs,viewArtists,viewPlaylists;
+            viewAlbums = shared.getBoolean("tabAlbumsCheck",true);
+            viewSongs = shared.getBoolean("tabSongsCheck",true);
+            viewArtists = shared.getBoolean("tabArtistsCheck",true);
+            viewPlaylists = shared.getBoolean("tabPlaylistsCheck",true);
+
+            if(viewAlbums){
+                Log.v(TAG,"ViewAlbums Check was True");
+                TabHost.TabSpec albumTab = tabHost.newTabSpec("Albums");
+                albumTab.setIndicator("Albums");
+                Intent albumIntent = generateTabIntent(Shared.TabType.ALBUM);
+                albumTab.setContent(albumIntent);
+                tabHost.addTab(albumTab);
+            }
+
+            if(viewSongs){
+                TabHost.TabSpec songTab = tabHost.newTabSpec("Songs");
+                songTab.setIndicator("Songs");
+                Intent songIntent = generateTabIntent(Shared.TabType.SONG);
+                songTab.setContent(songIntent);
+                tabHost.addTab(songTab);
+            }
+
+            if(viewArtists){
+                TabHost.TabSpec artistTab = tabHost.newTabSpec("Artists");
+                artistTab.setIndicator("Artists");
+                Intent artistIntent = generateTabIntent(Shared.TabType.ARTIST);
+                artistTab.setContent(artistIntent);
+                tabHost.addTab(artistTab);
+            }
+
+            if(viewPlaylists){
+                TabHost.TabSpec playlistTab = tabHost.newTabSpec("Playlists");
+                playlistTab.setIndicator("Playlists");
+                Intent playlistIntent = generateTabIntent(Shared.TabType.PLAYLIST);
+                playlistTab.setContent(playlistIntent);
+                tabHost.addTab(playlistTab);
+            }
             //Name the tag that each tab has
-            TabHost.TabSpec albumTab = tabHost.newTabSpec("Albums");
-            TabHost.TabSpec songTab = tabHost.newTabSpec("Songs");
-            TabHost.TabSpec artistTab = tabHost.newTabSpec("Artists");
-            TabHost.TabSpec playlistTab = tabHost.newTabSpec("Playlists");
 
             // Set the Tab name and Activity
             // that will be opened when particular Tab will be selected
-            albumTab.setIndicator("Albums");
-            Intent albumIntent = generateTabIntent(Shared.TabType.ALBUM);
-            albumTab.setContent(albumIntent);
 
-            songTab.setIndicator("Songs");
-            Intent songIntent = generateTabIntent(Shared.TabType.SONG);
-            songTab.setContent(songIntent);
 
-            artistTab.setIndicator("Artists");
-            Intent artistIntent = generateTabIntent(Shared.TabType.ARTIST);
-            artistTab.setContent(artistIntent);
 
-            playlistTab.setIndicator("Playlists");
-            Intent playlistIntent = generateTabIntent(Shared.TabType.PLAYLIST);
-            playlistTab.setContent(playlistIntent);
 
             //Add the tabs into the tabHost
-            tabHost.addTab(albumTab);
-            tabHost.addTab(songTab);
-            tabHost.addTab(artistTab);
-            tabHost.addTab(playlistTab);
             //Set tab
             Log.v(TAG, "Getting tab:" + getArguments().getInt("mMyCurrentTab", 0));
             tabHost.setCurrentTab(getArguments().getInt("mMyCurrentTab", 0));

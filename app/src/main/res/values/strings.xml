@@ -17,4 +17,29 @@
     <string name="ExampleArtist">Example Artist</string>
     <string name="NowPlaying">Now Playing</string>
     <string name="ExamplePlaylist">example Playlist</string>
+    <string name="title_activity_settings">Settings</string>
+    <string name="Settings_General">General</string>
+
+
+    <!-- Strings related to Settings -->
+    <string name="Tabs_Albums">Albums Tab</string>
+    <string name="Tabs_Albums_Off">The Albums tab is not visible</string>
+    <string name="Tabs_Albums_On">The Albums tab is currently visible</string>
+
+    <string name="Tabs_Songs">Songs Tab</string>
+    <string name="Tabs_Songs_Off">The Songs tab is not visible</string>
+    <string name="Tabs_Songs_On">The Songs tab is currently visible</string>
+
+    <string name="Tabs_Artists">Artists Tab</string>
+    <string name="Tabs_Artists_Off">The Artists tab is not visible</string>
+    <string name="Tabs_Artists_On">The Artists tab is currently visible</string>
+
+    <string name="Tabs_Playlists">Playlists Tab</string>
+    <string name="Tabs_Playlists_Off">The Playlists tab is not visible</string>
+    <string name="Tabs_Playlists_On">The Playlists tab is currently visible</string>
+
+    <!-- Example General settings -->
+    <string name="pref_header_general">General</string>
+
+
 </resources>
