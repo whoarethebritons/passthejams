@@ -17,7 +17,6 @@ import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.TreeMap;
 
 /**
  * Created by Eden on 7/20/2015.
@@ -71,7 +70,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         }
     }
 
-    public class JamsQueue<K, V> extends TreeMap<K, V> {
+    public class JamsQueue<K> extends ArrayList<K> {
         private NowPlayingFragment.OnQueueChangeListener mListener;
 
         /**
@@ -88,6 +87,12 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             if(mListener != null) {
                 mListener.onEvent();
             }
+        }
+        public int lastKey() {
+            return this.size();
+        }
+        public int firstKey() {
+            return 0;
         }
     }
 
@@ -106,7 +111,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     private LocalBroadcastManager localBroadcastManager;
     private BroadcastReceiver shuffleReceiver;
 
-    private JamsQueue<Integer, TrackInfo> songQueue = new JamsQueue<>();
+    private JamsQueue<TrackInfo> songQueue = new JamsQueue<>();
 
     //for logging
     final String TAG = "Service";
@@ -124,7 +129,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
                 Intent queue = new Intent(Shared.Broadcasters.BROADCAST_QUEUE.name());
                 Gson g = new Gson();
                 queue.putExtra(Shared.Broadcasters.QUEUE_VALUE.name(), g.toJson(songQueue,
-                        new TypeToken<JamsQueue<Integer, TrackInfo>>() {
+                        new TypeToken<JamsQueue<TrackInfo>>() {
                         }.getType()));
                 localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
                 localBroadcastManager.sendBroadcast(queue);
@@ -179,8 +184,11 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
      * sends that the queue should be updated with currently playing song
      */
     public void serviceOnNext() {
+        Log.d(TAG, "service on next");
         discardPause();
-        playPosition++;
+        if(playPosition < songQueue.lastKey()) {
+            playPosition++;
+        }
         songQueue.doEvent();
         changeSong();
     }
@@ -192,7 +200,9 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
      */
     public void serviceOnPrevious() {
         discardPause();
-        playPosition--;
+        if(playPosition > songQueue.firstKey()) {
+            playPosition--;
+        }
         songQueue.doEvent();
         changeSong();
     }
@@ -221,7 +231,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             }
             //add all songs from the current cursor to the queue
             while (inputQ.mCursor.moveToPosition(temp)) {
-                songQueue.put(playOrders.get(mPlayOrder), new TrackInfo(
+                songQueue.add(playOrders.get(mPlayOrder), new TrackInfo(
                         inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media._ID)),
                         inputQ.mCursor.getInt(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)),
                         inputQ.mCursor.getString(inputQ.mCursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
@@ -257,7 +267,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     private boolean changeSong(){
         int seekPosition=0;
         //if playPosition has not gone past the queue
-        if(playPosition <= songQueue.lastKey() && playPosition >= songQueue.firstKey()) {
+        if(playPosition < songQueue.lastKey() && playPosition >= songQueue.firstKey()) {
             Log.v(TAG, "position: " + playPosition);
             cursorPosition = playPosition;
             //get the TrackInfo
@@ -275,6 +285,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             albumArt.putExtra(Shared.Broadcasters.ART_VALUE.name(), g.toJson(trackInfo, TrackInfo.class));
 
             localBroadcastManager.sendBroadcast(albumArt);
+            sendBroadcast(albumArt);
 
             try {
                 //make sure to clear any player that is already playing
@@ -363,11 +374,11 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         songQueue.clear();
         int playOrder = 0;
         //add the original song
-        songQueue.put(playOrder, baseSong);
+        songQueue.add(playOrder, baseSong);
         //add all of the similar songs
         for(TrackInfo t : trackInfos) {
             if(!t.equals(baseSong)) {
-                songQueue.put(++playOrder, t);
+                songQueue.add(++playOrder, t);
             }
             else {
                 Log.d(TAG, "added song is base song");
@@ -383,14 +394,14 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
     /**
      *  @return TrackInfo to send to LastFm
      */
-    public TrackInfo getCurrentPlaying() {
+    public TrackInfo getCurrentPlaying() throws IndexOutOfBoundsException {
         return songQueue.get(playPosition);
     }
 
     /**
      * @return TreeMap of songs in the queue
      */
-    public TreeMap<Integer, TrackInfo> getQueue() {
+    public ArrayList<TrackInfo> getQueue() {
         return songQueue;
     }
 
@@ -399,10 +410,52 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
      */
     public void addToQueue(Cursor c) {
         int play = songQueue.size();
-        songQueue.put(play, new TrackInfo(
+        songQueue.add(play, new TrackInfo(
                 c.getInt(c.getColumnIndex(MediaStore.Audio.Media._ID)),
                 c.getInt(c.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)),
                 c.getString(c.getColumnIndex(MediaStore.Audio.Media.TITLE)),
                 c.getString(c.getColumnIndex(MediaStore.Audio.Media.ARTIST))));
     }
+
+    /**
+     * @param c type Cursor contains one item
+     */
+    public void playNext(Cursor c) {
+        int play = songQueue.size();
+        int position = 0;
+        if(playPosition != 0) {
+            position = playPosition;
+        }
+        songQueue.add(position, new TrackInfo(
+                c.getInt(c.getColumnIndex(MediaStore.Audio.Media._ID)),
+                c.getInt(c.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)),
+                c.getString(c.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+                c.getString(c.getColumnIndex(MediaStore.Audio.Media.ARTIST))));
+    }
+
+    public void pressPlay() {
+        Log.v(TAG, "press play");
+        if(pausedSongHolder.index == -1) {
+            discardPause();
+            changeSong();
+        }
+        else {
+            //set playPosition to the paused song position
+            playPosition = pausedSongHolder.getIndex();
+            changeSong();
+            int seekPosition = pausedSongHolder.getSeekTo();
+            Log.v(TAG, "seek: " + seekPosition);
+        }
+    }
+
+    public void isPlaying() {
+        //send that it is playing so it shows the pause button
+        if (mMediaPlayer.isPlaying()) {
+            sendButtonValue(PLAY);
+        }
+        else {
+            sendButtonValue(PAUSE);
+        }
+    }
+
 }

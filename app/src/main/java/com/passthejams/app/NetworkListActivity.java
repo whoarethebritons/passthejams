@@ -24,6 +24,9 @@ import com.google.gson.JsonParser;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * This activity is more of a test to get song copying to work.
+ */
 public class NetworkListActivity extends Activity {
     private static final String TAG = "NetworkListActivity";
     private NetworkService mService = null;
@@ -90,6 +93,7 @@ public class NetworkListActivity extends Activity {
         //Yes, all the nested callbacks
         ArrayAdapter adapter = new ArrayAdapter(this,android.R.layout.simple_list_item_1,devices);
         listView.setAdapter(adapter);
+        //Listener for selecting device. Displays its song list
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -102,6 +106,7 @@ public class NetworkListActivity extends Activity {
                 ListView listView = (ListView) findViewById(R.id.listView2);
                 listView.setAdapter(adapter);
 
+                //listener for retrieving song list
                 mService.getSongs(d, new NetworkService.Callback() {
                     @Override
                     public void stringCallback(final NetworkService service, final Device device, String response) {
@@ -117,11 +122,15 @@ public class NetworkListActivity extends Activity {
                         }
                         ArrayAdapter adapter = new ArrayAdapter(NetworkListActivity.this,android.R.layout.simple_list_item_1,songs);
                         ListView listView = (ListView) findViewById(R.id.listView2);
+
+                        //listener for clicking on song. copies that song
                         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                             @Override
                             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                                 TrackInfo song = songList.get(i);
                                 Log.v(TAG,"Copying " +song.title+", "+song.file_name+" to id "+song._id);
+
+                                //listener for retrieving song
                                 service.getSong(song, device, new NetworkService.GetSongCallback() {
                                     @Override
                                     public void onSuccess(NetworkService service, Device device, TrackInfo song) {
@@ -139,6 +148,8 @@ public class NetworkListActivity extends Activity {
                         UpdateList uiUpdate = new UpdateList();
                         uiUpdate.listView = listView;
                         uiUpdate.adapter = adapter;
+                        //this is a callback from a network thread
+                        //must run on update thread
                         runOnUiThread(uiUpdate);
                     }
                 });

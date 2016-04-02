@@ -21,7 +21,7 @@ import android.widget.TextView;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import java.util.TreeMap;
+import java.util.ArrayList;
 
 
 /**
@@ -57,13 +57,18 @@ public class NowPlayingFragment extends Fragment {
         Log.d(TAG, String.valueOf(toolbar.canShowOverflowMenu()));
         Log.d(TAG, album.toString());
 
+
         //retrieve the BottomMusicFragment so that we can see the currently playing song
         FragmentManager fragmentManager = getFragmentManager();
         BottomMusicFragment f = (BottomMusicFragment) fragmentManager.findFragmentById(R.id.bottomBar);
-        TrackInfo current = f.currentSong();
-
-        //set the album art of the ImageView
-        setNowPlayingArt(current);
+        try {
+            TrackInfo current = f.currentSong();
+            //set the album art of the ImageView
+            setNowPlayingArt(current);
+        }
+        catch(IndexOutOfBoundsException e) {
+            Log.v(TAG, e.getMessage());
+        }
         Log.d(TAG, "sent : " + id + "to imageview");
         return root;
     }
@@ -144,8 +149,8 @@ public class NowPlayingFragment extends Fragment {
             retrieved so communication can happen easier
             */
             BottomMusicFragment f = (BottomMusicFragment) fragmentManager.findFragmentById(R.id.bottomBar);
-            MusicPlaybackService.JamsQueue<Integer, TrackInfo> tempq = (MusicPlaybackService
-                    .JamsQueue<Integer,TrackInfo>) f.queue();
+            MusicPlaybackService.JamsQueue<TrackInfo> tempq = (MusicPlaybackService
+                    .JamsQueue<TrackInfo>) f.queue();
 
             /* set the list adapter for the view */
             mListAdapter = new JamsArrayAdapter(getActivity().getApplicationContext(),
@@ -168,8 +173,8 @@ public class NowPlayingFragment extends Fragment {
 
                     //convert the json string to JamsQueue<Integer,TrackInfo>
                     Gson g = new Gson();
-                    TreeMap<Integer, TrackInfo> t = (g.fromJson(jsonQueue,
-                            new TypeToken<MusicPlaybackService.JamsQueue<Integer, TrackInfo>>(){}.getType()));
+                    ArrayList<TrackInfo> t = (g.fromJson(jsonQueue,
+                            new TypeToken<MusicPlaybackService.JamsQueue<TrackInfo>>(){}.getType()));
 
                     //update the queue
                     mListAdapter.updateQueue(t);
@@ -187,13 +192,13 @@ public class NowPlayingFragment extends Fragment {
     }
 
     public static class JamsArrayAdapter extends ArrayAdapter {
-        TreeMap<Integer, TrackInfo> queue;
+        ArrayList<TrackInfo> queue;
         private class TrackHolder {
             TextView song;
             TextView artist;
         }
-        public JamsArrayAdapter(Context context, int resource, int textViewResourceId, TreeMap q) {
-            super(context, resource, textViewResourceId, q.values().toArray());
+        public JamsArrayAdapter(Context context, int resource, int textViewResourceId, ArrayList q) {
+            super(context, resource, textViewResourceId, q);
             queue = q;
         }
         @Override
@@ -203,7 +208,7 @@ public class NowPlayingFragment extends Fragment {
 
         @Override
         public Object getItem(int position) {
-            return queue.values().toArray()[position];
+            return queue.toArray()[position];
         }
 
         @Override
@@ -242,7 +247,7 @@ public class NowPlayingFragment extends Fragment {
          * @param queue changes the data source
          * then notifies data changed
          */
-        public void updateQueue(TreeMap<Integer, TrackInfo> queue) {
+        public void updateQueue(ArrayList<TrackInfo> queue) {
             this.queue = queue;
             notifyDataSetChanged();
         }
