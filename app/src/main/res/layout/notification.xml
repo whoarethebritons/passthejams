@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+* Copyright (C) 2013 The Android Open Source Project
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*       http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+-->
+
+<!-- Layout for the collapsed notification. -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@android:color/background_dark"
+    android:gravity="center_horizontal">
+<RelativeLayout android:layout_width="wrap_content" android:layout_height="fill_parent"
+android:id="@+id/songInfo">
+    <ImageView
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:src="@drawable/ic_launcher"
+            android:id="@+id/currentAlbumArt" android:contentDescription="Example Album"
+            android:layout_alignParentTop="true" android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"/>
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="New Text"
+            android:layout_toRightOf="@+id/currentAlbumArt"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:id="@+id/textView2" android:layout_alignParentTop="true"/>
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="New Text"
+            android:id="@+id/textView3"
+            android:layout_toRightOf="@+id/currentAlbumArt"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:layout_below="@+id/textView2"/>
+    </RelativeLayout>
+    <RelativeLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_below="@+id/notifyArtistName"
+                    android:layout_toRightOf="@+id/songInfo" android:layout_toEndOf="@+id/songInfo">
+        <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:drawable/ic_media_previous"
+                android:id="@+id/notifypreviousButton"
+                android:singleLine="false" android:layout_alignParentTop="true" android:layout_toLeftOf="@+id/notifyplayPause"
+                android:layout_toStartOf="@+id/notifyplayPause"/>
+
+        <RelativeLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/notifyplayPause" android:layout_alignParentTop="true" android:layout_centerHorizontal="true"
+        >
+            <Button
+                    style="?android:attr/buttonStyleSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:background="@android:drawable/ic_media_play"
+                    android:id="@+id/notifyplayButton" />
+            <Button
+                    style="?android:attr/buttonStyleSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:background="@android:drawable/ic_media_pause"
+                    android:visibility="invisible"
+                    android:id="@+id/notifypauseButton"/>
+
+        </RelativeLayout>
+        <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@android:drawable/ic_media_next"
+                android:id="@+id/notifynextButton" android:layout_alignParentTop="true" android:layout_toRightOf="@+id/notifyplayPause"
+                android:layout_toEndOf="@+id/notifyplayPause"/>
+        <Button
+                style="?android:attr/buttonStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ic_action_shuffle"
+                android:id="@+id/notifyshuffleButton" android:layout_alignParentTop="true" android:layout_toRightOf="@+id/notifynextButton"
+                android:layout_toEndOf="@+id/notifyplayPause"/>
+
+    </RelativeLayout>
+
+</RelativeLayout>
