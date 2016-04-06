@@ -6,9 +6,11 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -32,6 +34,24 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        String theme = shared.getString("pref_themevalues", "Default");
+        int choice = R.style.AppTheme;
+        switch(theme) {
+            case "Red":
+                choice = R.style.RedTheme;
+                break;
+            case "Green":
+                choice = R.style.GreenTheme;
+                break;
+            case "Blue":
+                choice = R.style.BlueTheme;
+                break;
+            default:
+                break;
+        }
+        Log.v(TAG, "THEME HAS BEEN CHANGED TO " + theme);
+        setTheme(choice);
         setContentView(R.layout.activity_main);
 
         /*start network service*/
@@ -48,7 +68,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         ft.commit();
 
         //the items that go in the drawer menu
-        mDrawerItems = new String[]{"Queue", "Network", "Search"};
+        mDrawerItems = new String[]{"Queue", "Network", "Search", "Theme"};
 
         mTitle = mDrawerTitle = getTitle();
         DrawerLayout mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -101,6 +121,24 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
 
     @Override
     protected void onResume(){
+        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
+        String theme = shared.getString("pref_themevalues", "Default");
+        int choice = R.style.AppTheme;
+        switch(theme) {
+            case "Red":
+                choice = R.style.RedTheme;
+                break;
+            case "Green":
+                choice = R.style.GreenTheme;
+                break;
+            case "Blue":
+                choice = R.style.BlueTheme;
+                break;
+            default:
+                break;
+        }
+        Log.v(TAG, "THEME HAS BEEN CHANGED TO " + theme);
+        setTheme(choice);
         super.onResume();
         TabFragment tfnew = new TabFragment();
         FragmentTransaction ftnew = getFragmentManager().beginTransaction();
@@ -127,7 +165,11 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
                     Intent intent = new Intent(getApplicationContext(), SearchActivity.class);
                     startActivity(intent);
                     break;
-
+                case "Theme":
+                    Log.v(TAG, "drawer menu clicked position: " + mDrawerItems[position]);
+                    Intent intent2 = new Intent(getApplicationContext(), Theme.class);
+                    startActivity(intent2);
+                    break;
             }
         }
     }
