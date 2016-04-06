@@ -125,7 +125,7 @@ public class PlaylistSongList extends Fragment {
         //get the playlist id from db given playlist name
         Cursor cursor = getActivity().getContentResolver().query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
                 Shared.PROJECTION_PLAYLIST,
-                MediaStore.Audio.Playlists.NAME + " = " + "'" + listTitle + "'",
+                MediaStore.Audio.Playlists.NAME + " = " + "'" + listTitle.replace("'", "''") + "'",
                 null, null);
         if (cursor.moveToFirst()) {
             playlistID = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
