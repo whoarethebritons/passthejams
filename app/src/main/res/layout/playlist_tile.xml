@@ -7,7 +7,7 @@
     <RelativeLayout
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android:id="@+id/albumView"
+        android:id="@+id/artView"
         android:adjustViewBounds="false"
         android:background="@drawable/circle"
         android:layout_marginLeft="10dp"

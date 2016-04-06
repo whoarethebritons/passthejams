@@ -1,16 +1,15 @@
 package com.passthejams.app;
 
-import android.app.Activity;
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
+import android.app.*;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -116,7 +115,74 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
             getActionBar().setHomeButtonEnabled(true);
         }
         //createNotification();
+        handleIntent(getIntent());
+    }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        handleIntent(intent);
+    }
+
+    private void handleIntent(Intent intent) {
+        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+            Log.d(TAG, "searched");
+            String query = intent.getStringExtra(SearchManager.QUERY);
+
+            int layout_id = R.layout.song_layout;
+            int row_id = R.layout.song_row;
+            String[] projectionString = Shared.PROJECTION_SONG;
+
+            String selectionString = MediaStore.Audio.Media.IS_MUSIC + "!=0 AND (instr(upper(" +
+                    MediaStore.Audio.Media.TITLE + "),upper(?)) OR instr(upper(" +
+                    MediaStore.Audio.Albums.ALBUM + "),upper(?)) OR instr(upper(" +
+                    MediaStore.Audio.Artists.ARTIST + "),upper(?)))";
+            String[] selectionArguments = new String[]{query, query, query};
+            Uri uri = Shared.libraryUri;
+            String[] displayFields = new String[]{MediaStore.Audio.Media.TITLE,
+                    MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM,
+                    MediaStore.Audio.Albums.ALBUM_ID};
+            int[] displayText = new int[] {R.id.songView, R.id.artistView, R.id.albumView, R.id.artView};
+            String sortOrder = (MediaStore.Audio.Media.ALBUM + " ASC, "+MediaStore.Audio.Media.TRACK+" ASC");
+
+            //testing code
+            //query the database given the passed items
+            Cursor mCursor = managedQuery(uri, projectionString, selectionString, selectionArguments, sortOrder);
+            int i = 0;
+            while(mCursor.moveToNext()){
+                Log.d(TAG, mCursor.getString(i));
+                i++;
+                Log.d(TAG, mCursor.getString(i));
+                i++;
+                Log.d(TAG, mCursor.getString(i));
+                i++;
+                Log.d(TAG, mCursor.getString(i));
+            }
+            SimpleCursorAdapter simpleCursorAdapter = new JamsCursorAdapter(this, layout_id, mCursor,
+                    displayFields, displayText);
+
+            //set adapter
+            //GridView lv = (GridView) findViewById(R.id.gridView);
+            Intent retIntent = new Intent(this, GenericTabActivity.class);
+            int list_id = android.R.id.list;
+            retIntent.putExtra(Shared.TabIntent.LAYOUT.name(), layout_id);
+            retIntent.putExtra(Shared.TabIntent.LISTVIEW.name(), list_id);
+            retIntent.putExtra(Shared.TabIntent.ROWID.name(), row_id);
+            retIntent.putExtra(Shared.TabIntent.PROJECTION_STRING.name(), projectionString);
+            retIntent.putExtra(Shared.TabIntent.SELECTION_STRING.name(), selectionString);
+            retIntent.putExtra(Shared.TabIntent.SELECTION_ARGS.name(), selectionArguments);
+            retIntent.putExtra(Shared.TabIntent.SORT_ORDER.name(), sortOrder);
+            retIntent.putExtra(Shared.TabIntent.URI.name(), uri.toString());
+            retIntent.putExtra(Shared.TabIntent.DISPLAY_FIELDS.name(), displayFields);
+            retIntent.putExtra(Shared.TabIntent.DISPLAY_TEXT.name(), displayText);
+            retIntent.putExtra(Shared.TabIntent.TYPE.name(), "Search");
+            ListFragment fragment = new ListFragment();
+            fragment.setListAdapter(simpleCursorAdapter);
+            FragmentTransaction ftnew = getFragmentManager().beginTransaction();
+            ftnew.replace(R.id.mainContent, fragment); // mainContent is the container for the fragments
+            ftnew.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            ftnew.addToBackStack(null);
+            ftnew.commit();
+        }
     }
 
     @Override
@@ -165,11 +231,6 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
                     Intent intent = new Intent(getApplicationContext(), SearchActivity.class);
                     startActivity(intent);
                     break;
-                case "Theme":
-                    Log.v(TAG, "drawer menu clicked position: " + mDrawerItems[position]);
-                    Intent intent2 = new Intent(getApplicationContext(), Theme.class);
-                    startActivity(intent2);
-                    break;
             }
         }
     }
@@ -178,6 +239,14 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        // Associate searchable configuration with the SearchView
+        SearchManager searchManager =
+                (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        SearchView searchView =
+                (SearchView) menu.findItem(R.id.search).getActionView();
+        searchView.setSearchableInfo(
+                searchManager.getSearchableInfo(getComponentName()));
+
         return true;
     }
 
@@ -285,6 +354,8 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         switch(tabHost.getCurrentTabTag()) {
             case "Songs":
                 return songListListener;
+            case "Search":
+                return songListListener;
             case "Albums":
                 return new AdapterView.OnItemClickListener()
                 {
@@ -328,7 +399,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
                     public void onItemClick(AdapterView<?> parent,
                                             View v, int position, long id)
                     {
-                        String artistName = (String)((TextView) v.findViewById(R.id.artistName)).getText();
+                        String artistName = (String)((TextView) v.findViewById(R.id.artistView)).getText();
                         SelectedAlbumList albl = new SelectedAlbumList();
                         Bundle bundle = new Bundle();
                         bundle.putString("ARTISTNAME", artistName);
