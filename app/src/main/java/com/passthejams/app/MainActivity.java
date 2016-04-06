@@ -1,7 +1,9 @@
 package com.passthejams.app;
 
 import android.app.*;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -312,6 +314,61 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
     @Override
     public Cursor currentViewCursor() {
         return returnCursor;
+    }
+
+    @Override
+    public AdapterView.OnItemLongClickListener getLongListener() {
+        TabHost tabHost = (TabHost) findViewById(android.R.id.tabhost);
+        if(tabHost.getCurrentTabTag().equals("Playlists")) {
+            return new AdapterView.OnItemLongClickListener() {
+
+                @Override
+                public boolean onItemLongClick (AdapterView<?> parent,
+                                                View v, int position, long id){
+                    final String playlistTitle = (String) ((TextView) v.findViewById(R.id.playlistName)).getText();
+                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                    builder.setTitle("Remove Playlist: "+playlistTitle+"");
+                    builder.setMessage("Are you sure you want to delete this playlist?");
+                    Log.v(TAG, "longclick set");
+
+
+                    // Set up the buttons
+                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ContentResolver resolver = getContentResolver();
+                            Uri uri = MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI;
+                            //get the playlist id from db given playlist name
+                            Cursor cursor = getContentResolver().query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
+                                    Shared.PROJECTION_PLAYLIST,
+                                    MediaStore.Audio.Playlists.NAME + " = " + "'" + playlistTitle.replace("'", "''") + "'",
+                                    null, null);
+                            cursor.moveToFirst();
+                            int playlistID = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
+
+                            int rowsDeleted = resolver.delete(uri.buildUpon().appendPath(String.valueOf(playlistID)).build(), null, null);
+                            Log.v(TAG, "Deleted "+playlistTitle+" with id: "+playlistID+". "+rowsDeleted+" rows removed.");
+                            Context context = getApplicationContext();
+                            int duration = Toast.LENGTH_LONG;
+
+                            Toast toast = Toast.makeText(context, ("Playlist " + playlistTitle + " was removed!"), duration);
+                            toast.show();
+                        }
+                    });
+                    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    });
+
+                    builder.show();
+                    return  true;
+                }
+            };
+        }
+        else
+            return null;
     }
 
     /**
