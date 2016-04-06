@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="theme_values">
+        <item>Default</item>
+        <item>Red</item>
+        <item>Green</item>
+        <item>Blue</item>
+    </string-array>
+    <integer-array name="theme_entry_values">
+        <item>@style/AppTheme</item>
+        <item>@style/RedTheme</item>
+        <item>@style/GreenTheme</item>
+        <item>@style/BlueTheme</item>
+    </integer-array>
+
+</resources>

@@ -6,5 +6,8 @@
         <item name="colorPrimary">@color/primary_dark_material_light</item>
         <item name="colorPrimaryDark">@color/primary_dark_material_dark</item>
     </style>
+    <style name="RedTheme" parent="AppTheme"/>
+    <style name="GreenTheme" parent="AppTheme"/>
+    <style name="BlueTheme" parent="AppTheme"/>
 
 </resources>

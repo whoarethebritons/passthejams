@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--TODO: change names-->
+    <color name="primary_blue_material_dark">#3f51b5</color>
+    <color name="primary_green_material_dark">#4caf50</color>
+    <color name="primary_red_material_dark">#f44336</color>
+</resources>
