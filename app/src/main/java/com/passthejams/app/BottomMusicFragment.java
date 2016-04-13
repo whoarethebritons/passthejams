@@ -34,7 +34,7 @@ public class BottomMusicFragment extends Fragment{
     //for interacting with holder activities
     private OnFragmentInteractionListener mListener;
 
-    final String TAG="fragment";
+    final String TAG="BottomMusicFragment";
 
     public BottomMusicFragment() {}
 
@@ -365,6 +365,10 @@ public class BottomMusicFragment extends Fragment{
     @Override
     public void onDestroy() {
         getActivity().unbindService(mServiceConnection);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(receiver);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(artReceiver);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(externalArtReceiver);
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(notificationReceiver);
         mBound = false;
         super.onDestroy();
     }

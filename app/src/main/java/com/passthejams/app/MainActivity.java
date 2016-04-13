@@ -1,11 +1,7 @@
 package com.passthejams.app;
 
 import android.app.*;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.*;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
@@ -35,24 +31,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
-        String theme = shared.getString("pref_themevalues", "Default");
-        int choice = R.style.AppTheme;
-        switch(theme) {
-            case "Red":
-                choice = R.style.RedTheme;
-                break;
-            case "Green":
-                choice = R.style.GreenTheme;
-                break;
-            case "Blue":
-                choice = R.style.BlueTheme;
-                break;
-            default:
-                break;
-        }
-        Log.v(TAG, "THEME HAS BEEN CHANGED TO " + theme);
-        setTheme(choice);
+        changeTheme();
         setContentView(R.layout.activity_main);
 
         /*start network service*/
@@ -68,6 +47,11 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         ft.addToBackStack(null);
         ft.commit();
 
+        setupNavigationDrawer();
+        //createNotification();
+    }
+
+    private void setupNavigationDrawer() {
         //the items that go in the drawer menu
         mDrawerItems = new String[]{"Queue", "Network", "Search", "Theme"};
 
@@ -116,79 +100,32 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
             getActionBar().setDisplayHomeAsUpEnabled(true);
             getActionBar().setHomeButtonEnabled(true);
         }
-        //createNotification();
-        handleIntent(getIntent());
     }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        handleIntent(intent);
-    }
+    private void handleIntent(String mQuery) {
+        Log.d(TAG, "searched for: " + mQuery);
 
-    private void handleIntent(Intent intent) {
-        if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
-            Log.d(TAG, "searched");
-            String query = intent.getStringExtra(SearchManager.QUERY);
-
-            int layout_id = R.layout.song_layout;
-            int row_id = R.layout.song_row;
-            String[] projectionString = Shared.PROJECTION_SONG;
-
-            String selectionString = MediaStore.Audio.Media.IS_MUSIC + "!=0 AND (instr(upper(" +
-                    MediaStore.Audio.Media.TITLE + "),upper(?)) OR instr(upper(" +
-                    MediaStore.Audio.Albums.ALBUM + "),upper(?)) OR instr(upper(" +
-                    MediaStore.Audio.Artists.ARTIST + "),upper(?)))";
-            String[] selectionArguments = new String[]{query, query, query};
-            Uri uri = Shared.libraryUri;
-            String[] displayFields = new String[]{MediaStore.Audio.Media.TITLE,
-                    MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM,
-                    MediaStore.Audio.Albums.ALBUM_ID};
-            int[] displayText = new int[] {R.id.songView, R.id.artistView, R.id.albumView, R.id.artView};
-            String sortOrder = (MediaStore.Audio.Media.ALBUM + " ASC, "+MediaStore.Audio.Media.TRACK+" ASC");
-
-            //testing code
-            //query the database given the passed items
-            Cursor mCursor = managedQuery(uri, projectionString, selectionString, selectionArguments, sortOrder);
-            int i = 0;
-            while(mCursor.moveToNext()){
-                Log.d(TAG, mCursor.getString(i));
-                i++;
-                Log.d(TAG, mCursor.getString(i));
-                i++;
-                Log.d(TAG, mCursor.getString(i));
-                i++;
-                Log.d(TAG, mCursor.getString(i));
-            }
-            SimpleCursorAdapter simpleCursorAdapter = new JamsCursorAdapter(this, layout_id, mCursor,
-                    displayFields, displayText);
-
-            //set adapter
-            //GridView lv = (GridView) findViewById(R.id.gridView);
-            Intent retIntent = new Intent(this, GenericTabActivity.class);
-            int list_id = android.R.id.list;
-            retIntent.putExtra(Shared.TabIntent.LAYOUT.name(), layout_id);
-            retIntent.putExtra(Shared.TabIntent.LISTVIEW.name(), list_id);
-            retIntent.putExtra(Shared.TabIntent.ROWID.name(), row_id);
-            retIntent.putExtra(Shared.TabIntent.PROJECTION_STRING.name(), projectionString);
-            retIntent.putExtra(Shared.TabIntent.SELECTION_STRING.name(), selectionString);
-            retIntent.putExtra(Shared.TabIntent.SELECTION_ARGS.name(), selectionArguments);
-            retIntent.putExtra(Shared.TabIntent.SORT_ORDER.name(), sortOrder);
-            retIntent.putExtra(Shared.TabIntent.URI.name(), uri.toString());
-            retIntent.putExtra(Shared.TabIntent.DISPLAY_FIELDS.name(), displayFields);
-            retIntent.putExtra(Shared.TabIntent.DISPLAY_TEXT.name(), displayText);
-            retIntent.putExtra(Shared.TabIntent.TYPE.name(), "Search");
-            ListFragment fragment = new ListFragment();
-            fragment.setListAdapter(simpleCursorAdapter);
-            FragmentTransaction ftnew = getFragmentManager().beginTransaction();
-            ftnew.replace(R.id.mainContent, fragment); // mainContent is the container for the fragments
-            ftnew.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-            ftnew.addToBackStack(null);
-            ftnew.commit();
-        }
+        SearchResultsFragment searchResultsFragment = SearchResultsFragment.newInstance(mQuery);
+        FragmentTransaction ftnew = getFragmentManager().beginTransaction();
+        ftnew.replace(R.id.mainContent, searchResultsFragment); // mainContent is the container for the fragments
+        ftnew.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        ftnew.addToBackStack(null);
+        ftnew.commit();
     }
 
     @Override
     protected void onResume(){
+        changeTheme();
+        super.onResume();
+        TabFragment tfnew = new TabFragment();
+        FragmentTransaction ftnew = getFragmentManager().beginTransaction();
+        ftnew.replace(R.id.mainContent, tfnew); // mainContent is the container for the fragments
+        ftnew.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        ftnew.addToBackStack(null);
+        ftnew.commit();
+    }
+
+    private void changeTheme() {
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         String theme = shared.getString("pref_themevalues", "Default");
         int choice = R.style.AppTheme;
@@ -207,14 +144,8 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         }
         Log.v(TAG, "THEME HAS BEEN CHANGED TO " + theme);
         setTheme(choice);
-        super.onResume();
-        TabFragment tfnew = new TabFragment();
-        FragmentTransaction ftnew = getFragmentManager().beginTransaction();
-        ftnew.replace(R.id.mainContent, tfnew); // mainContent is the container for the fragments
-        ftnew.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-        ftnew.addToBackStack(null);
-        ftnew.commit();
     }
+
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView parent, View view, int position, long id) {
@@ -244,10 +175,23 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         // Associate searchable configuration with the SearchView
         SearchManager searchManager =
                 (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-        SearchView searchView =
+        final SearchView searchView =
                 (SearchView) menu.findItem(R.id.search).getActionView();
         searchView.setSearchableInfo(
                 searchManager.getSearchableInfo(getComponentName()));
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                handleIntent(searchView.getQuery().toString());
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
 
         return true;
     }

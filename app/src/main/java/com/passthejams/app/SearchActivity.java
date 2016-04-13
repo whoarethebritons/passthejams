@@ -26,14 +26,14 @@ public class SearchActivity extends Activity {
     public void handleIntent(View view) {
         Log.d(TAG, "searched");
         EditText e = (EditText) findViewById(R.id.searchQuery);
-        String query = e.getEditableText().toString();
+        String mQuery = e.getEditableText().toString();
 
         int row_id = R.layout.song_row;
         String[] projectionString = Shared.PROJECTION_SONG;
 
         String selectionString = MediaStore.Audio.Media.IS_MUSIC + "!=0 AND (instr(upper(" +
                 MediaStore.Audio.Media.TITLE + "),upper(?)))";
-        String[] selectionArguments = new String[]{query};
+        String[] selectionArguments = new String[]{mQuery};
         Uri uri = Shared.libraryUri;
         String[] displayFields = new String[]{MediaStore.Audio.Media.TITLE,
                 MediaStore.Audio.Albums.ARTIST, MediaStore.Audio.Albums.ALBUM,
@@ -50,9 +50,11 @@ public class SearchActivity extends Activity {
 
         //set adapter
         GridLayout lv = (GridLayout) findViewById(R.id.songList);
+        //lv.setAdapter(simpleCursorAdapter);
         LayoutInflater inflater = (LayoutInflater)getApplicationContext().getSystemService
                 (Context.LAYOUT_INFLATER_SERVICE);
-        while(mCursor.moveToNext()){
+        for(int j = 0; j<20 && mCursor.moveToNext(); j++) {
+        //while(mCursor.moveToNext()){
             Log.d(TAG, "song count:" + mCursor.getCount());
             View row = inflater.inflate(row_id,null);
             TextView t = (TextView) row.findViewById(R.id.songView);
@@ -76,7 +78,7 @@ public class SearchActivity extends Activity {
         displayText =  new int[] {R.id.artistView, R.id.albumTitle, R.id.artView};
         selectionString = "(instr(upper(" +
                 MediaStore.Audio.Media.ALBUM + "),upper(?)))";
-        selectionArguments = new String[]{query};
+        selectionArguments = new String[]{mQuery};
         sortOrder = (MediaStore.Audio.Media.ALBUM + " ASC");
 
         //testing code
@@ -88,7 +90,9 @@ public class SearchActivity extends Activity {
 
         //set adapter
         lv = (GridLayout) findViewById(R.id.albumList);
-        while(mCursor.moveToNext()){
+        //lv.setAdapter(simpleCursorAdapter);
+        for(int j = 0; j<8 && mCursor.moveToNext(); j++) {
+            //while(mCursor.moveToNext()){
             Log.d(TAG, "album count:" + mCursor.getCount());
             View row = inflater.inflate(row_id,null);
             TextView t = (TextView) row.findViewById(R.id.artistView);
@@ -106,7 +110,7 @@ public class SearchActivity extends Activity {
 
         selectionString = "instr(upper(" +
                 MediaStore.Audio.Media.ARTIST + "),upper(?))) GROUP BY("+ MediaStore.Audio.Media.ARTIST_ID;
-        selectionArguments = new String[]{query};
+        selectionArguments = new String[]{mQuery};
         uri = Shared.libraryUri;
         displayFields = new String[]{
                 MediaStore.Audio.Artists.ARTIST,
@@ -123,7 +127,9 @@ public class SearchActivity extends Activity {
 
         //set adapter
         lv = (GridLayout) findViewById(R.id.artistList);
-        while(mCursor.moveToNext()){
+        //lv.setAdapter(simpleCursorAdapter);
+        for(int j = 0; j<6 && mCursor.moveToNext(); j++) {
+            //while(mCursor.moveToNext()){
             Log.d(TAG, "artist count:" + mCursor.getCount());
             View row = inflater.inflate(row_id,null);
             TextView t = (TextView) row.findViewById(R.id.artistView);
