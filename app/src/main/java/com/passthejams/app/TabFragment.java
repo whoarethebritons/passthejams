@@ -190,7 +190,7 @@ public class TabFragment extends Fragment {
                 displayFields = new String[]{
                         MediaStore.Audio.Playlists.NAME,MediaStore.Audio.Playlists.NAME};
                 displayText =  new int[] {R.id.playlistName, R.id.playlistLetter};
-                sortOrder = (MediaStore.Audio.Playlists.NAME + " ASC");
+                sortOrder = (MediaStore.Audio.Playlists.NAME + " COLLATE NOCASE ASC");
                 break;
             default:
                 break;

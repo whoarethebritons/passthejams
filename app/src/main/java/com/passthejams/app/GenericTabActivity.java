@@ -90,6 +90,7 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
     //use onResume so that the cursor gets updated each time the tab is switched
     @Override
     public void onResume() {
+        simpleCursorAdapter.notifyDataSetChanged();
         Log.v(TAG, "on tab changed");
         //get the AbsListView
         T lv = (T) findViewById(list_id);
@@ -106,26 +107,20 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
     public void addPlaylist(View v) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("New Playlist");
-
+        //set up layout
         LinearLayout layout = new LinearLayout(this);
         LinearLayout.LayoutParams parms = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         layout.setOrientation(LinearLayout.VERTICAL);
         layout.setLayoutParams(parms);
-
         layout.setGravity(Gravity.CLIP_VERTICAL);
         layout.setPadding(80, 20, 80, 20);
-
         // Set up the input
         final EditText input = new EditText(this);
         input.setCompoundDrawablePadding(5);
-        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
         input.setInputType(InputType.TYPE_CLASS_TEXT);
-
-
+        //add to layout
         layout.addView(input, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-
         builder.setView(layout);
-
         // Set up the buttons
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
@@ -153,10 +148,6 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
                     Toast toast = Toast.makeText(context, "Invalid name for playlist", duration);
                     toast.show();
                 }
-
-
-
-
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -165,11 +156,11 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
                 dialog.cancel();
             }
         });
-
         builder.show();
     }
 
-    public void showMenu(View view) {
+    public void showMenu(final View view) {
+        final Context context = this;
         PopupMenu popup = new PopupMenu(this, view);
         MenuInflater inflater = popup.getMenuInflater();
         inflater.inflate(R.menu.menu_song, popup.getMenu());
@@ -208,14 +199,159 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
                                 getParent().getFragmentManager().findFragmentById(R.id.bottomBar);
                         ListView lv = (ListView) findViewById(android.R.id.list);
                         //get item at requested position and add it to queue using BottomMusicFragment
-                        fr.mService.addToQueue((Cursor)lv.getAdapter().getItem(p));
+                        fr.mService.addToQueue((Cursor) lv.getAdapter().getItem(p));
+                        return true;
+                    case R.id.action_add_to_playlist:
+
+
+
+
+
+                        //cursor for playlists sorted alphabetically ignoring case
+                        final Cursor cursor = getContentResolver().query(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
+                                Shared.PROJECTION_PLAYLIST, null, null, MediaStore.Audio.Playlists.NAME + " COLLATE NOCASE ASC");
+                        AlertDialog.Builder playlistList = new AlertDialog.Builder(context);
+                        playlistList.setTitle("Choose a Playlist");
+                        playlistList.setCursor(cursor, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                cursor.moveToPosition(which);
+                                int duration = Toast.LENGTH_LONG;
+                                int playlistID = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Playlists._ID));
+                                Cursor pickedSong = mCursor;
+                                pickedSong.moveToPosition(p);
+                                int songID = pickedSong.getInt(pickedSong.getColumnIndex(MediaStore.Audio.Media._ID));
+
+                                ContentResolver resolver = getContentResolver();
+                                Uri uri = MediaStore.Audio.Playlists.Members.getContentUri("external",
+                                        playlistID);
+                                // Get most recent play order ID from playlist, so we can append
+                                Cursor orderCursor = resolver.query(uri,
+                                        new String[]{
+                                                MediaStore.Audio.Playlists.Members.PLAY_ORDER}, null, null,
+                                        MediaStore.Audio.Playlists.Members.PLAY_ORDER + " DESC ");
+
+                                int playOrder = 0;
+                                if (orderCursor != null) {
+                                    if (orderCursor.moveToFirst()) {
+                                        playOrder = orderCursor.getInt(0) + 1;
+                                    }
+                                    orderCursor.close();
+                                }
+
+                                ContentValues value = new ContentValues();
+                                value.put(MediaStore.Audio.Playlists.Members.AUDIO_ID, songID);
+                                value.put(MediaStore.Audio.Playlists.Members.PLAY_ORDER, playOrder++);
+                                resolver.insert(uri, value);
+
+                                Toast toast = Toast.makeText(GenericTabActivity.this, "Song successfully inserted into playlist.", duration);
+                                toast.show();
+                            }
+                        }, MediaStore.Audio.Playlists.NAME);
+                        /*FUNCTIONAL BUT BLANKS OUT SONGS TAB ONCE FINISHED, NEED TO GO INTO NEW FRAG TO REFRESH VIEW
+                        //Create new playlist and add song to it
+                        playlistList.setPositiveButton("Add to a New Playlist", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                                builder.setTitle("New Playlist");
+                                //set up layout
+                                LinearLayout layout = new LinearLayout(context);
+                                LinearLayout.LayoutParams parms = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                                layout.setOrientation(LinearLayout.VERTICAL);
+                                layout.setLayoutParams(parms);
+                                layout.setGravity(Gravity.CLIP_VERTICAL);
+                                layout.setPadding(80, 20, 80, 20);
+                                // Set up the input
+                                final EditText input = new EditText(context);
+                                input.setCompoundDrawablePadding(5);
+                                input.setInputType(InputType.TYPE_CLASS_TEXT);
+                                //add to layout
+                                layout.addView(input, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                                builder.setView(layout);
+                                // Set up the buttons
+                                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        newPlaylistName = input.getText().toString();
+                                        if (!newPlaylistName.equals("")) {
+                                            ContentResolver resolver = getContentResolver();
+                                            //make new row
+                                            Uri uri = MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI;
+                                            ContentValues values = new ContentValues();
+                                            values.put(MediaStore.Audio.Playlists.NAME, newPlaylistName);
+                                            //row insert
+                                            Uri newPlaylistUri = resolver.insert(uri, values);
+                                            Log.v(TAG, "newPlaylistURI:" + newPlaylistUri);
+                                            //get the playlistID of the new playlist
+                                            Cursor newPlaylistID = resolver.query(newPlaylistUri, new String[]{MediaStore.Audio.Playlists._ID}, null, null, null);
+                                            newPlaylistID.moveToFirst();
+                                            int playlistID = newPlaylistID.getInt(newPlaylistID.getColumnIndex(MediaStore.Audio.Playlists._ID));
+                                            newPlaylistID.close();
+                                            Log.v(TAG, "newPlaylistID:" + playlistID);
+                                            //get playlist members of new playlist(there will be none)
+                                            uri = MediaStore.Audio.Playlists.Members.getContentUri("external",
+                                                    playlistID);
+                                            // Get most recent play order ID from playlist, so we can append
+                                            Cursor orderCursor = resolver.query(uri,
+                                                    new String[]{
+                                                            MediaStore.Audio.Playlists.Members.PLAY_ORDER}, null, null,
+                                                    MediaStore.Audio.Playlists.Members.PLAY_ORDER + " DESC ");
+
+                                            int playOrder = 0;
+                                            if (orderCursor != null) {
+                                                if (orderCursor.moveToFirst()) {
+                                                    playOrder = orderCursor.getInt(0) + 1;
+                                                }
+                                                orderCursor.close();
+                                            }
+                                            //getting id of the chosen song
+                                            Cursor pickedSong = mCursor;
+                                            pickedSong.moveToPosition(p);
+                                            int songID = pickedSong.getInt(pickedSong.getColumnIndex(MediaStore.Audio.Media._ID));
+                                            pickedSong.close();
+                                            //creating row
+                                            ContentValues value = new ContentValues();
+                                            value.put(MediaStore.Audio.Playlists.Members.AUDIO_ID, songID);
+                                            value.put(MediaStore.Audio.Playlists.Members.PLAY_ORDER, playOrder++);
+                                            //insert row into playlist
+                                            resolver.insert(uri, value);
+                                        } else {
+                                            Context context = getApplicationContext();
+                                            int duration = Toast.LENGTH_LONG;
+                                            Toast toast = Toast.makeText(context, "Invalid name for playlist", duration);
+                                            toast.show();
+                                        }
+                                    }
+                                });
+
+                                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.cancel();
+                                    }
+                                });
+                                builder.show();
+                            }
+                        });
+
+                        playlistList.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                            }
+                        });
+                        */
+                        playlistList.show();
+
+
                         return true;
                     case R.id.action_play_next:
                         BottomMusicFragment fr2 = (BottomMusicFragment)
                                 getParent().getFragmentManager().findFragmentById(R.id.bottomBar);
                         ListView lv2 = (ListView) findViewById(android.R.id.list);
                         //get item at requested position and add it to queue using BottomMusicFragment
-                        fr2.mService.playNext((Cursor)lv2.getAdapter().getItem(p));
+                        fr2.mService.playNext((Cursor) lv2.getAdapter().getItem(p));
                         return true;
                     default:
                         return false;

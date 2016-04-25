@@ -4,6 +4,8 @@
           android:title="@string/LastFmTitle"/>
     <item android:id="@+id/action_add_to_queue"
           android:title="@string/AddToQueue"/>
+    <item android:id="@+id/action_add_to_playlist"
+    android:title="@string/AddToPlaylist"/>
     <item android:id="@+id/action_play_next"
           android:title="@string/playnext"/>
 </menu>

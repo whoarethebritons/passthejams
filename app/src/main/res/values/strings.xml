@@ -11,6 +11,7 @@
     <string name="QueueTitle">Queue</string>
     <string name="LastFmTitle">Last Fm</string>
     <string name="AddToQueue">Add to Queue</string>
+    <string name="AddToPlaylist">Add to Playlist</string>
     <string name="ExampleSong">Example Song</string>
     <string name="NetworkTitle">Network Devices</string>
     <string name="ExampleAlbum">Example Album</string>

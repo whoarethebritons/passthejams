@@ -95,7 +95,7 @@ android:id="@+id/songInfo">
                 android:layout_height="wrap_content"
                 android:background="@drawable/ic_action_shuffle"
                 android:id="@+id/notifyshuffleButton" android:layout_alignParentTop="true" android:layout_toRightOf="@+id/notifynextButton"
-                android:layout_toEndOf="@+id/notifyplayPause"/>
+                />
 
     </RelativeLayout>
 
