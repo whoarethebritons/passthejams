@@ -13,6 +13,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.*;
@@ -493,9 +494,66 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
      * This callback is defined through the 'onClick' attribute of the
      * 'Show Notification' button in the XML layout.
      *
-     * @param v
+     * @param view
      */
     /*public void showNotificationClicked(View v) {
         createNotification();
     }*/
+    public void showMenu(View view) {
+        PopupMenu popup = new PopupMenu(this, view);
+        MenuInflater inflater = popup.getMenuInflater();
+        inflater.inflate(R.menu.menu_song, popup.getMenu());
+
+        final int p = (int) view.getTag();
+        Log.v(TAG, String.valueOf(p));
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.action_last_fm:
+                        Log.d(TAG, "lastfm clicked");
+                        BottomMusicFragment f = (BottomMusicFragment)
+                                getFragmentManager().findFragmentById(R.id.bottomBar);
+                        //Intent intent = makeActionIntent(button.name(), v.getVerticalScrollbarPosition(), discard);
+                        Intent intent = new Intent(getApplicationContext(), MusicPlaybackService.class);
+                        //specifies what action we will be performing
+                        intent.putExtra(Shared.Main.OPTION.name(), Shared.Service.PLAY.name());
+                        //specifies position in database of the song
+                        intent.putExtra(Shared.Main.POSITION.name(), p);
+                        //whether we are unpausing or skipping
+                        intent.putExtra(Shared.Main.DISCARD_PAUSE.name(), false);
+                        //requests position of song in list given current cursor
+                        MusicPlaybackService.QueueObjectInfo queueObjectInfo =
+                                new MusicPlaybackService().new QueueObjectInfo(returnCursor,
+                                        intent.getIntExtra(Shared.Main.POSITION.name(), 0));
+                        //calls play
+                        f.mService.serviceOnPlay(queueObjectInfo,
+                                intent.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), false);
+                        //so that it can then run the lastfm method
+                        Button lastfm = (Button) findViewById(R.id.lastfmButton);
+                        lastfm.performClick();
+                        return true;
+                    case R.id.action_add_to_queue:
+                        BottomMusicFragment fr = (BottomMusicFragment)
+                                getFragmentManager().findFragmentById(R.id.bottomBar);
+                        ListView lv = (ListView) findViewById(android.R.id.list);
+                        //get item at requested position and add it to queue using BottomMusicFragment
+                        fr.mService.addToQueue((Cursor) lv.getAdapter().getItem(p));
+                        return true;
+                    case R.id.action_play_next:
+                        BottomMusicFragment fr2 = (BottomMusicFragment)
+                                getFragmentManager().findFragmentById(R.id.bottomBar);
+                        ListView lv2 = (ListView) findViewById(android.R.id.list);
+                        //get item at requested position and add it to queue using BottomMusicFragment
+                        fr2.mService.playNext((Cursor) lv2.getAdapter().getItem(p));
+                        return true;
+                    //TODO: implementation in GenericTabActivity either copied over here or moved here completely
+                    //case R.id.action_add_to_playlist
+                    default:
+                        return false;
+                }
+            }
+        });
+        popup.show();
+    }
 }
