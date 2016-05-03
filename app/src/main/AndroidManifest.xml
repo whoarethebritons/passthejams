@@ -61,14 +61,6 @@
                     android:name="android.support.PARENT_ACTIVITY"
                     android:value="MainActivity" />
         </activity>
-        <activity
-                android:name=".Theme"
-                android:label="@string/title_activity_theme"
-                android:theme="@style/AppTheme" >
-            <meta-data
-                    android:name="android.support.PARENT_ACTIVITY"
-                    android:value="MainActivity" />
-        </activity>
     </application>
 
 </manifest>

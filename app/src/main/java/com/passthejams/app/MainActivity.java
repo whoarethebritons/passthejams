@@ -54,7 +54,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
 
     private void setupNavigationDrawer() {
         //the items that go in the drawer menu
-        mDrawerItems = new String[]{"Queue", "Network", "Search", "Theme"};
+        mDrawerItems = new String[]{"Queue", "Network", "Search"};
 
         mTitle = mDrawerTitle = getTitle();
         DrawerLayout mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -150,7 +150,6 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView parent, View view, int position, long id) {
-            //TODO: have the drawer items open their respective views
             System.out.println("item click");
             Log.d(TAG, "clicked position: " + position);
             switch(mDrawerItems[position]) {
@@ -159,6 +158,9 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
                     break;
                 case "Network":
                     Log.v(TAG, "drawer menu clicked position: " + mDrawerItems[position]);
+                    //start network settings activity
+                    Intent oManager = new Intent(getApplicationContext(), NetworkListActivity.class);
+                    startActivity(oManager);
                     break;
                 case "Search": //currently the Search
                     Log.v(TAG, "drawer menu clicked position: " + mDrawerItems[position]);
