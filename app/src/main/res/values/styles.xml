@@ -11,4 +11,8 @@
     <style name="GreenTheme" parent="AppTheme"/>
     <style name="BlueTheme" parent="AppTheme"/>
 
+    <style name="Cool" parent="android:Theme.DeviceDefault" >
+        <item name="android:windowBackground">@color/ic_launcher</item>
+    </style>
+
 </resources>

@@ -52,6 +52,8 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
             case "Blue":
                 choice = R.style.BlueTheme;
                 break;
+            case "Cool":
+                choice = R.style.Cool;
             default:
                 break;
         }
@@ -139,6 +141,9 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
             case "Blue":
                 choice = R.style.BlueTheme;
                 break;
+            case "Cool":
+                choice = R.style.Cool;
+                break;
             default:
                 break;
         }
@@ -169,11 +174,6 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
                     Log.v(TAG, "drawer menu clicked position: " + mDrawerItems[position]);
                     Intent intent = new Intent(getApplicationContext(), SearchActivity.class);
                     startActivity(intent);
-                    break;
-                case "Theme":
-                    Log.v(TAG, "drawer menu clicked position: " + mDrawerItems[position]);
-                    Intent intent2 = new Intent(getApplicationContext(), Theme.class);
-                    startActivity(intent2);
                     break;
             }
         }

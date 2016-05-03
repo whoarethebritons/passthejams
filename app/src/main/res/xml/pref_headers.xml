@@ -5,4 +5,7 @@
     <header android:fragment="com.passthejams.app.SettingsActivity$GeneralPreferenceFragment"
         android:title="@string/pref_header_general"  />
 
+    <header android:fragment="com.passthejams.app.SettingsActivity$ThemingPreferenceFragment"
+        android:title="@string/pref_header_theming"  />
+
 </preference-headers>

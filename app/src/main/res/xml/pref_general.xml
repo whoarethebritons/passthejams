@@ -31,13 +31,5 @@
         android:summaryOn="@string/Tabs_Playlists_On"
         android:defaultValue="true"
         />
-    <ListPreference
-            android:key="pref_themevalues"
-            android:title="@string/pref_theme"
-            android:dialogTitle="@string/pref_theme"
-            android:entries="@array/theme_values"
-            android:entryValues="@array/theme_values"
-        />
-
 
 </PreferenceScreen>

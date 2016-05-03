@@ -8,6 +8,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -18,6 +20,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.*;
+
+import com.baoyz.swipemenulistview.SwipeMenu;
+import com.baoyz.swipemenulistview.SwipeMenuCreator;
+import com.baoyz.swipemenulistview.SwipeMenuItem;
+import com.baoyz.swipemenulistview.SwipeMenuListView;
 
 
 /**
@@ -69,7 +76,7 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
 
         //get the view as a generic that extends AbsListView (i.e. GridView, ListView)
         T lv = (T) findViewById(list_id);
-        lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+        //lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 
         //text to display
         String[] displayFields = getIntent().getStringArrayExtra(Shared.TabIntent.DISPLAY_FIELDS.name());
@@ -80,12 +87,80 @@ public class GenericTabActivity<T extends AbsListView> extends Activity {
                 displayFields, displayText);
 
         //set adapter
-        lv.setAdapter(simpleCursorAdapter);
+        //lv.setAdapter(simpleCursorAdapter);
         //get click listener
         genericTabInterface ef = (genericTabInterface) getParent();
+        //lv.setOnItemClickListener(ef.getListener());
+        //send over cursor
         lv.setOnItemLongClickListener(ef.getLongListener());
         lv.setOnItemClickListener(ef.getListener());//send over cursor
         ef.passCursor(mCursor, tabType);
+
+        //
+        if(tabType.equals(Shared.TabType.SONG.name())){
+            SwipeMenuListView swipeMenuListView = (SwipeMenuListView) lv;
+            SwipeMenuCreator creator = new SwipeMenuCreator() {
+
+                @Override
+                public void create(SwipeMenu menu) {
+                    // create "open" item
+                    SwipeMenuItem openItem = new SwipeMenuItem(
+                            getApplicationContext());
+                    // set item background
+                    openItem.setBackground(new ColorDrawable(Color.rgb(0xC9, 0xC9,
+                            0xCE)));
+                    // set item width
+                    openItem.setWidth(200);
+                    // set item title
+                    openItem.setTitle("Open");
+                    // set item title fontsize
+                    openItem.setTitleSize(18);
+                    // set item title font color
+                    openItem.setTitleColor(Color.WHITE);
+                    // add to menu
+                    menu.addMenuItem(openItem);
+
+                    // create "delete" item
+                    SwipeMenuItem deleteItem = new SwipeMenuItem(
+                            getApplicationContext());
+                    // set item background
+                    deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
+                            0x3F, 0x25)));
+                    // set item width
+                    deleteItem.setWidth(200);
+                    // add to menu
+                    menu.addMenuItem(deleteItem);
+                }
+
+
+            };
+
+            // set creator
+            swipeMenuListView.setMenuCreator(creator);
+            /*
+            swipeMenuListView.setOnMenuItemClickListener(new OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+                    switch (index) {
+                        case 0:
+                            // Left
+                            break;
+                        case 1:
+                            // Right
+                            break;
+                    }
+                    // false : close the menu; true : not close the menu
+                    return false;
+                }
+            });
+            */
+            // Left
+            swipeMenuListView.setSwipeDirection(SwipeMenuListView.DIRECTION_RIGHT);
+        }
+            lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+            lv.setAdapter(simpleCursorAdapter);
+            lv.setOnItemClickListener(ef.getListener());
+
     }
     //use onResume so that the cursor gets updated each time the tab is switched
     @Override

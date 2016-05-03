@@ -133,7 +133,7 @@ public class NetworkService extends Service implements Closeable{
         @Override
         public void run() {
             //initialize socket and nsd
-            Log.v(TAG,getSongs());
+            //Log.v(TAG,getSongs());
             try {
                 serverSocket = new ServerSocket(port);
             } catch (IOException e) {

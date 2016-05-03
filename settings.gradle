@@ -1,2 +1,2 @@
-include ':app', ':musicserver'
+include ':app', ':musicserver', ':swipemenulistview-1.1.0'
 include 'lastfm'

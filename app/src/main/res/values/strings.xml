@@ -48,5 +48,6 @@
 
     <!-- Example General settings -->
     <string name="pref_header_general">General</string>
+    <string name="pref_header_theming">Theming</string>
     <string name="pref_theme">Theme</string>
 </resources>

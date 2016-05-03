@@ -5,12 +5,14 @@
         <item>Red</item>
         <item>Green</item>
         <item>Blue</item>
+        <item>Cool</item>
     </string-array>
     <integer-array name="theme_entry_values">
         <item>@style/AppTheme</item>
         <item>@style/RedTheme</item>
         <item>@style/GreenTheme</item>
         <item>@style/BlueTheme</item>
+        <item>@style/Cool</item>
     </integer-array>
 
 </resources>
