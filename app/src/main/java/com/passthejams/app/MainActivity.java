@@ -464,6 +464,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             NowPlayingFragment fragment = new NowPlayingFragment();
             fragment.setArguments(b);
+            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
             fragmentTransaction.replace(R.id.mainContent, fragment);
             fragmentTransaction.addToBackStack("nowplaying");
             fragmentTransaction.commit();
@@ -486,6 +487,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
             Log.v(TAG, "added a now playing");
             FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             NowPlayingFragment.Queue fragment = new NowPlayingFragment.Queue();
+            fragmentTransaction.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
             fragmentTransaction.replace(R.id.mainContent, fragment);
             fragmentTransaction.addToBackStack("queue");
             fragmentTransaction.commit();
