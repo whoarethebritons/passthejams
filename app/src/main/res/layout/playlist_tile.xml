@@ -7,7 +7,7 @@
     <RelativeLayout
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android:id="@+id/albumView"
+        android:id="@+id/artView"
         android:adjustViewBounds="false"
         android:background="@drawable/circle"
         android:layout_marginLeft="10dp"
@@ -19,6 +19,7 @@
             android:textColor="#ffffff"
             android:text="@string/ExamplePlaylist"
             android:id="@+id/playlistLetter"
+            android:textAllCaps="true"
             android:maxLines="1"
             android:maxLength="1"
             android:gravity="center_vertical|center_horizontal"

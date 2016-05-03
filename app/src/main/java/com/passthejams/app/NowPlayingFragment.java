@@ -77,7 +77,13 @@ public class NowPlayingFragment extends Fragment {
     public void onResume() {
         FragmentManager fragmentManager = getFragmentManager();
         BottomMusicFragment f = (BottomMusicFragment) fragmentManager.findFragmentById(R.id.bottomBar);
-        TrackInfo current = f.currentSong();
+        TrackInfo current;
+        try {
+            current = f.currentSong();
+        }
+        catch (IndexOutOfBoundsException e) {
+            current = new TrackInfo();
+        }
         setNowPlayingArt(current);
         super.onResume();
 
@@ -115,8 +121,13 @@ public class NowPlayingFragment extends Fragment {
         //method that will set the image to whatever is at the uri
         //Shared.getAlbumArt(String s) will resolve the uri
         if(artLocation != null) {
-            Shared.getAlbumArt(getActivity().getApplicationContext(), album, String.valueOf(artLocation.album_id));
-            toolbar.setTitle(artLocation.title + " -- " + artLocation.artist);
+            if(artLocation.album_id == -1) {
+                album.setImageResource(R.drawable.default_album);
+                toolbar.setTitle("");
+            }else {
+                Shared.getAlbumArt(getActivity().getApplicationContext(), album, String.valueOf(artLocation.album_id));
+                toolbar.setTitle(artLocation.title + " -- " + artLocation.artist);
+            }
         }
     }
 

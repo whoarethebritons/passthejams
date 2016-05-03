@@ -1,8 +1,11 @@
 package com.passthejams.app;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.ContentResolver;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.MergeCursor;
 import android.net.Uri;
@@ -13,8 +16,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ListView;
+import android.widget.ListAdapter;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
+
 import com.mobeta.android.dslv.DragSortController;
 import com.mobeta.android.dslv.DragSortListView;
 
@@ -178,6 +183,7 @@ public class PlaylistSongList extends Fragment {
         genericTabInterface e = (genericTabInterface) a;
         //get click listener
         listView.setOnItemClickListener(e.getListener());
+        listView.setOnItemLongClickListener(deleteSong());
         //pass cursor
         e.passCursor(mCursor, Shared.TabType.SONG.name());
 
@@ -196,16 +202,96 @@ public class PlaylistSongList extends Fragment {
         genericTabInterface ef = (genericTabInterface) a;
         //set click listener
         listView.setOnItemClickListener(ef.getListener());
+        listView.setOnItemLongClickListener(deleteSong());
         //pass cursor
         ef.passCursor(mCursor, Shared.TabType.SONG.name());
         //call super to perform other actions
         super.onResume();
     }
 
+
+
+    AdapterView.OnItemLongClickListener deleteSong() {
+            return new AdapterView.OnItemLongClickListener() {
+
+                @Override
+                public boolean onItemLongClick (AdapterView<?> parent,
+                                                View v, int position, long id){
+                    final String songTitle = (String) ((TextView) v.findViewById(R.id.songView)).getText();
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    builder.setTitle("Remove Song: "+songTitle+"");
+                    builder.setMessage("Are you sure you want to delete this song?");
+                    Log.v(TAG, "longclick set");
+                    final int songPos = position;
+
+
+                    // Set up the buttons
+                    builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            ContentResolver resolver = getActivity().getContentResolver();
+                            Uri uri = MediaStore.Audio.Playlists.Members.getContentUri("external", playlistID);
+                            String[] proj = {MediaStore.Audio.Playlists.Members.AUDIO_ID,
+                                    MediaStore.Audio.Playlists.Members.ARTIST,
+                                    MediaStore.Audio.Playlists.Members.TITLE,
+                                    MediaStore.Audio.Playlists.Members.ALBUM,
+                                    MediaStore.Audio.Playlists.Members.ALBUM_ID,
+                                    MediaStore.Audio.Playlists.Members._ID};
+                            //get the playlist id from db given playlist name
+                            Cursor cursor = getActivity().getContentResolver().query(uri, proj, null, null,
+                                    MediaStore.Audio.Playlists.Members.DEFAULT_SORT_ORDER);
+                            cursor.moveToPosition(songPos);
+                            int songID = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Playlists.Members._ID));
+                            //take position into consideration rather than song id in case of multiple of same song in playlist
+                            //int songID = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
+                            String where = MediaStore.Audio.Playlists.Members._ID + " =? ";
+                            String[] selectionArgs = {Integer.toString(songID)};
+                            int rowsDeleted = resolver.delete(uri, where, selectionArgs);
+                            Log.v(TAG, "Deleted song with "+rowsDeleted+" rows removed.");
+                            mCursor = getActivity().getContentResolver().query(uri, proj, null, null,
+                                    MediaStore.Audio.Playlists.Members.DEFAULT_SORT_ORDER);
+                            mCursor = rebuildCursor(mCursor);
+                            String[] displayFields = new String[]{MediaStore.Audio.Playlists.Members.TITLE,
+                                    MediaStore.Audio.Playlists.Members.ARTIST, MediaStore.Audio.Playlists.Members.ALBUM,
+                                    MediaStore.Audio.Playlists.Members.ALBUM_ID};
+                            int row_layout = R.layout.song_row;
+                            //fields to display text in
+                            int[] displayText = new int[]{R.id.songView, R.id.artistView, R.id.albumView, R.id.artView};
+
+                            simpleCursorAdapter = new JamsCursorAdapter(getActivity(), row_layout, mCursor,
+                                    displayFields, displayText);
+
+
+                            listView.setAdapter(simpleCursorAdapter);
+                            //simpleCursorAdapter.changeCursor(mCursor);
+                            //simpleCursorAdapter.notifyDataSetChanged();
+                            genericTabInterface ef = (genericTabInterface) getActivity();
+                            ef.passCursor(mCursor, Shared.TabType.SONG.name());
+                            //int duration = Toast.LENGTH_LONG;
+                            //Toast toast = Toast.makeText(context, "Song was removed", duration);
+                            //toast.show();
+                        }
+                    });
+                    builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    });
+
+                    builder.show();
+                    return  true;
+                }
+            };
+
+
+
+    }
+
     public interface genericTabInterface {
         AdapterView.OnItemClickListener getListener();
-
         void passCursor(Cursor c, String s);
+
     }
 
 

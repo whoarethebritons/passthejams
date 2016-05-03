@@ -1,15 +1,7 @@
 package com.passthejams.app;
 
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Fragment;
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.SharedPreferences;
+import android.app.*;
+import android.content.*;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.Uri;
@@ -21,6 +13,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.*;
@@ -39,26 +32,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
-        String theme = shared.getString("pref_themevalues", "Default");
-        int choice = R.style.AppTheme;
-        switch(theme) {
-            case "Red":
-                choice = R.style.RedTheme;
-                break;
-            case "Green":
-                choice = R.style.GreenTheme;
-                break;
-            case "Blue":
-                choice = R.style.BlueTheme;
-                break;
-            case "Cool":
-                choice = R.style.Cool;
-            default:
-                break;
-        }
-        Log.v(TAG, "THEME HAS BEEN CHANGED TO " + theme);
-        setTheme(choice);
+        changeTheme();
         setContentView(R.layout.activity_main);
 
         /*start network service*/
@@ -74,8 +48,13 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         ft.addToBackStack(null);
         ft.commit();
 
+        setupNavigationDrawer();
+        //createNotification();
+    }
+
+    private void setupNavigationDrawer() {
         //the items that go in the drawer menu
-        mDrawerItems = new String[]{"Queue", "Network", "Search", "Theme"};
+        mDrawerItems = new String[]{"Queue", "Network", "Search"};
 
         mTitle = mDrawerTitle = getTitle();
         DrawerLayout mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -122,12 +101,32 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
             getActionBar().setDisplayHomeAsUpEnabled(true);
             getActionBar().setHomeButtonEnabled(true);
         }
-        //createNotification();
+    }
 
+    private void handleIntent(String mQuery) {
+        Log.d(TAG, "searched for: " + mQuery);
+
+        SearchResultsFragment searchResultsFragment = SearchResultsFragment.newInstance(mQuery);
+        FragmentTransaction ftnew = getFragmentManager().beginTransaction();
+        ftnew.replace(R.id.mainContent, searchResultsFragment); // mainContent is the container for the fragments
+        ftnew.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        ftnew.addToBackStack(null);
+        ftnew.commit();
     }
 
     @Override
     protected void onResume(){
+        changeTheme();
+        super.onResume();
+        TabFragment tfnew = new TabFragment();
+        FragmentTransaction ftnew = getFragmentManager().beginTransaction();
+        ftnew.replace(R.id.mainContent, tfnew); // mainContent is the container for the fragments
+        ftnew.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+        ftnew.addToBackStack(null);
+        ftnew.commit();
+    }
+
+    private void changeTheme() {
         SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(this);
         String theme = shared.getString("pref_themevalues", "Default");
         int choice = R.style.AppTheme;
@@ -149,18 +148,11 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         }
         Log.v(TAG, "THEME HAS BEEN CHANGED TO " + theme);
         setTheme(choice);
-        super.onResume();
-        TabFragment tfnew = new TabFragment();
-        FragmentTransaction ftnew = getFragmentManager().beginTransaction();
-        ftnew.replace(R.id.mainContent, tfnew); // mainContent is the container for the fragments
-        ftnew.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-        ftnew.addToBackStack(null);
-        ftnew.commit();
     }
+
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView parent, View view, int position, long id) {
-            //TODO: have the drawer items open their respective views
             System.out.println("item click");
             Log.d(TAG, "clicked position: " + position);
             switch(mDrawerItems[position]) {
@@ -169,6 +161,9 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
                     break;
                 case "Network":
                     Log.v(TAG, "drawer menu clicked position: " + mDrawerItems[position]);
+                    //start network settings activity
+                    Intent oManager = new Intent(getApplicationContext(), NetworkListActivity.class);
+                    startActivity(oManager);
                     break;
                 case "Search": //currently the Search
                     Log.v(TAG, "drawer menu clicked position: " + mDrawerItems[position]);
@@ -183,6 +178,27 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        // Associate searchable configuration with the SearchView
+        SearchManager searchManager =
+                (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        final SearchView searchView =
+                (SearchView) menu.findItem(R.id.search).getActionView();
+        searchView.setSearchableInfo(
+                searchManager.getSearchableInfo(getComponentName()));
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                handleIntent(searchView.getQuery().toString());
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+
         return true;
     }
 
@@ -345,6 +361,8 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
         switch(tabHost.getCurrentTabTag()) {
             case "Songs":
                 return songListListener;
+            case "Search":
+                return songListListener;
             case "Albums":
                 return new AdapterView.OnItemClickListener()
                 {
@@ -388,7 +406,7 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
                     public void onItemClick(AdapterView<?> parent,
                                             View v, int position, long id)
                     {
-                        String artistName = (String)((TextView) v.findViewById(R.id.artistName)).getText();
+                        String artistName = (String)((TextView) v.findViewById(R.id.artistView)).getText();
                         SelectedAlbumList albl = new SelectedAlbumList();
                         Bundle bundle = new Bundle();
                         bundle.putString("ARTISTNAME", artistName);
@@ -481,9 +499,66 @@ public class MainActivity extends Activity implements BottomMusicFragment.OnFrag
      * This callback is defined through the 'onClick' attribute of the
      * 'Show Notification' button in the XML layout.
      *
-     * @param v
+     * @param view
      */
     /*public void showNotificationClicked(View v) {
         createNotification();
     }*/
+    public void showMenu(View view) {
+        PopupMenu popup = new PopupMenu(this, view);
+        MenuInflater inflater = popup.getMenuInflater();
+        inflater.inflate(R.menu.menu_song, popup.getMenu());
+
+        final int p = (int) view.getTag();
+        Log.v(TAG, String.valueOf(p));
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.action_last_fm:
+                        Log.d(TAG, "lastfm clicked");
+                        BottomMusicFragment f = (BottomMusicFragment)
+                                getFragmentManager().findFragmentById(R.id.bottomBar);
+                        //Intent intent = makeActionIntent(button.name(), v.getVerticalScrollbarPosition(), discard);
+                        Intent intent = new Intent(getApplicationContext(), MusicPlaybackService.class);
+                        //specifies what action we will be performing
+                        intent.putExtra(Shared.Main.OPTION.name(), Shared.Service.PLAY.name());
+                        //specifies position in database of the song
+                        intent.putExtra(Shared.Main.POSITION.name(), p);
+                        //whether we are unpausing or skipping
+                        intent.putExtra(Shared.Main.DISCARD_PAUSE.name(), false);
+                        //requests position of song in list given current cursor
+                        MusicPlaybackService.QueueObjectInfo queueObjectInfo =
+                                new MusicPlaybackService().new QueueObjectInfo(returnCursor,
+                                        intent.getIntExtra(Shared.Main.POSITION.name(), 0));
+                        //calls play
+                        f.mService.serviceOnPlay(queueObjectInfo,
+                                intent.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), false);
+                        //so that it can then run the lastfm method
+                        Button lastfm = (Button) findViewById(R.id.lastfmButton);
+                        lastfm.performClick();
+                        return true;
+                    case R.id.action_add_to_queue:
+                        BottomMusicFragment fr = (BottomMusicFragment)
+                                getFragmentManager().findFragmentById(R.id.bottomBar);
+                        ListView lv = (ListView) findViewById(android.R.id.list);
+                        //get item at requested position and add it to queue using BottomMusicFragment
+                        fr.mService.addToQueue((Cursor) lv.getAdapter().getItem(p));
+                        return true;
+                    case R.id.action_play_next:
+                        BottomMusicFragment fr2 = (BottomMusicFragment)
+                                getFragmentManager().findFragmentById(R.id.bottomBar);
+                        ListView lv2 = (ListView) findViewById(android.R.id.list);
+                        //get item at requested position and add it to queue using BottomMusicFragment
+                        fr2.mService.playNext((Cursor) lv2.getAdapter().getItem(p));
+                        return true;
+                    //TODO: implementation in GenericTabActivity either copied over here or moved here completely
+                    //case R.id.action_add_to_playlist
+                    default:
+                        return false;
+                }
+            }
+        });
+        popup.show();
+    }
 }

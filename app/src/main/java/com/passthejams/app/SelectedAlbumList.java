@@ -65,7 +65,7 @@ public class SelectedAlbumList extends Fragment {
                 MediaStore.Audio.Albums._ID};
 
         //fields to display text in
-        int[] displayText = new int[]{R.id.artistName, R.id.albumTitle, R.id.albumView};
+        int[] displayText = new int[]{R.id.artistView, R.id.albumTitle, R.id.artView};
         //Here is where we take the name of the album of the selected album and create a new SelectedSongList
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent,

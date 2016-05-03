@@ -1,0 +1,64 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent" android:layout_height="match_parent">
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                  xmlns:tools="http://schemas.android.com/tools"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:paddingLeft="@dimen/activity_horizontal_margin"
+                  android:paddingRight="@dimen/activity_horizontal_margin"
+                  android:paddingTop="@dimen/activity_vertical_margin"
+                  android:paddingBottom="@dimen/activity_vertical_margin"
+                  tools:context="com.passthejams.app.SearchActivity" android:orientation="vertical">
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Artist"
+                android:id="@+id/artistTextView"/>
+        <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Show All"
+                android:id="@+id/button5"/>
+        <GridLayout android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="2"
+                    android:id="@+id/artistList" tools:listitem="@layout/artist_tile" android:useDefaultMargins="true"
+                    android:rowCount="3">
+        </GridLayout>
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Songs"
+                android:id="@+id/songTextView"/>
+        <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Show All"
+                android:id="@+id/button3"/>
+        <GridLayout android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="1"
+                    android:id="@+id/songList" tools:listitem="@layout/song_row" android:useDefaultMargins="true"
+                    android:rowCount="20">
+        </GridLayout>
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Albums"
+                android:id="@+id/albumTextView"/>
+        <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Show All"
+                android:id="@+id/button4"/>
+        <GridLayout android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:columnCount="2"
+                    android:id="@+id/albumList" tools:listitem="@layout/album_tile" android:useDefaultMargins="true"
+                    android:rowCount="4">
+        </GridLayout>
+    </LinearLayout>
+</ScrollView>

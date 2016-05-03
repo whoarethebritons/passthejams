@@ -164,7 +164,7 @@ public class TabFragment extends Fragment {
                         MediaStore.Audio.Albums.ARTIST,
                         MediaStore.Audio.Albums.ALBUM,
                         MediaStore.Audio.Albums._ID};
-                displayText =  new int[] {R.id.artistName, R.id.albumTitle, R.id.albumView};
+                displayText =  new int[] {R.id.artistView, R.id.albumTitle, R.id.artView};
                 sortOrder = (MediaStore.Audio.Media.ALBUM + " ASC");
                 break;
             case ARTIST:
@@ -177,7 +177,7 @@ public class TabFragment extends Fragment {
                 displayFields = new String[]{
                         MediaStore.Audio.Artists.ARTIST,
                         MediaStore.Audio.Albums.ALBUM_ID};
-                displayText =  new int[] {R.id.artistName, R.id.albumView};
+                displayText =  new int[] {R.id.artistView, R.id.artView};
                 sortOrder = (MediaStore.Audio.Artists.ARTIST + " ASC");
                 break;
             case PLAYLIST:
@@ -190,7 +190,7 @@ public class TabFragment extends Fragment {
                 displayFields = new String[]{
                         MediaStore.Audio.Playlists.NAME,MediaStore.Audio.Playlists.NAME};
                 displayText =  new int[] {R.id.playlistName, R.id.playlistLetter};
-                sortOrder = (MediaStore.Audio.Playlists.NAME + " ASC");
+                sortOrder = (MediaStore.Audio.Playlists.NAME + " COLLATE NOCASE ASC");
                 break;
             default:
                 break;
