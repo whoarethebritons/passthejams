@@ -1,5 +1,8 @@
 package com.passthejams.app;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.*;
 import android.database.Cursor;
@@ -11,12 +14,17 @@ import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.view.View;
+import android.widget.RemoteViews;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 
 /**
  * Created by Eden on 7/20/2015.
@@ -151,9 +159,35 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         //actual registration of that listener
         localBroadcastManager.registerReceiver(shuffleReceiver,
                 new IntentFilter(Shared.Service.BROADCAST_SHUFFLE.name()));
+        createNotification(false, false, false, null);
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.v(TAG, "receiving notification");
+        if(intent.getBooleanExtra(Shared.Service.PLAY.name(), false)) {
+            Log.v(TAG, "from play");
+            pressPlay();
+            createNotification(true, true, false, null);
+        }
+        else if(intent.getBooleanExtra(Shared.Service.PREVIOUS.name(), false)) {
+            Log.v(TAG, "from previous");
+            serviceOnPrevious();
+        }
+        else if(intent.getBooleanExtra(Shared.Service.NEXT.name(), false)) {
+            Log.v(TAG, "from next");
+            serviceOnNext();
+        }
+        else if(intent.getBooleanExtra(Shared.Service.PAUSE.name(), false)) {
+            Log.v(TAG, "from pause");
+            serviceOnPause();
+            createNotification(true, false, false, null);
+        }
+        else if(intent.getBooleanExtra(Shared.Service.SHUFFLE_VALUE.name(), false)) {
+            Log.v(TAG, "from shuffle");
+        }
+        else {
+            Log.v(TAG, "not a button");
+        }
         return flags;
     }
 
@@ -283,7 +317,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             Log.v(TAG, "sending over album id: " + trackInfo);
             Gson g = new Gson();
             albumArt.putExtra(Shared.Broadcasters.ART_VALUE.name(), g.toJson(trackInfo, TrackInfo.class));
-
+            createNotification(true, false, true, trackInfo);
             localBroadcastManager.sendBroadcast(albumArt);
             sendBroadcast(albumArt);
 
@@ -326,6 +360,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         playPauseUpdate.putExtra(Shared.Broadcasters.BUTTON_VALUE.name(), value);
         localBroadcastManager = LocalBroadcastManager.getInstance(getApplicationContext());
         localBroadcastManager.sendBroadcast(playPauseUpdate);
+        createNotification(true, value, false, null);
     }
     private void discardPause() {
         Log.v(TAG, "discarded pause");
@@ -457,5 +492,139 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
             sendButtonValue(PAUSE);
         }
     }
+    /**
+     * This sample demonstrates notifications with custom content views.
+     *
+     * <p>On API level 16 and above a big content view is also defined that is used for the
+     * 'expanded' notification. The notification is created by the NotificationCompat.Builder.
+     * The expanded content view is set directly on the {@link android.app.Notification} once it has been build.
+     * (See {@link android.app.Notification#bigContentView}.) </p>
+     *
+     * <p>The content views are inflated as {@link android.widget.RemoteViews} directly from their XML layout
+     * definitions using {@link android.widget.RemoteViews#RemoteViews(String, int)}.</p>
+     */
+    private void createNotification(boolean updateButton, boolean playPause, boolean songChange, TrackInfo artLocation) {
+        android.support.v4.app.NotificationCompat.Builder builder =
+                new android.support.v4.app.NotificationCompat.Builder(getApplicationContext());
 
+        builder.setTicker(getResources().getString(R.string.custom_notification));
+
+        // Sets the small icon for the ticker
+        builder.setSmallIcon(R.drawable.ic_launcher);
+        // Cancel the notification when clicked
+        builder.setAutoCancel(true);
+
+        // Build the notification
+        Notification notification = builder.build();
+        // END_INCLUDE(buildNotification)
+
+        // BEGIN_INCLUDE(customLayout)
+        // Inflate the notification layout as RemoteViews
+        RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.notification);
+
+        // Set text on a TextView in the RemoteViews programmatically.
+        final String time = DateFormat.getTimeInstance().format(new Date()).toString();
+        final String text = getResources().getString(R.string.collapsed, time);
+        contentView.setTextViewText(R.id.textView, text);
+
+        /* Workaround: Need to set the content view here directly on the notification.
+         * NotificationCompatBuilder contains a bug that prevents this from working on platform
+         * versions HoneyComb.
+         * See https://code.google.com/p/android/issues/detail?id=30495
+         */
+        notification.contentView = contentView;
+
+        // Add a big content view to the notification if supported.
+        // Support for expanded notifications was added in API level 16.
+        // (The normal contentView is shown when the notification is collapsed, when expanded the
+        // big content view set here is displayed.)
+        //if (Build.VERSION.SDK_INT >= 16) {
+        // Inflate and set the layout for the expanded notification view
+        RemoteViews expandedView =
+                new RemoteViews(getPackageName(), R.layout.notification_expanded);
+
+        if(updateButton) {
+            //if that value is false, then mediaplayer is not playing
+            if(!playPause) {
+                contentView.setViewVisibility(R.id.notifyplayButton, View.VISIBLE);
+                contentView.setViewVisibility(R.id.notifypauseButton, View.INVISIBLE);
+                expandedView.setViewVisibility(R.id.notifyplayButton, View.VISIBLE);
+                expandedView.setViewVisibility(R.id.notifypauseButton, View.INVISIBLE);
+            }
+            //otherwise it is playing and show the pause button
+            else {
+                contentView.setViewVisibility(R.id.notifyplayButton, View.INVISIBLE);
+                contentView.setViewVisibility(R.id.notifypauseButton, View.VISIBLE);
+                expandedView.setViewVisibility(R.id.notifyplayButton, View.INVISIBLE);
+                expandedView.setViewVisibility(R.id.notifypauseButton, View.VISIBLE);
+            }
+        }
+        if(songChange) {
+            Log.v(TAG, "trackinfo changed");
+            //method that will set the image to whatever is at the uri
+            //Shared.getAlbumArt(String s) will resolve the uri
+            if(artLocation != null) {
+                int id = artLocation.album_id;
+                Uri test = ContentUris.withAppendedId(
+                        Uri.parse("content://media/external/audio/albumart"), id);
+                try {
+                    getApplicationContext().getContentResolver().openInputStream(test);
+                    contentView.setImageViewUri(R.id.notifycurrentAlbumArt, test);
+                    expandedView.setImageViewUri(R.id.notifycurrentAlbumArt, test);
+                }
+                catch(FileNotFoundException e) {
+                    Log.e("Shared", e.getMessage());
+                    contentView.setImageViewResource(R.id.notifycurrentAlbumArt, R.drawable.default_album);
+                    expandedView.setImageViewResource(R.id.notifycurrentAlbumArt, R.drawable.default_album);
+                }
+
+                contentView.setTextViewText(R.id.notifyArtistName, artLocation.artist);
+                contentView.setTextViewText(R.id.notifySongName, artLocation.title);
+                expandedView.setTextViewText(R.id.notifyArtistName, artLocation.artist);
+                expandedView.setTextViewText(R.id.notifySongName, artLocation.title);
+            }
+        }
+        Intent play = new Intent(this, MusicPlaybackService.class);
+        play.putExtra(Shared.Service.PLAY.name(), true);
+
+        Intent pause = new Intent(this, MusicPlaybackService.class);
+        pause.putExtra(Shared.Service.PAUSE.name(), true);
+
+        Intent next = new Intent(this, MusicPlaybackService.class);
+        next.putExtra(Shared.Service.NEXT.name(), true);
+
+        Intent prev = new Intent(this, MusicPlaybackService.class);
+        prev.putExtra(Shared.Service.PREVIOUS.name(), true);
+
+        Intent shuffle = new Intent(this, MusicPlaybackService.class);
+        shuffle.putExtra(Shared.Service.SHUFFLE_VALUE.name(), true);
+
+
+        PendingIntent playpendingIntent  = PendingIntent.getService(this, 1039, play, 0);
+        PendingIntent pausependingIntent  = PendingIntent.getService(this, 1040, pause, 0);
+        PendingIntent nextpendingIntent  = PendingIntent.getService(this, 1041, next, 0);
+        PendingIntent previouspendingIntent  = PendingIntent.getService(this, 1042, prev, 0);
+        PendingIntent shufflependingIntent  = PendingIntent.getService(this, 1043, shuffle, 0);
+
+        contentView.setOnClickPendingIntent(R.id.notifyplayButton, playpendingIntent);
+        contentView.setOnClickPendingIntent(R.id.notifypauseButton, pausependingIntent);
+        contentView.setOnClickPendingIntent(R.id.notifynextButton, nextpendingIntent);
+        contentView.setOnClickPendingIntent(R.id.notifypreviousButton, previouspendingIntent);
+
+        expandedView.setOnClickPendingIntent(R.id.notifyplayButton, playpendingIntent);
+        expandedView.setOnClickPendingIntent(R.id.notifypauseButton, pausependingIntent);
+        expandedView.setOnClickPendingIntent(R.id.notifynextButton, nextpendingIntent);
+        expandedView.setOnClickPendingIntent(R.id.notifypreviousButton, previouspendingIntent);
+        expandedView.setOnClickPendingIntent(R.id.notifyshuffleButton, shufflependingIntent);
+
+        notification.bigContentView = expandedView;
+        //}
+        // END_INCLUDE(customLayout)
+
+        // START_INCLUDE(notify)
+        // Use the NotificationManager to show the notification
+        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        nm.notify(1340, notification);
+        // END_INCLUDE(notify)
+    }
 }

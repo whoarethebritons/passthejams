@@ -1,9 +1,9 @@
 package com.passthejams.app;
 
-import android.app.*;
+import android.app.Activity;
+import android.app.Fragment;
 import android.content.*;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
@@ -15,13 +15,9 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.RemoteViews;
 import com.google.gson.Gson;
 
-import java.io.FileNotFoundException;
-import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class BottomMusicFragment extends Fragment{
     //boolean value to hold whether the service is bound or not
@@ -68,8 +64,6 @@ public class BottomMusicFragment extends Fragment{
                     play.setVisibility(View.INVISIBLE);
                     pause.setVisibility(View.VISIBLE);
                 }
-
-                createNotification(true, playPause, false, null);
             }
         };
         //actual registration of that listener
@@ -89,60 +83,11 @@ public class BottomMusicFragment extends Fragment{
                 //method that will set the image to whatever is at the uri
                 //Shared.getAlbumArt(String s) will resolve the uri
                 Shared.getAlbumArt(context, play, String.valueOf(t.album_id));
-                createNotification(true, false, true, t);
             }
         };
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(artReceiver,
                 new IntentFilter(Shared.Broadcasters.BROADCAST_ART.name()));
 
-        externalArtReceiver = new BroadcastReceiver(){
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Log.d(TAG, "external art received");
-                Gson g = new Gson();
-                String artLocation = intent.getStringExtra(Shared.Broadcasters.ART_VALUE.name());
-                TrackInfo t = g.fromJson(artLocation, TrackInfo.class);
-                createNotification(true, false, true, t);
-            }
-        };
-
-        getActivity().registerReceiver(externalArtReceiver,
-                new IntentFilter(Shared.Broadcasters.BROADCAST_ART.name()));
-        /*notification handling*/
-        notificationReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                Log.v(TAG, "receiving notification");
-                if(intent.getBooleanExtra(Shared.Service.PLAY.name(), false)) {
-                    Log.v(TAG, "from play");
-                    mService.pressPlay();
-                    createNotification(true, true, false, null);
-                }
-                else if(intent.getBooleanExtra(Shared.Service.PREVIOUS.name(), false)) {
-                    Log.v(TAG, "from previous");
-                    servicePrevious();
-                }
-                else if(intent.getBooleanExtra(Shared.Service.NEXT.name(), false)) {
-                    Log.v(TAG, "from next");
-                    serviceNext();
-                }
-                else if(intent.getBooleanExtra(Shared.Service.PAUSE.name(), false)) {
-                    Log.v(TAG, "from pause");
-                    servicePause();
-                    createNotification(true, false, false, null);
-                }
-                else if(intent.getBooleanExtra(Shared.Service.SHUFFLE_VALUE.name(), false)) {
-                    Log.v(TAG, "from shuffle");
-                }
-                else {
-                    Log.v(TAG, "not a button");
-                }
-
-            }
-        };
-
-        getActivity().registerReceiver(notificationReceiver,
-                new IntentFilter(Shared.Broadcasters.BROADCAST_NOTIFY.name()));
         /*
         the onclick listeners that will go to the music service
          */
@@ -265,46 +210,23 @@ public class BottomMusicFragment extends Fragment{
                 switch(button) {
                     case PLAY:
                         if(mListener.currentViewCursor() != null) {
-                            servicePlay(intent);
+                            mService.pressPlay();
                         }
                         break;
                     case NEXT:
-                        serviceNext();
+                        mService.serviceOnNext();
                         break;
                     case PREVIOUS:
-                        servicePrevious();
+                        mService.serviceOnPrevious();
                         break;
                     case PAUSE:
-                        servicePause();
+                        mService.serviceOnPause();
                         break;
                     default:
                         break;
                 }
             }
         };
-    }
-
-    public void servicePlay(Intent intent) {
-        //QueueObjectInfo containing the cursor and position of song
-        //when play is pressed assume it is position 0 we are requesting
-        /*MusicPlaybackService.QueueObjectInfo queueObjectInfo =
-                new MusicPlaybackService().new QueueObjectInfo(mListener.currentViewCursor(),
-                        intent.getIntExtra(Shared.Main.POSITION.name(), 0));
-        //TODO: pressing play always discards queue
-        mService.serviceOnPlay(queueObjectInfo,
-                intent.getBooleanExtra(Shared.Main.DISCARD_PAUSE.name(), true), false);*/
-        mService.pressPlay();
-    }
-
-    public void servicePause() {
-        mService.serviceOnPause();
-    }
-
-    public void servicePrevious() {
-        mService.serviceOnPrevious();
-    }
-    public void serviceNext() {
-        mService.serviceOnNext();
     }
 
     //gets the service if we can successfully bind to it
@@ -334,8 +256,6 @@ public class BottomMusicFragment extends Fragment{
         //remove the broadcasters
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(receiver);
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(artReceiver);
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(externalArtReceiver);
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(notificationReceiver);
         super.onStop();
     }
     @Override
@@ -350,7 +270,6 @@ public class BottomMusicFragment extends Fragment{
         super.onAttach(activity);
         try {
             mListener = (OnFragmentInteractionListener) activity;
-            createNotification(false, false, false, null);
         } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
@@ -367,8 +286,6 @@ public class BottomMusicFragment extends Fragment{
         getActivity().unbindService(mServiceConnection);
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(receiver);
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(artReceiver);
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(externalArtReceiver);
-        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(notificationReceiver);
         mBound = false;
         super.onDestroy();
     }
@@ -413,149 +330,5 @@ public class BottomMusicFragment extends Fragment{
          */
         void setImageVal(String albumid);
     }
-    /**
-     * This sample demonstrates notifications with custom content views.
-     *
-     * <p>On API level 16 and above a big content view is also defined that is used for the
-     * 'expanded' notification. The notification is created by the NotificationCompat.Builder.
-     * The expanded content view is set directly on the {@link android.app.Notification} once it has been build.
-     * (See {@link android.app.Notification#bigContentView}.) </p>
-     *
-     * <p>The content views are inflated as {@link android.widget.RemoteViews} directly from their XML layout
-     * definitions using {@link android.widget.RemoteViews#RemoteViews(String, int)}.</p>
-     */
-    private void createNotification(boolean updateButton, boolean playPause, boolean songChange, TrackInfo artLocation) {
-        // BEGIN_INCLUDE(notificationCompat)
-        android.support.v4.app.NotificationCompat.Builder builder = new android.support.v4.app.NotificationCompat.Builder(getActivity().getApplicationContext());
-        // END_INCLUDE(notificationCompat)
 
-        // BEGIN_INCLUDE(intent)
-        //Create Intent to launch this Activity again if the notification is clicked.
-        Intent i = new Intent(getActivity().getApplicationContext(), BottomMusicFragment.class);
-        i.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        /*PendingIntent intent = PendingIntent.getActivity(this, 0, i,
-                PendingIntent.FLAG_UPDATE_CURRENT);*/
-        //builder.setContentIntent(intent);
-        // END_INCLUDE(intent)
-
-        // BEGIN_INCLUDE(ticker)
-        // Sets the ticker text
-        builder.setTicker(getResources().getString(R.string.custom_notification));
-
-        // Sets the small icon for the ticker
-        builder.setSmallIcon(R.drawable.ic_launcher);
-        // END_INCLUDE(ticker)
-
-        // BEGIN_INCLUDE(buildNotification)
-        // Cancel the notification when clicked
-        builder.setAutoCancel(true);
-
-        // Build the notification
-        Notification notification = builder.build();
-        // END_INCLUDE(buildNotification)
-
-        // BEGIN_INCLUDE(customLayout)
-        // Inflate the notification layout as RemoteViews
-        RemoteViews contentView = new RemoteViews(getActivity().getPackageName(), R.layout.notification);
-
-        // Set text on a TextView in the RemoteViews programmatically.
-        final String time = DateFormat.getTimeInstance().format(new Date()).toString();
-        final String text = getResources().getString(R.string.collapsed, time);
-        contentView.setTextViewText(R.id.textView, text);
-
-        /* Workaround: Need to set the content view here directly on the notification.
-         * NotificationCompatBuilder contains a bug that prevents this from working on platform
-         * versions HoneyComb.
-         * See https://code.google.com/p/android/issues/detail?id=30495
-         */
-        notification.contentView = contentView;
-
-        // Add a big content view to the notification if supported.
-        // Support for expanded notifications was added in API level 16.
-        // (The normal contentView is shown when the notification is collapsed, when expanded the
-        // big content view set here is displayed.)
-        //if (Build.VERSION.SDK_INT >= 16) {
-        // Inflate and set the layout for the expanded notification view
-        RemoteViews expandedView =
-                new RemoteViews(getActivity().getPackageName(), R.layout.notification_expanded);
-
-        if(updateButton) {
-            //if that value is false, then mediaplayer is not playing
-            if(!playPause) {
-                expandedView.setViewVisibility(R.id.notifyplayButton, View.VISIBLE);
-                expandedView.setViewVisibility(R.id.notifypauseButton, View.INVISIBLE);
-            }
-            //otherwise it is playing and show the pause button
-            else {
-                expandedView.setViewVisibility(R.id.notifyplayButton, View.INVISIBLE);
-                expandedView.setViewVisibility(R.id.notifypauseButton, View.VISIBLE);
-            }
-        }
-        if(songChange) {
-            Log.v(TAG, "trackinfo changed");
-            //method that will set the image to whatever is at the uri
-            //Shared.getAlbumArt(String s) will resolve the uri
-            if(artLocation != null) {
-                int id = artLocation.album_id;
-                Uri test = ContentUris.withAppendedId(
-                        Uri.parse("content://media/external/audio/albumart"), id);
-                try {
-                    getActivity().getApplicationContext().getContentResolver().openInputStream(test);
-                    expandedView.setImageViewUri(R.id.notifycurrentAlbumArt, test);
-                }
-                catch(FileNotFoundException e) {
-                    Log.e("Shared", e.getMessage());
-                    expandedView.setImageViewResource(R.id.notifycurrentAlbumArt, R.drawable.default_album);
-                }
-
-                expandedView.setTextViewText(R.id.notifyArtistName, artLocation.artist);
-                expandedView.setTextViewText(R.id.notifySongName, artLocation.title);
-            }
-        }
-        Intent play = new Intent(Shared.Broadcasters.BROADCAST_NOTIFY.name());
-        play.putExtra(Shared.Service.PLAY.name(), true);
-
-        Intent pause = new Intent(Shared.Broadcasters.BROADCAST_NOTIFY.name());
-        pause.putExtra(Shared.Service.PAUSE.name(), true);
-
-        Intent next = new Intent(Shared.Broadcasters.BROADCAST_NOTIFY.name());
-        next.putExtra(Shared.Service.NEXT.name(), true);
-
-        Intent prev = new Intent(Shared.Broadcasters.BROADCAST_NOTIFY.name());
-        prev.putExtra(Shared.Service.PREVIOUS.name(), true);
-
-        Intent shuffle = new Intent(Shared.Broadcasters.BROADCAST_NOTIFY.name());
-        shuffle.putExtra(Shared.Service.SHUFFLE_VALUE.name(), true);
-
-
-        PendingIntent playpendingIntent  = PendingIntent.getBroadcast(getActivity().getApplicationContext(), 1235, play,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-        expandedView.setOnClickPendingIntent(R.id.notifyplayButton, playpendingIntent);
-
-        PendingIntent pausependingIntent  = PendingIntent.getBroadcast(getActivity().getApplicationContext(), 1236, pause,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-        expandedView.setOnClickPendingIntent(R.id.notifypauseButton, pausependingIntent);
-
-        PendingIntent nextpendingIntent  = PendingIntent.getBroadcast(getActivity().getApplicationContext(), 1237, next,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-        expandedView.setOnClickPendingIntent(R.id.notifynextButton, nextpendingIntent);
-
-        PendingIntent previouspendingIntent  = PendingIntent.getBroadcast(getActivity().getApplicationContext(), 1238, prev,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-        expandedView.setOnClickPendingIntent(R.id.notifypreviousButton, previouspendingIntent);
-
-        PendingIntent shufflependingIntent  = PendingIntent.getBroadcast(getActivity().getApplicationContext(), 1239, shuffle,
-                PendingIntent.FLAG_UPDATE_CURRENT);
-        expandedView.setOnClickPendingIntent(R.id.notifyshuffleButton, shufflependingIntent);
-
-        notification.bigContentView = expandedView;
-        //}
-        // END_INCLUDE(customLayout)
-
-        // START_INCLUDE(notify)
-        // Use the NotificationManager to show the notification
-        NotificationManager nm = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
-        nm.notify(1340, notification);
-        // END_INCLUDE(notify)
-    }
 }
