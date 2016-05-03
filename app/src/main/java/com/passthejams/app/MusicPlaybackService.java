@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 import android.provider.MediaStore;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
@@ -25,6 +26,8 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+
+import static android.app.Notification.VISIBILITY_PUBLIC;
 
 /**
  * Created by Eden on 7/20/2015.
@@ -508,6 +511,7 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
                 new android.support.v4.app.NotificationCompat.Builder(getApplicationContext());
 
         builder.setTicker(getResources().getString(R.string.custom_notification));
+        builder.setVisibility(VISIBILITY_PUBLIC);
 
         // Sets the small icon for the ticker
         builder.setSmallIcon(R.drawable.ic_launcher);
@@ -598,7 +602,15 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
 
         Intent shuffle = new Intent(this, MusicPlaybackService.class);
         shuffle.putExtra(Shared.Service.SHUFFLE_VALUE.name(), true);
-
+        Intent resultIntent = new Intent(this, MainActivity.class);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        // Adds the back stack
+        stackBuilder.addParentStack(MainActivity.class);
+        // Adds the Intent to the top of the stack
+        stackBuilder.addNextIntent(resultIntent);
+        // Gets a PendingIntent containing the entire back stack
+        PendingIntent resultPendingIntent =
+                stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
         PendingIntent playpendingIntent  = PendingIntent.getService(this, 1039, play, 0);
         PendingIntent pausependingIntent  = PendingIntent.getService(this, 1040, pause, 0);
@@ -610,12 +622,14 @@ public class MusicPlaybackService extends Service implements MediaPlayer.OnPrepa
         contentView.setOnClickPendingIntent(R.id.notifypauseButton, pausependingIntent);
         contentView.setOnClickPendingIntent(R.id.notifynextButton, nextpendingIntent);
         contentView.setOnClickPendingIntent(R.id.notifypreviousButton, previouspendingIntent);
+        contentView.setOnClickPendingIntent(R.id.notifycurrentAlbumArt, resultPendingIntent);
 
         expandedView.setOnClickPendingIntent(R.id.notifyplayButton, playpendingIntent);
         expandedView.setOnClickPendingIntent(R.id.notifypauseButton, pausependingIntent);
         expandedView.setOnClickPendingIntent(R.id.notifynextButton, nextpendingIntent);
         expandedView.setOnClickPendingIntent(R.id.notifypreviousButton, previouspendingIntent);
         expandedView.setOnClickPendingIntent(R.id.notifyshuffleButton, shufflependingIntent);
+        expandedView.setOnClickPendingIntent(R.id.notifycurrentAlbumArt, resultPendingIntent);
 
         notification.bigContentView = expandedView;
         //}
