@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">passthejams</string>
+    <string name="app_name">Pass the Jams</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_network_list">NetworkListActivity</string>
 
